@@ -1,0 +1,140 @@
+/* This file is the descriptor for the Custom Python Prediction algorithm dev-glm_glm */
+{
+    "meta" : {
+        "label": "GLM-BinaryClassification",
+        "description": "GLM-BinaryClassification",
+        "icon": "icon-briefcase"
+    },
+
+    "predictionTypes": ["BINARY_CLASSIFICATION"],
+    "gridSearchMode": "MANAGED",
+    "supportsSampleWeights": false,
+    "acceptsSparseMatrix": false,
+    "params": [
+        {
+            "name": "family",
+            "label": "Distribution",
+            "description": "The distribution for the link function",
+            "type": "SELECT",
+            "defaultValue": ["binomial"],
+            "selectChoices": [
+                {
+                    "value":"binomial",
+                    "label":"Binomial"
+                },
+                {
+                    "value":"gamma",
+                    "label":"Gamma"
+                },
+                {
+                    "value":"gaussian",
+                    "label": "Gaussian"
+                },
+                {
+                    "value":"inverse_gaussian",
+                    "label": "Inverse Gaussian"
+                },
+                {
+                    "value":"poisson",
+                    "label": "Poisson"
+                },
+                {
+                    "value":"negative_binomial",
+                    "label": "Negative Binomial"
+                },
+                {
+                    "value":"tweedie",
+                    "label": "Tweedie"
+                }
+            ],
+            "allowDuplicates": false,
+            "gridParam": false
+        },
+        {
+            "name": "link",
+            "label": "Link Function",
+            "gridParam": false,
+            "description":"Relates the expected value of the response to the linear predictors in the model",
+            "defaultValue": ["logit"],
+            "type": "SELECT",
+             "selectChoices": [
+                {
+                    "value":"cdf",
+                    "label":"CDF"
+                },
+                {
+                    "value":"cloglog",
+                    "label":"CLogLog"
+                },
+                {
+                    "value":"log",
+                    "label":"Log"
+                },
+                {
+                    "value":"logit",
+                    "label":"Logit"
+                },
+                {
+                    "value":"negative_binomial",
+                    "label":"Negative Binomial"
+                },
+                {
+                    "value":"power",
+                    "label":"Power"
+                },
+                {
+                    "value":"cauchy",
+                    "label":"Cauchy"
+                },
+                {
+                    "value":"identity",
+                    "label":"Identity"
+                },
+                {
+                    "value":"inverse_power",
+                    "label":"Inverse Power"
+                },
+                {
+                    "value":"inverse_squared",
+                    "label":"Inverse Squared"
+                }
+                
+            ],
+            "allowDuplicates": false,
+            "gridParam": false
+        },
+
+        {
+            "name": "sep1",
+            "label": "HyperParams",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "alpha",
+            "label": "Alpha",
+            "type": "INT",
+            "allowDuplicates": false,
+            "mandatory":false,
+            "visibilityCondition" : "model.family == 'negative_binomial'",
+            "gridParam": false
+        },
+        {
+            "name": "power",
+            "label": "Power",
+            "type": "INT",
+            "allowDuplicates": false,
+            "mandatory":false,
+            "gridParam": false,
+            "visibilityCondition" : "model.link == 'power'"
+        },
+        {
+            "name": "var_power",
+            "label": "Variance Power",
+            "type": "INT",
+            "allowDuplicates": false,
+            "mandatory":false,
+            "gridParam": false,
+            "visibilityCondition" : "model.family == 'tweedie'"
+        }
+    ]
+}
