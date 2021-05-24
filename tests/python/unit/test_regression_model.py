@@ -30,13 +30,13 @@ def test_link_function():
 
     actual = []
     for link in link_strings:
-        binary_model = CustomPredictionAlgorithm(
+        regression_model = CustomPredictionAlgorithm(
             link=link,
             family='binomial',
             alpha=1,
             power=1,
             var_power=1
         )
-        actual.append(binary_model.get_link())
+        actual.append(regression_model.get_link())
 
     case.assertItemsEqual(actual, expected)
