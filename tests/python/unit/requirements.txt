@@ -1,1 +1,3 @@
-statsmodels
+pytest~=6.2
+allure-pytest~=2.8
+statsmodels>=0.10,<0.11
