@@ -1,4 +1,4 @@
-/* This file is the descriptor for the Custom Python Prediction algorithm dev-glm_glm */
+
 {
     "meta" : {
         "label": "Generalized Linear Model",
