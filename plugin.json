@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "meta": {
         "label": "Generalized Linear Models",
-        "description": "Generalization of linear models that allows for response variables with error distributions that are not normally distributed",
+        "description": "Train and deploy Generalized Linear Models",
         "author": "Dataiku (Matthew Galloway)",
         "icon": "icon-briefcase",
         "tags": ["Machine Learning"],
