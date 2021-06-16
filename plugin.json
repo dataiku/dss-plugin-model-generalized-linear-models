@@ -1,6 +1,6 @@
 {
     "id": "generalized-linear-models",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "meta": {
         "label": "Generalized Linear Models",
         "description": "Generalization of linear models that allows for response variables with error distributions that are not normally distributed",
