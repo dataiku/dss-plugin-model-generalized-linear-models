@@ -1,6 +1,6 @@
 {
     "meta" : {
-        "label": "Generalized Liner Model",
+        "label": "Generalized Linear Model",
         "description": "GLM-Regression",
         "icon": "icon-briefcase "
     },
