@@ -106,7 +106,7 @@
 
         {
             "name": "sep1",
-            "label": "HyperParams",
+            "label": "Hyper parameters",
             "type": "SEPARATOR"
         },
         {
