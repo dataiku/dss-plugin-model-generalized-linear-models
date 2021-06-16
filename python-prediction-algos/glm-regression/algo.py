@@ -1,6 +1,6 @@
 # This file is the actual code for the custom Python algorithm dev-glm_glm
 from dataiku.doctor.plugins.custom_prediction_algorithm import BaseCustomPredictionAlgorithm
-from generalizedlinearmodels.dku_glm import RegressionGLM
+from generalized_linear_models.dku_glm import RegressionGLM
 
 class CustomPredictionAlgorithm(BaseCustomPredictionAlgorithm):    
     

@@ -1,6 +1,6 @@
 # This file is the actual code for the custom Python algorithm
 from dataiku.doctor.plugins.custom_prediction_algorithm import BaseCustomPredictionAlgorithm
-from generalizedlinearmodels.dku_glm import BinaryClassificationGLM
+from generalized_linear_models.dku_glm import BinaryClassificationGLM
 
 class CustomPredictionAlgorithm(BaseCustomPredictionAlgorithm):    
     
