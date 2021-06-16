@@ -67,7 +67,7 @@ class BinaryClassificationGLM(BaseEstimator, ClassifierMixin):
         elif self.family == "tweedie":
             return sm.families.Tweedie(link=link, var_power=self.var_power)
         else:
-            exit()
+            raise ValueError("Unsupported family")
     
     def fit(self, X, y):
         """ 
