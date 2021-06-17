@@ -9,7 +9,6 @@
     "gridSearchMode": "MANAGED",
     "supportsSampleWeights": false,
     "acceptsSparseMatrix": false,
-    "paramsPythonSetup": "front_end_filters.py",
     "params": [
         {
             "name": "family",
