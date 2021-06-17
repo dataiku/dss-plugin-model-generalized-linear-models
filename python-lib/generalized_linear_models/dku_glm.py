@@ -4,15 +4,24 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 import pandas as pd
 
 
-class BaseGLM:
+class BaseGLM(BaseEstimator, ClassifierMixin):
     """
     Base class for GLM
+    Binary and Regression GLM inherit from here
     """
 
-    def __init__(self, link, family, alpha, power, var_power):
+    def __init__(self, family, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link, poisson_link,
+                 negative_binomial_link, tweedie_link, alpha, power, var_power):
 
-        self.link = link
         self.family = family
+        self.binomial_link = binomial_link
+        self.gamma_link = gamma_link
+        self.gaussian_link = gaussian_link
+        self.inverse_gaussian_link = inverse_gaussian_link
+        self.poisson_link = poisson_link
+        self.negative_binomial_link = negative_binomial_link
+        self.tweedie_link = tweedie_link
+        self.link = None
         self.alpha = alpha
         self.power = power
         self.var_power = var_power
@@ -23,7 +32,7 @@ class BaseGLM:
         self.intercept_ = None
         self.classes_ = None
 
-    def get_link(self):
+    def get_link_function(self):
         """
         gets the statsmodel link function based on the
         user defined link on the model training screen
@@ -41,6 +50,19 @@ class BaseGLM:
         }
 
         return links_dict[self.link]
+
+    def set_link_str(self):
+
+        link_str_dict = {
+            'binomial': self.binomial_link,
+            'gamma': self.gamma_link,
+            'gaussian': self.gaussian_link,
+            'inverse_gaussian': self.inverse_gaussian_link,
+            'poisson': self.poisson_link,
+            'negative_binomial': self.negative_binomial_link,
+            'tweedie': self.tweedie_link
+        }
+        self.link = link_str_dict[self.family]
 
     def get_family(self, link):
         """
@@ -72,19 +94,22 @@ class BaseGLM:
             raise ValueError("Unsupported family")
 
 
-class BinaryClassificationGLM(BaseEstimator, ClassifierMixin, BaseGLM):
+class BinaryClassificationGLM(BaseGLM):
 
     def fit(self, X, y):
         """
         takes in training data and fits a model
         """
-
+        print('starting  binary classication model')
+        print('self.link {}'.format(self.link))
+        print('self.family {}'.format(self.family))
         self.classes_ = list(set(y))
 
         X = sm.add_constant(X)
 
         #  returns statsmodel link and distribution functions based on user input
-        link = self.get_link()
+        self.set_link_str()
+        link = self.get_link_function()
         family = self.get_family(link)
 
         #  fits and stores statsmodel glm
@@ -124,7 +149,7 @@ class BinaryClassificationGLM(BaseEstimator, ClassifierMixin, BaseGLM):
         return np.append(1 - y_pred_final, y_pred_final, axis=1)
 
 
-class RegressionGLM(BaseEstimator, ClassifierMixin, BaseGLM):
+class RegressionGLM(BaseGLM):
 
     def fit(self, X, y):
         """
@@ -134,9 +159,9 @@ class RegressionGLM(BaseEstimator, ClassifierMixin, BaseGLM):
         self.classes_ = list(set(y))
 
         X = sm.add_constant(X)
-
+        self.set_link_str()
         #  returns statsmodel link and distribution functions based on user input
-        link = self.get_link()
+        link = self.get_link_function()
         family = self.get_family(link)
 
         #  fits and stores statsmodel glm
@@ -161,7 +186,7 @@ class RegressionGLM(BaseEstimator, ClassifierMixin, BaseGLM):
 
         return y_pred
 
-           
 
-    
-    
+
+
+
