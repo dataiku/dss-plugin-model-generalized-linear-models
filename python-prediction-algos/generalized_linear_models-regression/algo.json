@@ -13,7 +13,7 @@
         {
             "name": "family",
             "label": "Distribution",
-            "description": "The distribution for the link function",
+                "description": "The distribution for the link function",
             "type": "SELECT",
             "defaultValue": ["binomial"],
             "selectChoices": [
