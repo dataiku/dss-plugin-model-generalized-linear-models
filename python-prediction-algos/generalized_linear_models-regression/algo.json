@@ -260,7 +260,7 @@
                 "allowDuplicates": false,
                 "mandatory":false,
                 "gridParam": false,
-                "visibilityCondition" : "model.negative_binomial_link == 'power'"
+                "visibilityCondition" : "model.negative_binomial_link == 'power'|| model.tweedie_link == 'power'"
             },
             {
                 "name": "var_power",
