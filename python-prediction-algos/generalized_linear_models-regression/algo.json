@@ -238,9 +238,10 @@
                 "gridParam": false
             },
             {
-                "name": "sep1",
+                "name": "separator_hyperparams",
                 "label": "Hyper parameters",
-                "type": "SEPARATOR"
+                "type": "SEPARATOR",
+                "visibilityCondition" : "model.family == 'tweedie'||model.family == 'negative_binomial'"
             },
             {
                 "name": "alpha",
