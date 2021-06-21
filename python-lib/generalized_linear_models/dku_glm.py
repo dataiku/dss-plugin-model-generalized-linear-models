@@ -100,9 +100,7 @@ class BinaryClassificationGLM(BaseGLM):
         """
         takes in training data and fits a model
         """
-        print('starting  binary classication model')
-        print('self.link {}'.format(self.link))
-        print('self.family {}'.format(self.family))
+
         self.classes_ = list(set(y))
 
         X = sm.add_constant(X)
