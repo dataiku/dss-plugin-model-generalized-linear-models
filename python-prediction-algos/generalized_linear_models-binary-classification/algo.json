@@ -1,7 +1,7 @@
 
     {
         "meta" : {
-            "label": "Generalized Linear Model",
+            "label": "Generalized Linear Model Classification",
             "description": "Flexible generalization of ordinary linear models to  allow for distributions other than a normal distribution",
             "icon": "icon-briefcase"
         },
