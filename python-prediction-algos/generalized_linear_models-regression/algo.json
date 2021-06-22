@@ -2,11 +2,11 @@
     {
         "meta" : {
             "label": "Generalized Linear Model",
-            "description": "GLM-BinaryClassification",
+            "description": "Flexible generalization of ordinary linear models to  allow for distributions other than a normal distribution",
             "icon": "icon-briefcase"
         },
 
-        "predictionTypes": ["BINARY_CLASSIFICATION"],
+        "predictionTypes": ["REGRESSION"],
         "gridSearchMode": "MANAGED",
         "supportsSampleWeights": false,
         "acceptsSparseMatrix": false,
