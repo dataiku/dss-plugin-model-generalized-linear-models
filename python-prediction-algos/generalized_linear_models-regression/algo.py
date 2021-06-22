@@ -1,12 +1,12 @@
 from dataiku.doctor.plugins.custom_prediction_algorithm import BaseCustomPredictionAlgorithm
-from generalized_linear_models.dku_glm import BinaryClassificationGLM
+from generalized_linear_models.dku_glm import RegressionGLM
 
 
 class CustomPredictionAlgorithm(BaseCustomPredictionAlgorithm):
 
     def __init__(self, prediction_type=None, params=None):
         self.params = params
-        self.clf = BinaryClassificationGLM(
+        self.clf = RegressionGLM(
             family=params.get("family"),
             binomial_link=params.get("binomial_link"),
             gamma_link=params.get("gamma_link"),

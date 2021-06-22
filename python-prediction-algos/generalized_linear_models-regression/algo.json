@@ -16,7 +16,7 @@
                 "label": "Distribution",
                 "description": "The distribution for the link function",
                 "type": "SELECT",
-                "defaultValue": "binomial",
+                "defaultValue": "gaussian",
                 "selectChoices": [
                     {
                         "value":"binomial",
