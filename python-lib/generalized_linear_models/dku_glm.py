@@ -10,10 +10,10 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     Binary and Regression GLM inherit from here
     """
 
-    def __init__(self, family, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link, poisson_link,
+    def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link, poisson_link,
                  negative_binomial_link, tweedie_link, alpha, power, var_power):
 
-        self.family = family
+        self.family_name = family_name
         self.binomial_link = binomial_link
         self.gamma_link = gamma_link
         self.gaussian_link = gaussian_link
@@ -21,7 +21,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.poisson_link = poisson_link
         self.negative_binomial_link = negative_binomial_link
         self.tweedie_link = tweedie_link
-        self.link = None
+        self.family = None
         self.alpha = alpha
         self.power = power
         self.var_power = var_power
@@ -74,28 +74,50 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         and statsmodel link function
         returns the family
         """
-        if self.family == 'binomial':
+        if self.family_name == 'binomial':
             return sm.families.Binomial(link=link)
 
-        elif self.family == "gamma":
+        elif self.family_name == "gamma":
             return sm.families.Gamma(link=link)
 
-        elif self.family == "gaussian":
+        elif self.family_name == "gaussian":
             return sm.families.Gaussian(link=link)
 
-        elif self.family == "inverse_gaussian":
+        elif self.family_name == "inverse_gaussian":
             return sm.families.InverseGaussian(link=link)
 
-        elif self.family == "negative_binomial":
+        elif self.family_name == "negative_binomial":
             return sm.families.NegativeBinomial(link=link, alpha=self.alpha)
 
-        elif self.family == "poisson":
+        elif self.family_name == "poisson":
             return sm.families.Poisson(link=link)
 
-        elif self.family == "tweedie":
+        elif self.family_name == "tweedie":
             return sm.families.Tweedie(link=link, var_power=self.var_power)
         else:
             raise ValueError("Unsupported family")
+
+    def assign_family(self):
+        """
+        converts string inputs of family & link
+        in to statsmodel family and makes it an attribute
+        """
+        link = self.get_link_function()
+        self.family = self.get_family(link)
+
+    def fit_model(self, X, y):
+        """
+        fits a GLM model
+        """
+        self.classes_ = list(set(y))
+        X = sm.add_constant(X)
+
+        self.assign_family()
+
+        #  fits and stores statsmodel glm
+        model = sm.GLM(y, X, family=self.family)
+
+        self.fitted_model = model.fit()
 
 
 class BinaryClassificationGLM(BaseGLM):
@@ -104,19 +126,7 @@ class BinaryClassificationGLM(BaseGLM):
         """
         takes in training data and fits a model
         """
-
-        self.classes_ = list(set(y))
-
-        X = sm.add_constant(X)
-
-        #  returns statsmodel link and distribution functions based on user input
-
-        link = self.get_link_function()
-        family = self.get_family(link)
-
-        #  fits and stores statsmodel glm
-        model = sm.GLM(y, X, family=family)
-        self.fitted_model = model.fit()
+        self.fit_model(X, y)
 
         #  adds attributes for explainability
         self.coef_ = np.array(self.fitted_model.params[1:]).reshape(1,
@@ -158,16 +168,7 @@ class RegressionGLM(BaseGLM):
         takes in training data and fits a model
         """
 
-        self.classes_ = list(set(y))
-
-        X = sm.add_constant(X)
-        #  returns statsmodel link and distribution functions based on user input
-        link = self.get_link_function()
-        family = self.get_family(link)
-
-        #  fits and stores statsmodel glm
-        model = sm.GLM(y, X, family=family)
-        self.fitted_model = model.fit()
+        self.fit_model(X, y)
 
         #  adds attributes for explainability
         # intercept cant be multidimensional np array like in classification

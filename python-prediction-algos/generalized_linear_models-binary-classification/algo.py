@@ -7,7 +7,7 @@ class CustomPredictionAlgorithm(BaseCustomPredictionAlgorithm):
     def __init__(self, prediction_type=None, params=None):
         self.params = params
         self.clf = BinaryClassificationGLM(
-            family=params.get("family"),
+            family_name=params.get("family"),
             binomial_link=params.get("binomial_link"),
             gamma_link=params.get("gamma_link"),
             gaussian_link=params.get("gaussian_link"),
