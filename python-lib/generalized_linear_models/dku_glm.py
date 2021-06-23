@@ -37,32 +37,36 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         gets the statsmodel link function based on the
         user defined link on the model training screen
         """
-        links_dict = {
-            'cloglog': sm.families.links.cloglog(),
-            'log': sm.families.links.log(),
-            'logit': sm.families.links.logit(),
-            'negative_binomial': sm.families.links.NegativeBinomial(self.alpha),
-            'power': sm.families.links.Power(self.power),
-            'cauchy': sm.families.links.cauchy(),
-            'identity': sm.families.links.identity(),
-            'inverse_power': sm.families.links.inverse_power(),
-            'inverse_squared': sm.families.links.inverse_squared()
-        }
+        possible_links = [
+            self.binomial_link,
+            self.gamma_link,
+            self.gaussian_link,
+            self.inverse_gaussian_link,
+            self.poisson_link,
+            self.negative_binomial_link,
+            self.tweedie_link
+        ]
+        for user_link in possible_links:
+            if user_link:
+                if user_link == 'cloglog':
+                    return sm.families.links.cloglog(),
+                elif user_link == 'log':
+                    return sm.families.links.log()
+                elif user_link == 'logit':
+                    return sm.families.links.logit()
+                elif user_link == 'negative_binomial':
+                    return sm.families.links.NegativeBinomial(self.alpha)
+                elif user_link == 'power':
+                    return sm.families.links.Power(self.power)
+                elif user_link == 'cauchy':
+                    return sm.families.links.cauchy()
+                elif user_link == 'identity':
+                    return sm.families.links.identity(),
+                elif user_link == 'inverse_power':
+                    return sm.families.links.inverse_power()
+                elif user_link == 'inverse_squared':
+                    return sm.families.links.inverse_squared()
 
-        return links_dict[self.link]
-
-    def set_link_str(self):
-
-        link_str_dict = {
-            'binomial': self.binomial_link,
-            'gamma': self.gamma_link,
-            'gaussian': self.gaussian_link,
-            'inverse_gaussian': self.inverse_gaussian_link,
-            'poisson': self.poisson_link,
-            'negative_binomial': self.negative_binomial_link,
-            'tweedie': self.tweedie_link
-        }
-        self.link = link_str_dict[self.family]
 
     def get_family(self, link):
         """
@@ -106,7 +110,7 @@ class BinaryClassificationGLM(BaseGLM):
         X = sm.add_constant(X)
 
         #  returns statsmodel link and distribution functions based on user input
-        self.set_link_str()
+
         link = self.get_link_function()
         family = self.get_family(link)
 
@@ -157,7 +161,6 @@ class RegressionGLM(BaseGLM):
         self.classes_ = list(set(y))
 
         X = sm.add_constant(X)
-        self.set_link_str()
         #  returns statsmodel link and distribution functions based on user input
         link = self.get_link_function()
         family = self.get_family(link)
