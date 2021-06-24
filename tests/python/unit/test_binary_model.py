@@ -1,5 +1,5 @@
-from python-lib.generalized_linear_models.dku_glm import BinaryClassificationGLM
-import statsmodel.api as sm
+from generalized_linear_models.dku_glm import BinaryClassificationGLM
+import statsmodels.api as sm
 import unittest
 from testing_utils import testing_dict
 
