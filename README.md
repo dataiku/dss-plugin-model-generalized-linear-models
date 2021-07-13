@@ -6,8 +6,8 @@ and its accuracy therefore is not able to be guaranteed.
 
 # Release Notes
 
-See the changelog for a history of notable changes to this plugin.
+See the [changelog](CHANGELOG.md) for a history of notable changes to this plugin.
 
 # License
 
-This plugin is distributed under the Apache License version 2.0.
+This plugin is distributed under the [Apache License version 2.0](LICENSE).
