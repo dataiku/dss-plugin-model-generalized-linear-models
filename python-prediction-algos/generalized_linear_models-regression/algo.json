@@ -12,7 +12,7 @@
         "acceptsSparseMatrix": false,
         "params": [
             {
-                "name": "family",
+                "name": "family_name",
                 "label": "Distribution",
                 "description": "The distribution for the link function",
                 "type": "SELECT",
@@ -79,7 +79,7 @@
                     }
 
                 ],
-                "visibilityCondition" : "model.family == 'binomial'",
+                "visibilityCondition" : "model.family_name == 'binomial'",
                 "allowDuplicates": false,
                 "gridParam": false
             },
@@ -105,7 +105,7 @@
                     }
 
                 ],
-                "visibilityCondition" : "model.family == 'gamma'",
+                "visibilityCondition" : "model.family_name == 'gamma'",
                 "allowDuplicates": false,
                 "gridParam": false
             },
@@ -130,7 +130,7 @@
                         "label":"Inverse Power"
                     }
                 ],
-                "visibilityCondition" : "model.family == 'gaussian'",
+                "visibilityCondition" : "model.family_name == 'gaussian'",
                 "allowDuplicates": false,
                 "gridParam": false
             },
@@ -159,7 +159,7 @@
                         "label":"Inverse Power"
                     }
                 ],
-                "visibilityCondition" : "model.family == 'inverse_gaussian'",
+                "visibilityCondition" : "model.family_name == 'inverse_gaussian'",
                 "allowDuplicates": false,
                 "gridParam": false
             },
@@ -181,7 +181,7 @@
                     }
 
                 ],
-                "visibilityCondition" : "model.family == 'poisson'",
+                "visibilityCondition" : "model.family_name == 'poisson'",
                 "allowDuplicates": false,
                 "gridParam": false
             },
@@ -211,7 +211,7 @@
                     }
 
                 ],
-                "visibilityCondition" : "model.family == 'negative_binomial'",
+                "visibilityCondition" : "model.family_name == 'negative_binomial'",
                 "allowDuplicates": false,
                 "gridParam": false
             },
@@ -233,7 +233,7 @@
                     }
 
                 ],
-                "visibilityCondition" : "model.family == 'tweedie'",
+                "visibilityCondition" : "model.family_name == 'tweedie'",
                 "allowDuplicates": false,
                 "gridParam": false
             },
@@ -241,7 +241,7 @@
                 "name": "separator_hyperparams",
                 "label": "Hyper parameters",
                 "type": "SEPARATOR",
-                "visibilityCondition" : "model.family == 'tweedie'||model.family == 'negative_binomial'"
+                "visibilityCondition" : "model.family_name == 'tweedie'||model.family_name == 'negative_binomial'"
             },
             {
                 "name": "alpha",
@@ -250,7 +250,7 @@
                 "defaultValue": 1,
                 "allowDuplicates": false,
                 "mandatory":false,
-                "visibilityCondition" : "model.family == 'negative_binomial'",
+                "visibilityCondition" : "model.family_name == 'negative_binomial'",
                 "gridParam": false
             },
             {
@@ -271,7 +271,7 @@
                 "allowDuplicates": false,
                 "mandatory":false,
                 "gridParam": false,
-                "visibilityCondition" : "model.family == 'tweedie'"
+                "visibilityCondition" : "model.family_name == 'tweedie'"
             }
         ]
     }
