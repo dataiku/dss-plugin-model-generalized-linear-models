@@ -12,7 +12,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
     def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
                  poisson_link,negative_binomial_link, tweedie_link, alpha, power,
-                 var_power, offset_column, exposure_column, important_column=None, column_labels=None):
+                 var_power, offset_column, exposure_column,training_dataset, important_column=None, column_labels=None):
 
         self.family_name = family_name
         self.binomial_link = binomial_link
@@ -36,7 +36,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.exposure_column = exposure_column
         self.important_column = important_column
         self.column_labels = column_labels
-
+        self.training_dataset = training_dataset
 
     def get_link_function(self):
         """
@@ -149,7 +149,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         model = sm.GLM(y, X, family=self.family)
 
         self.fitted_model = model.fit()
-        
+
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
         # the estimator, we have declared it as a keyword argument in the

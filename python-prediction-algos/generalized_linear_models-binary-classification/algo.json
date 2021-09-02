@@ -12,6 +12,13 @@
         "acceptsSparseMatrix": false,
         "params": [
             {
+              "type": "DATASET",
+              "name": "training_dataset",
+              "label": "Training dataset",
+              "description": "Select the dataset the model is being trained on",
+              "mandatory":true
+            },
+            {
                 "name": "family_name",
                 "label": "Distribution",
                 "description": "The distribution for the link function",
@@ -242,8 +249,8 @@
                 "label": "Offset Column",
                 "gridParam": false,
                 "description":"Column to offset model predictions",
-                "defaultValue": "None",
-                "type": "STRING",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "training_dataset",
                 "mandatory":false,
                 "gridParam": false
             },
@@ -252,8 +259,8 @@
                 "label": "Exposure Column",
                 "gridParam": false,
                 "description":"Log of the exposure column will be added to the model, relevant when the log link function is used",
-                "defaultValue": "None",
-                "type": "STRING",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "training_dataset",
                 "mandatory":false,
                 "gridParam": false,
                 "visibilityCondition" : "model.binomial_link == 'log'||model.gamma_link == 'log'||model.gaussian_link == 'log'||model.inverse_gaussian_link == 'log'||model.poisson_link == 'log'||model.negative_binomial_link == 'log'||model.tweedie_link == 'log'"
