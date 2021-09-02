@@ -238,6 +238,27 @@
                 "gridParam": false
             },
             {
+                "name": "offset_column",
+                "label": "Offset Column",
+                "gridParam": false,
+                "description":"Column to offset model predictions",
+                "defaultValue": "None",
+                "type": "STRING",
+                "mandatory":false,
+                "gridParam": false
+            },
+            {
+                "name": "exposure_column",
+                "label": "Exposure Column",
+                "gridParam": false,
+                "description":"Log of the exposure column will be added to the model, relevant when the log link function is used",
+                "defaultValue": "None",
+                "type": "STRING",
+                "mandatory":false,
+                "gridParam": false,
+                "visibilityCondition" : "model.binomial_link == 'log'||model.gamma_link == 'log'||model.gaussian_link == 'log'||model.inverse_gaussian_link == 'log'||model.poisson_link == 'log'||model.negative_binomial_link == 'log'||model.tweedie_link == 'log'"
+            },
+            {
                 "name": "separator_hyperparams",
                 "label": "Hyper parameters",
                 "type": "SEPARATOR",

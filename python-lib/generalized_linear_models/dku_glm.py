@@ -10,8 +10,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     Binary and Regression GLM inherit from here
     """
 
-    def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link, poisson_link,
-                 negative_binomial_link, tweedie_link, alpha, power, var_power):
+    def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
+                 poisson_link,negative_binomial_link, tweedie_link, alpha, power,
+                 var_power, offset_column, exposure_column, important_column=None, column_labels=None):
 
         self.family_name = family_name
         self.binomial_link = binomial_link
@@ -31,6 +32,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.coef_ = None
         self.intercept_ = None
         self.classes_ = None
+        self.offset_column = offset_column
+        self.exposure_column = exposure_column
+        self.important_column = important_column
+        self.column_labels = column_labels
+
 
     def get_link_function(self):
         """
@@ -106,6 +112,22 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         link = self.get_link_function()
         self.family = self.get_family(link)
 
+    def get_x_column(self, X, important_column):
+        """
+        returns an array of values specified by column name provided
+        by the user
+        """
+        if important_column == 'None':
+            column_values = None
+
+        elif important_column not in self.column_labels:
+            raise ValueError(f'The column name provided: [{important_column}], is not present in the list of columns from the dataset. Please chose one of:{self.column_labels}')
+        else:
+            column_index = self.column_labels.index(important_column)
+            column_values = X[:, column_index]
+
+        return column_values
+
     def fit_model(self, X, y):
         """
         fits a GLM model
@@ -114,6 +136,14 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         X = sm.add_constant(X)
 
         self.assign_family()
+
+        # sets the offset & exposure columns
+
+        offset = self.get_x_column(X, self.offset_column)
+        exposure = self.get_x_column(X, self.exposure_column)
+
+        #  fits and stores statsmodel glm
+        model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure)
 
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family)
