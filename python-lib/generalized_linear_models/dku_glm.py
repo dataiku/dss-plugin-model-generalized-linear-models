@@ -149,7 +149,12 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         model = sm.GLM(y, X, family=self.family)
 
         self.fitted_model = model.fit()
-
+        
+    def set_column_labels(self, column_labels):
+        # in order to preserve the attribute `column_labels` when cloning
+        # the estimator, we have declared it as a keyword argument in the
+        # `__init__` and set it there
+        self.column_labels = column_labels
 
 class BinaryClassificationGLM(BaseGLM):
 
