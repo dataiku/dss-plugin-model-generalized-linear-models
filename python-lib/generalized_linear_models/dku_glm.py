@@ -120,7 +120,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         returns an array of values specified by column name provided
         by the user
         """
-        if important_column == 'None':
+        if important_column == None:
             column_values = None
 
         elif important_column not in self.column_labels:

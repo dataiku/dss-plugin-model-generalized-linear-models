@@ -20,7 +20,7 @@ new_col_prefix = recipe_config.get('new_col_prefix')
 df = input_dataset.get_dataframe()
 
 
-RegSpines = RegressionSplines(column_name, degree_freedom, knots,new_col_prefix)
+RegSpines = RegressionSplines(column_name, degree_freedom, knots, new_col_prefix)
 output_dataset_df = RegSpines.run_spline_creation(df,keep_original=True)
 
 # Write recipe outputs
