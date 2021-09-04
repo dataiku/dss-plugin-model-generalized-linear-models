@@ -3,10 +3,10 @@ import dataiku
 from dataiku.customrecipe import *
 import pandas as pd, numpy as np
 from dataiku import pandasutils as pdu
-from regression_splines.commons import *
+
 
 from regression_splines.dku_reg_splines import RegressionSplines
-
+from regression_splines.commons import *
 # define inputs
 (input_dataset, output_dataset) = get_input_output()
 recipe_config = get_recipe_config()
