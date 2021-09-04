@@ -1,0 +1,67 @@
+{
+    "meta": {
+        "label": "Regression Splines",
+        "description": "Allows a user to create regression splines",
+        "icon": "icon-puzzle-piece"
+    },
+    "paramsPythonSetup": "project_keys.py",
+    "kind": "PYTHON",
+
+    "selectableFromDataset": "input_dataset",
+    "inputRoles": [
+        {
+            "name": "input_dataset",
+            "label": "Input Dataset",
+            "description": "Input Dataset",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true,
+            "acceptsFolder": false
+        }
+    ],
+
+    "outputRoles": [
+        {
+            "name": "output_dataset",
+            "label": "Output Dataset.",
+            "description": "",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        }
+    ],
+
+
+    "params": [
+        {
+            "name": "column_name",
+            "label": "Column Name",
+            "description": "The input column upon which the regression splines will be built",
+            "type": "COLUMN",
+            "columnRole": "input_dataset",
+            "mandatory": true
+        },
+       {
+            "name": "knots",
+            "label": "Knots",
+            "type": "DOUBLES",
+            "mandatory": true
+        },
+        {
+            "name": "degree_freedom",
+            "label": "Degrees of Freedom",
+            "type": "INT",
+            "mandatory": true
+        },
+
+        {
+            "name": "new_col_prefix",
+            "label": "New Column Prefix",
+            "type": "STRING",
+            "mandatory": false
+        }
+    ],
+
+    "resourceKeys": []
+
+}
