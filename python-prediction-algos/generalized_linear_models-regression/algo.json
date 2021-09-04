@@ -61,7 +61,7 @@
                 "name": "binomial_link",
                 "label": "Link Functions",
                 "description":"Relates the expected value of the response to the linear predictors in the model",
-                "defaultValue": "log",
+                "defaultValue": "logit",
                 "type": "SELECT",
                  "selectChoices": [
                     {
@@ -94,7 +94,7 @@
                 "name": "gamma_link",
                 "label": "Link Function",
                 "description":"Relates the expected value of the response to the linear predictors in the model",
-                "defaultValue": "log",
+                "defaultValue": "inverse_power",
                 "gridParam": false,
                 "type": "SELECT",
                  "selectChoices": [
@@ -120,7 +120,7 @@
                 "name": "gaussian_link",
                 "label": "Link Function",
                 "description":"Relates the expected value of the response to the linear predictors in the model",
-                "defaultValue": "log",
+                "defaultValue": "identity",
                 "gridParam": false,
                 "type": "SELECT",
                  "selectChoices": [
@@ -145,7 +145,7 @@
                 "name": "inverse_gaussian_link",
                 "label": "Link Function",
                 "description":"Relates the expected value of the response to the linear predictors in the model",
-                "defaultValue": "log",
+                "defaultValue": "inverse_squared",
                 "gridParam": false,
                 "type": "SELECT",
                  "selectChoices": [
