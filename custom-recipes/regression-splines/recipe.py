@@ -3,7 +3,7 @@ import dataiku
 from dataiku.customrecipe import *
 import pandas as pd, numpy as np
 from dataiku import pandasutils as pdu
-from commons import *
+from regression_splines.commons import *
 
 from regression_splines.dku_reg_splines import RegressionSplines
 
