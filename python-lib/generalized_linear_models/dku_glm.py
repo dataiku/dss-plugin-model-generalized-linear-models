@@ -12,7 +12,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
     def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
                  poisson_link,negative_binomial_link, tweedie_link, alpha, power,
-                 var_power, offset_column, exposure_column,training_dataset, important_column=None, column_labels=None):
+                 var_power, offset_column, exposure_column,training_dataset,
+                 var_weights_column=None,freq_weights_column=None,important_column=None, column_labels=None):
 
         self.family_name = family_name
         self.binomial_link = binomial_link
@@ -37,6 +38,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.important_column = important_column
         self.column_labels = column_labels
         self.training_dataset = training_dataset
+        self.var_weights_column = var_weights_column
+        self.freq_weights_column = freq_weights_column
 
     def get_link_function(self):
         """
@@ -141,9 +144,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         offset = self.get_x_column(X, self.offset_column)
         exposure = self.get_x_column(X, self.exposure_column)
+        freq_weights = self.get_x_column(X, self.freq_weights_column)
+        var_weights = self.get_x_column(X, self.var_weights_column)
 
         #  fits and stores statsmodel glm
-        model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure)
+        model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, freq_weights=freq_weights ,var_weights=var_weights)
 
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family)
