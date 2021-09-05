@@ -4,6 +4,8 @@ from dataiku.customrecipe import *
 import pandas as pd, numpy as np
 from dataiku import pandasutils as pdu
 
+import sys
+print(sys.modules)
 
 from regression_splines.dku_reg_splines import RegressionSplines
 from commons import *
