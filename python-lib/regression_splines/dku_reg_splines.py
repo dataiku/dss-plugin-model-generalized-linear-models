@@ -19,7 +19,7 @@ class RegressionSplines:
         df.columns = new_cols
         return df
 
-    def concate_(self, original_df, feature_splines, keep_original=True):
+    def concateate(self, original_df, feature_splines, keep_original=True):
         if not keep_original:
             original_df = original_df.drop(self.column_name)
 
@@ -35,6 +35,6 @@ class RegressionSplines:
         feature_splines = self.generate_splines(df)
         feature_splines = self.rename_columns(feature_splines)
 
-        new_df = self.concate_(df, feature_splines, keep_original)
+        new_df = self.concateate(df, feature_splines, keep_original)
 
         return new_df
