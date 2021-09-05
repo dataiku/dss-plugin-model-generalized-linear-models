@@ -148,10 +148,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         var_weights = self.get_x_column(X, self.var_weights_column)
 
         #  fits and stores statsmodel glm
-        model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, freq_weights=freq_weights ,var_weights=var_weights)
-
-        #  fits and stores statsmodel glm
-        model = sm.GLM(y, X, family=self.family)
+        model = sm.GLM(y, X, family=self.family, offset=np.log(offset), exposure=exposure, freq_weights=freq_weights ,var_weights=var_weights)
 
         self.fitted_model = model.fit()
 
