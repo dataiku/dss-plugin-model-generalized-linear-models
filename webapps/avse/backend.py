@@ -1,9 +1,4 @@
 from dataiku.customwebapp import *
-
-# Access the parameters that end-users filled in using webapp config
-# For example, for a parameter called "input_dataset"
-# input_dataset = get_webapp_config()["input_dataset"]
-
 import dash
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -21,7 +16,7 @@ from datetime import datetime, timedelta
 import sys
 import generalized_linear_models
 sys.modules['generalized_linear_models']=generalized_linear_models
-from get_ave_data import get_ave_data
+from a_vs_e.ave_utils import get_ave_data
 
 ave_data, target, weight = get_ave_data()
 
