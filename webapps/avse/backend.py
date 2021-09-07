@@ -37,7 +37,8 @@ feature_names = [c for c in ave_data.columns if c not in excluded_columns]
 for c in feature_names:
     if is_numeric_dtype(ave_data[c].dtype):
         if len(ave_data[c].unique())>20:
-            ave_data[c] = [str(x.left) + ', ' + str(x.right) for x in pd.cut(ave_data[c], bins=20)]
+            #ave_data[c] = [str(x.left) + ', ' + str(x.right) for x in pd.cut(ave_data[c], bins=20)]
+            ave_data[c] = [x.left for x in pd.cut(ave_data[c], bins=20)]
 
 ave_grouped = {c: ave_data.groupby([c]).agg({weighted_target: 'sum', weighted_prediction: 'sum', weight: 'sum'}).reset_index() 
                for c in feature_names}
