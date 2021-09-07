@@ -143,12 +143,14 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         # sets the offset & exposure columns
 
         offset = self.get_x_column(X, self.offset_column)
+        if offset is not None:
+            offset = np.log(offset)
         exposure = self.get_x_column(X, self.exposure_column)
         freq_weights = self.get_x_column(X, self.freq_weights_column)
         var_weights = self.get_x_column(X, self.var_weights_column)
 
         #  fits and stores statsmodel glm
-        model = sm.GLM(y, X, family=self.family, offset=np.log(offset), exposure=exposure, freq_weights=freq_weights ,var_weights=var_weights)
+        model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, freq_weights=freq_weights ,var_weights=var_weights)
 
         self.fitted_model = model.fit()
 
