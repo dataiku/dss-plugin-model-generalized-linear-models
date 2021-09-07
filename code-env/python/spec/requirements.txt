@@ -6,3 +6,4 @@ dash_table
 scipy
 scikit-learn==0.21
 statsmodels
+xgboost
