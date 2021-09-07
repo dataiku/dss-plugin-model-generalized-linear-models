@@ -10,16 +10,19 @@ def get_model_handler(model, version_id=None):
 
 def get_original_model_handler():
     fmi = get_webapp_config().get("trainedModelFullModelId")
-        if fmi is None:
-            model = Model(get_webapp_config()["modelId"])
-            version_id = get_webapp_config().get("versionId")
-            original_model_handler = get_model_handler(model, version_id)
-            name = model.get_name()
-        else:
-            original_model_handler = PredictionModelInformationHandler.from_full_model_id(fmi)
+    print(fmi)
+    if fmi is None:
+        model = dataiku.Model(get_webapp_config()["modelId"])
+        version_id = get_webapp_config().get("versionId")
+        original_model_handler = get_model_handler(model, version_id)
+        name = model.get_name()
+    else:
+        original_model_handler = PredictionModelInformationHandler.from_full_model_id(fmi)
+    return original_model_handler
 
 def get_ave_data():
     model_handler = get_original_model_handler()
+    print(model_handler)
     predictor = model_handler.get_predictor()
     test_df = model_handler.get_test_df()[0]
     predicted = predictor.predict(test_df)
