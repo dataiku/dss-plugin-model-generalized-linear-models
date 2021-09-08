@@ -13,7 +13,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
                  poisson_link,negative_binomial_link, tweedie_link, alpha, power,
                  var_power, training_dataset, offset_column=None, exposure_column=None,
-                 var_weights_column=None,freq_weights_column=None,important_column=None, column_labels=None):
+                 important_column=None, column_labels=None):
 
         self.family_name = family_name
         self.binomial_link = binomial_link
@@ -38,8 +38,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.important_column = important_column
         self.column_labels = column_labels
         self.training_dataset = training_dataset
-        self.var_weights_column = var_weights_column
-        self.freq_weights_column = freq_weights_column
 
     def get_link_function(self):
         """
@@ -131,7 +129,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         return column_values
 
-    def fit_model(self, X, y):
+    def fit_model(self, X, y, sample_weight=None):
         """
         fits a GLM model
         """
@@ -146,11 +144,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         if offset is not None:
             offset = np.log(offset)
         exposure = self.get_x_column(X, self.exposure_column)
-        freq_weights = self.get_x_column(X, self.freq_weights_column)
-        var_weights = self.get_x_column(X, self.var_weights_column)
 
         #  fits and stores statsmodel glm
-        model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, freq_weights=freq_weights ,var_weights=var_weights)
+        model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
 
         self.fitted_model = model.fit()
 
@@ -162,11 +158,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
 class BinaryClassificationGLM(BaseGLM):
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """
         takes in training data and fits a model
         """
-        self.fit_model(X, y)
+        self.fit_model(X, y, sample_weight)
 
         #  adds attributes for explainability
         self.coef_ = np.array(self.fitted_model.params[1:]).reshape(1,
@@ -203,12 +199,12 @@ class BinaryClassificationGLM(BaseGLM):
 
 class RegressionGLM(BaseGLM):
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """
         takes in training data and fits a model
         """
 
-        self.fit_model(X, y)
+        self.fit_model(X, y, sample_weight)
 
         #  adds attributes for explainability
         # intercept cant be multidimensional np array like in classification

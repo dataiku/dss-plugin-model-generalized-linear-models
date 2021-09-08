@@ -8,7 +8,7 @@
 
         "predictionTypes": ["REGRESSION"],
         "gridSearchMode": "MANAGED",
-        "supportsSampleWeights": false,
+        "supportsSampleWeights": true,
         "acceptsSparseMatrix": false,
         "params": [
             {
@@ -264,26 +264,6 @@
                 "mandatory":false,
                 "gridParam": false,
                 "visibilityCondition" : "model.binomial_link == 'log'||model.gamma_link == 'log'||model.gaussian_link == 'log'||model.inverse_gaussian_link == 'log'||model.poisson_link == 'log'||model.negative_binomial_link == 'log'||model.tweedie_link == 'log'"
-            },
-            {
-                "name": "freq_weights_column",
-                "label": "Frequency Weights",
-                "gridParam": false,
-                "description":"Frequency weights be added to the model",
-                "type": "DATASET_COLUMN",
-                "datasetParamName": "training_dataset",
-                "mandatory":false,
-                "gridParam": false
-            },
-            {
-                "name": "var_weights_column",
-                "label": "Variance Weights",
-                "gridParam": false,
-                "description":"Variance Weights to be added to the model",
-                "type": "DATASET_COLUMN",
-                "datasetParamName": "training_dataset",
-                "mandatory":false,
-                "gridParam": false
             },
             {
                 "name": "separator_hyperparams",
