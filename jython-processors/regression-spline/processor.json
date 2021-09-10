@@ -1,0 +1,70 @@
+/* This file is the descriptor for the Custom jython step regression-spline */
+{
+    "meta" : {
+        // label: name of the data prep step as displayed, should be short
+        "label": "Regression Spline",
+
+        // description: longer string to help end users understand what this data prep step does
+        "description": "Split the variable into B-spline basis",
+
+        // icon: must be one of the FontAwesome 3.2.1 icons, complete list here at https://fontawesome.com/v3.2.1/icons/
+        "icon": "icon-puzzle-piece"
+    },
+
+    /*
+     * the processor mode, dictating what output is expected:
+     * - CELL : the code outputs a value
+     * - ROW : the code outputs a row
+     * - ROWS : the code outputs an array of rows
+     */
+    "mode": "ROW",
+
+    /* params:
+    DSS will generate a formular from this list of requested parameters.
+    Your component code can then access the value provided by users using the "name" field of each parameter.
+
+    Available parameter types include:
+    STRING, INT, DOUBLE, BOOLEAN, DATE, SELECT, TEXTAREA, MAP, PRESET and others.
+
+    For the full list and for more details, see the documentation: https://doc.dataiku.com/dss/latest/plugins/reference/params.html
+    */
+    "params": [
+        {
+            "name": "column",
+            "label": "Column",
+            "type": "COLUMN",
+            "description": "The column on which the spline is fitted",
+            "mandatory": true
+        },
+        {
+            "name": "degree",
+            "label": "Degree",
+            "type": "INT",
+            "description": "The degree of the spline",
+            "defaultValue": 1,
+            "mandatory": true
+        },
+        {
+            "name": "min_value",
+            "label": "Minimum Value",
+            "type": "DOUBLE",
+            "description": "The minimum possible value of the column",
+            "mandatory": true
+        },
+        {
+            "name": "max_value",
+            "label": "Maximum Value",
+            "type": "DOUBLE",
+            "description": "The minimum possible value of the column",
+            "mandatory": true
+        },
+        {
+            "name": "knots",
+            "label": "Knots",
+            "type": "DOUBLES",
+            "description": "The knots of the spline",
+            "mandatory": true
+        }
+    ],
+    "useKernel" : true
+}
