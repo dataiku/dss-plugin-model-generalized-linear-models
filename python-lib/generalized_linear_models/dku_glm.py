@@ -11,7 +11,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     """
 
     def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
-                 poisson_link,negative_binomial_link, tweedie_link, alpha, power,
+                 poisson_link,negative_binomial_link, tweedie_link, alpha, power, penalty,
                  var_power, training_dataset, offset_column=None, exposure_column=None,
                  important_column=None, column_labels=None):
 
@@ -26,6 +26,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.family = None
         self.alpha = alpha
         self.power = power
+        self.penalty = penalty
         self.var_power = var_power
         self.fit_intercept = True
         self.intercept_scaling = 1
@@ -147,9 +148,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
-
-        self.fitted_model = model.fit()
-
+        
+        self.fitted_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
+        
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
         # the estimator, we have declared it as a keyword argument in the

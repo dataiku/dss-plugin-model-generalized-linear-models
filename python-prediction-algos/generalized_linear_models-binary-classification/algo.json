@@ -12,6 +12,15 @@
         "acceptsSparseMatrix": false,
         "params": [
             {
+              "name": "penalty",
+              "label": "Elastic Net Regularization",
+              "description": "The penalty weight of the Elastic Net regularization",
+              "mandatory":true,
+              "type": "DOUBLES",
+              "defaultValue": [0.0],
+              "gridParam": true
+            },
+            {
               "type": "DATASET",
               "name": "training_dataset",
               "label": "Training dataset",
