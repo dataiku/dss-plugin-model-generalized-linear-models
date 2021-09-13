@@ -35,8 +35,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.intercept_ = None
         self.classes_ = None
         self.offset_column = offset_column
+        self.offset_index = None
         self.exposure_column = exposure_column
-        self.important_column = important_column
+        self.exposure_index = None
         self.column_labels = column_labels
         self.training_dataset = training_dataset
 
@@ -58,7 +59,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         user_link = family_2_link_dict[self.family_name]
 
         if user_link == 'cloglog':
-            return sm.families.links.cloglog(),
+            return sm.families.links.cloglog()
         elif user_link == 'log':
             return sm.families.links.log()
         elif user_link == 'logit':
@@ -121,6 +122,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         """
         if important_column == None:
             column_values = None
+            column_index = None
 
         elif important_column not in self.column_labels:
             raise ValueError(f'The column name provided: [{important_column}], is not present in the list of columns from the dataset. Please chose one of:{self.column_labels}')
@@ -128,24 +130,28 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             column_index = self.column_labels.index(important_column)
             column_values = X[:, column_index]
 
-        return column_values
+        return column_values, column_index
 
     def fit_model(self, X, y, sample_weight=None):
         """
         fits a GLM model
         """
         self.classes_ = list(set(y))
-        X = sm.add_constant(X)
 
         self.assign_family()
 
         # sets the offset & exposure columns
 
-        offset = self.get_x_column(X, self.offset_column)
+        offset, self.offset_index = self.get_x_column(X, self.offset_column)
         if offset is not None:
-            offset = np.log(offset)
-        exposure = self.get_x_column(X, self.exposure_column)
-
+            X = np.delete(X, self.offset_index, axis=1)
+            del self.column_labels[self.offset_index]
+        exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
+        if exposure is not None:
+            X = np.delete(X, self.exposure_index, axis=1)
+            del self.column_labels[self.exposure_index]
+        
+        X = sm.add_constant(X)
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
         
@@ -156,6 +162,13 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         # the estimator, we have declared it as a keyword argument in the
         # `__init__` and set it there
         self.column_labels = column_labels
+    
+    def process_fixed_columns(self, X):
+        if self.offset_index is not None:
+            X = np.delete(X, self.offset_index, axis=1)
+        if self.exposure_index is not None:
+            X = np.delete(X, self.exposure_index, axis=1)
+        return X
 
 class BinaryClassificationGLM(BaseGLM):
 
@@ -174,7 +187,8 @@ class BinaryClassificationGLM(BaseGLM):
         """
         Returns the binary target
         """
-
+        X = self.process_fixed_columns(X)
+        
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
@@ -187,6 +201,7 @@ class BinaryClassificationGLM(BaseGLM):
         """
         Return the prediction proba
         """
+        X = self.process_fixed_columns(X)
         #  adds a constant
         X = sm.add_constant(X, has_constant='add')
 
@@ -217,7 +232,7 @@ class RegressionGLM(BaseGLM):
         """
         Returns the target as 1D array
         """
-
+        X = self.process_fixed_columns(X)
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
