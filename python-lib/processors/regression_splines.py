@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from patsy import dmatrix
+from patsy import dmatrix, build_design_matrices
 
 
 class RegressionSplines:
@@ -11,12 +11,14 @@ class RegressionSplines:
         self.degree_freedom = degree_freedom
         self.knots = knots
         self.new_col_prefix = new_col_prefix
-        self.formula_string = f"bs(train, knots={self.knots}, degree={self.degree_freedom}, include_intercept=False)"
+        self.formula_string = f"bs(x, knots={self.knots}, degree={self.degree_freedom}, include_intercept=False)"
         self.original_col = None
         self.keep_original = keep_original
+        self.train_data = None
 
     def fit(self, series):
         self.original_col = series.name
+        self.train_data = [min(series), max(series)]
 
     def rename_columns(self, df):
         num_cols = len(df.columns)
@@ -24,8 +26,9 @@ class RegressionSplines:
         df.columns = new_cols
         return df
 
-    def generate_splines(self, train_x):
-        transformed_x = dmatrix(self.formula_string, {"train": train_x}, return_type='dataframe')
+    def generate_splines(self, series):
+        design_info = dmatrix(self.formula_string, {"x": self.train_data}).design_info
+        transformed_x = build_design_matrices([design_info], {'x': series}, return_type='dataframe')[0]
         transformed_x.drop('Intercept', axis=1, inplace=True)
         return transformed_x
 
