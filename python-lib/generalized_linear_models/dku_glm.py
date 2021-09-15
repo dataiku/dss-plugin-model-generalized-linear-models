@@ -14,7 +14,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                  poisson_link,negative_binomial_link, tweedie_link, alpha, power, penalty,
                  var_power, training_dataset, offset_column=None, exposure_column=None,
                  important_column=None, column_labels=None):
-
         self.family_name = family_name
         self.binomial_link = binomial_link
         self.gamma_link = gamma_link
@@ -40,6 +39,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.exposure_index = None
         self.column_labels = column_labels
         self.training_dataset = training_dataset
+        self.removed_indices = None
 
     def get_link_function(self):
         """
@@ -132,6 +132,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         return column_values, column_index
 
+        return column_values
+
     def fit_model(self, X, y, sample_weight=None):
         """
         fits a GLM model
@@ -139,19 +141,23 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.classes_ = list(set(y))
 
         self.assign_family()
-
-        # sets the offset & exposure columns
-
+        
         offset, self.offset_index = self.get_x_column(X, self.offset_column)
-        if offset is not None:
-            X = np.delete(X, self.offset_index, axis=1)
-            del self.column_labels[self.offset_index]
         exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
-        if exposure is not None:
-            X = np.delete(X, self.exposure_index, axis=1)
-            del self.column_labels[self.exposure_index]
+        self.removed_indices = []
+        if self.offset_index is not None:
+            self.removed_indices.append(self.offset_index)
+        if self.exposure_index is not None:
+            if self.exposure_index != self.offset_index:
+                self.removed_indices.append(self.exposure_index)
+        
+        if len(self.removed_indices)>0:
+            X = np.delete(X, self.removed_indices, axis=1)
+            for index in sorted(self.removed_indices, reverse=True):
+                del self.column_labels[index]
         
         X = sm.add_constant(X)
+        
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
         
@@ -164,10 +170,14 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.column_labels = column_labels
     
     def process_fixed_columns(self, X):
+        removed_indices = []
         if self.offset_index is not None:
-            X = np.delete(X, self.offset_index, axis=1)
+            removed_indices.append(self.offset_index)
         if self.exposure_index is not None:
-            X = np.delete(X, self.exposure_index, axis=1)
+            if self.exposure_index != self.offset_index:
+                removed_indices.append(self.exposure_index)
+        if len(removed_indices)>0:
+            X = np.delete(X, removed_indices, axis=1)
         return X
 
 class BinaryClassificationGLM(BaseGLM):
@@ -177,7 +187,7 @@ class BinaryClassificationGLM(BaseGLM):
         takes in training data and fits a model
         """
         self.fit_model(X, y, sample_weight)
-
+        
         #  adds attributes for explainability
         self.coef_ = np.array(self.fitted_model.params[1:]).reshape(1,
                                                                     -1)  # removes first value which is the intercept
@@ -219,13 +229,14 @@ class RegressionGLM(BaseGLM):
         """
         takes in training data and fits a model
         """
-
         self.fit_model(X, y, sample_weight)
-
-        #  adds attributes for explainability
-        # intercept cant be multidimensional np array like in classification
-        # as scoring_base.py func compute_lm_significant hstack method will fail
+        X = self.process_fixed_columns(X)
+        
         self.coef_ = np.array(self.fitted_model.params[1:])  # removes first value which is the intercept
+        # insert 0 coefs for exposure and offset
+        if len(self.removed_indices) > 0:
+            self.coef_ = np.insert(self.coef_, self.removed_indices, 0)
+
         self.intercept_ = float(self.fitted_model.params[0])
 
     def predict(self, X):
@@ -234,7 +245,7 @@ class RegressionGLM(BaseGLM):
         """
         X = self.process_fixed_columns(X)
         X = sm.add_constant(X, has_constant='add')
-
+        
         # makes predictions and converts to DSS accepted format
         y_pred = np.array(self.fitted_model.predict(X))
 
