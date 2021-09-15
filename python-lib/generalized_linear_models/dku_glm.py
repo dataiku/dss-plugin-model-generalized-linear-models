@@ -153,8 +153,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         
         if len(self.removed_indices)>0:
             X = np.delete(X, self.removed_indices, axis=1)
-            for index in sorted(self.removed_indices, reverse=True):
-                del self.column_labels[index]
+            #for index in sorted(self.removed_indices, reverse=True):
+            #    del self.column_labels[index]
         
         X = sm.add_constant(X)
         
@@ -243,11 +243,14 @@ class RegressionGLM(BaseGLM):
         """
         Returns the target as 1D array
         """
+        
+        offset, self.offset_index = self.get_x_column(X, self.offset_column)
+        exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
         X = self.process_fixed_columns(X)
         X = sm.add_constant(X, has_constant='add')
         
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offset, exposure=exposure))
 
         return y_pred
 
