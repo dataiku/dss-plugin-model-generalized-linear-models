@@ -35,10 +35,13 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.intercept_ = None
         self.classes_ = None
         self.offset_column = offset_column
+        self.offset_index = None
         self.exposure_column = exposure_column
-        self.important_column = important_column
+        self.exposure_index = None
         self.column_labels = column_labels
         self.training_dataset = training_dataset
+        self.removed_indices = None
+
 
     def get_link_function(self):
         """
@@ -58,7 +61,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         user_link = family_2_link_dict[self.family_name]
 
         if user_link == 'cloglog':
-            return sm.families.links.cloglog(),
+            return sm.families.links.cloglog()
         elif user_link == 'log':
             return sm.families.links.log()
         elif user_link == 'logit':
@@ -121,12 +124,15 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         """
         if important_column == None:
             column_values = None
+            column_index = None
 
         elif important_column not in self.column_labels:
             raise ValueError(f'The column name provided: [{important_column}], is not present in the list of columns from the dataset. Please chose one of:{self.column_labels}')
         else:
             column_index = self.column_labels.index(important_column)
             column_values = X[:, column_index]
+
+        return column_values, column_index
 
         return column_values
 
@@ -135,16 +141,24 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         fits a GLM model
         """
         self.classes_ = list(set(y))
-        X = sm.add_constant(X)
 
         self.assign_family()
-
         # sets the offset & exposure columns
-
-        offset = self.get_x_column(X, self.offset_column)
-        if offset is not None:
-            offset = np.log(offset)
-        exposure = self.get_x_column(X, self.exposure_column)
+        offset, self.offset_index = self.get_x_column(X, self.offset_column)
+        exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
+        self.removed_indices = []
+        if self.offset_index is not None:
+            self.removed_indices.append(self.offset_index)
+        if self.exposure_index is not None:
+            if self.exposure_index != self.offset_index:
+                self.removed_indices.append(self.exposure_index)
+        
+        if len(self.removed_indices)>0:
+            X = np.delete(X, self.removed_indices, axis=1)
+            #for index in sorted(self.removed_indices, reverse=True):
+            #    del self.column_labels[index]
+        
+        X = sm.add_constant(X)
 
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
@@ -156,6 +170,17 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         # the estimator, we have declared it as a keyword argument in the
         # `__init__` and set it there
         self.column_labels = column_labels
+    
+    def process_fixed_columns(self, X):
+        removed_indices = []
+        if self.offset_index is not None:
+            removed_indices.append(self.offset_index)
+        if self.exposure_index is not None:
+            if self.exposure_index != self.offset_index:
+                removed_indices.append(self.exposure_index)
+        if len(removed_indices)>0:
+            X = np.delete(X, removed_indices, axis=1)
+        return X
 
 class BinaryClassificationGLM(BaseGLM):
 
@@ -164,7 +189,6 @@ class BinaryClassificationGLM(BaseGLM):
         takes in training data and fits a model
         """
         self.fit_model(X, y, sample_weight)
-
         #  adds attributes for explainability
         self.coef_ = np.array(self.fitted_model.params[1:]).reshape(1,
                                                                     -1)  # removes first value which is the intercept
@@ -174,7 +198,8 @@ class BinaryClassificationGLM(BaseGLM):
         """
         Returns the binary target
         """
-
+        X = self.process_fixed_columns(X)
+        
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
@@ -187,6 +212,7 @@ class BinaryClassificationGLM(BaseGLM):
         """
         Return the prediction proba
         """
+        X = self.process_fixed_columns(X)
         #  adds a constant
         X = sm.add_constant(X, has_constant='add')
 
@@ -204,24 +230,32 @@ class RegressionGLM(BaseGLM):
         """
         takes in training data and fits a model
         """
-
         self.fit_model(X, y, sample_weight)
+        X = self.process_fixed_columns(X)
+
 
         #  adds attributes for explainability
         # intercept cant be multidimensional np array like in classification
         # as scoring_base.py func compute_lm_significant hstack method will fail
         self.coef_ = np.array(self.fitted_model.params[1:])  # removes first value which is the intercept
+        # insert 0 coefs for exposure and offset
+        if len(self.removed_indices) > 0:
+            self.coef_ = np.insert(self.coef_, self.removed_indices, 0)
+
         self.intercept_ = float(self.fitted_model.params[0])
 
     def predict(self, X):
         """
         Returns the target as 1D array
         """
-
+        
+        offset, self.offset_index = self.get_x_column(X, self.offset_column)
+        exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
+        X = self.process_fixed_columns(X)
         X = sm.add_constant(X, has_constant='add')
-
+        
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offset, exposure=exposure))
 
         return y_pred
 
