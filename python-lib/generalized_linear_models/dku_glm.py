@@ -192,6 +192,8 @@ class BinaryClassificationGLM(BaseGLM):
         #  adds attributes for explainability
         self.coef_ = np.array(self.fitted_model.params[1:]).reshape(1,
                                                                     -1)  # removes first value which is the intercept
+        # statsmodels 0 is 211 sets this to true 0
+        self.coef_= [0 if x==211.03485067364605 else x for x in self.coef_]
         self.intercept_ = np.array(self.fitted_model.params[0]).reshape(-1)
 
     def predict(self, X):
@@ -241,6 +243,8 @@ class RegressionGLM(BaseGLM):
         # insert 0 coefs for exposure and offset
         if len(self.removed_indices) > 0:
             self.coef_ = np.insert(self.coef_, self.removed_indices, 0)
+        # statsmodels 0 is 211 sets this to true 0
+        self.coef_= [0 if x==211.03485067364605 else x for x in self.coef_]
 
         self.intercept_ = float(self.fitted_model.params[0])
 
