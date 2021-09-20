@@ -14,6 +14,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                  poisson_link,negative_binomial_link, tweedie_link, alpha, power, penalty,
                  var_power, training_dataset, offset_column=None, exposure_column=None,
                  important_column=None, column_labels=None):
+
         self.family_name = family_name
         self.binomial_link = binomial_link
         self.gamma_link = gamma_link
@@ -40,6 +41,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.column_labels = column_labels
         self.training_dataset = training_dataset
         self.removed_indices = None
+
 
     def get_link_function(self):
         """
@@ -141,7 +143,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.classes_ = list(set(y))
 
         self.assign_family()
-        
+        # sets the offset & exposure columns
         offset, self.offset_index = self.get_x_column(X, self.offset_column)
         exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
         self.removed_indices = []
@@ -157,7 +159,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             #    del self.column_labels[index]
         
         X = sm.add_constant(X)
-        
+
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
         
@@ -187,7 +189,6 @@ class BinaryClassificationGLM(BaseGLM):
         takes in training data and fits a model
         """
         self.fit_model(X, y, sample_weight)
-        
         #  adds attributes for explainability
         self.coef_ = np.array(self.fitted_model.params[1:]).reshape(1,
                                                                     -1)  # removes first value which is the intercept
@@ -231,7 +232,11 @@ class RegressionGLM(BaseGLM):
         """
         self.fit_model(X, y, sample_weight)
         X = self.process_fixed_columns(X)
-        
+
+
+        #  adds attributes for explainability
+        # intercept cant be multidimensional np array like in classification
+        # as scoring_base.py func compute_lm_significant hstack method will fail
         self.coef_ = np.array(self.fitted_model.params[1:])  # removes first value which is the intercept
         # insert 0 coefs for exposure and offset
         if len(self.removed_indices) > 0:
