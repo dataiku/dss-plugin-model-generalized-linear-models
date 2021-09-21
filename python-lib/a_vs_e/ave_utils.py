@@ -54,7 +54,7 @@ def compute_base_predictions(model_handler, predictor):
         copy_test_df = test_df.copy()
         for other_feature in [col for col in test_df.columns if col!=feature]:
             copy_test_df[other_feature] = base_params[other_feature]
-            base_data[feature] = predictor.predict(copy_test_df)
+        base_data[feature] = predictor.predict(copy_test_df)
     
     # compile predictions
     base_predictions = pd.concat([base_data[c] for c in base_data], axis=1)
