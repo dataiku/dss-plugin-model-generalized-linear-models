@@ -134,8 +134,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         return column_values, column_index
 
-        return column_values
-
     def fit_model(self, X, y, sample_weight=None):
         """
         fits a GLM model
@@ -155,11 +153,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         
         if len(self.removed_indices)>0:
             X = np.delete(X, self.removed_indices, axis=1)
-            #for index in sorted(self.removed_indices, reverse=True):
-            #    del self.column_labels[index]
         
         X = sm.add_constant(X)
-
+        
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
         
@@ -168,6 +164,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             self.fitted_model = model.fit()
         else:
             self.fitted_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
+        
         
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
@@ -194,22 +191,27 @@ class BinaryClassificationGLM(BaseGLM):
         """
         self.fit_model(X, y, sample_weight)
         #  adds attributes for explainability
-        self.coef_ = np.array(self.fitted_model.params[1:]).reshape(1,
-                                                                    -1)  # removes first value which is the intercept
+        self.coef_ = np.array(self.fitted_model.params[1:])
+        # insert 0 coefs for exposure and offset
+        if len(self.removed_indices) > 0:
+            self.coef_ = np.insert(self.coef_, self.removed_indices, 0)
         # statsmodels 0 is 211 sets this to true 0
         self.coef_= [0 if x==211.03485067364605 else x for x in self.coef_]
-        self.intercept_ = np.array(self.fitted_model.params[0]).reshape(-1)
+        self.intercept_ = float(self.fitted_model.params[0])
 
     def predict(self, X):
         """
         Returns the binary target
         """
+        offset, self.offset_index = self.get_x_column(X, self.offset_column)
+        exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
+        
         X = self.process_fixed_columns(X)
         
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offset, exposure=exposure))
         y_pred_final = y_pred.reshape((len(y_pred), -1))
 
         return y_pred_final > 0.5
@@ -218,12 +220,15 @@ class BinaryClassificationGLM(BaseGLM):
         """
         Return the prediction proba
         """
+        offset, self.offset_index = self.get_x_column(X, self.offset_column)
+        exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
+        
         X = self.process_fixed_columns(X)
         #  adds a constant
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offset, exposure=exposure))
         y_pred_final = y_pred.reshape((len(y_pred), -1))
 
         # returns p, 1-p prediction probabilities
