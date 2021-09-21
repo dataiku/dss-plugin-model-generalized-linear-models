@@ -163,7 +163,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
         
-        self.fitted_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
+        if self.penalty==0.0:
+            # fit is 10-100x faster than fit_regularized
+            self.fitted_model = model.fit()
+        else:
+            self.fitted_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
         
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
