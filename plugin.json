@@ -9,6 +9,6 @@
         "tags": ["Machine Learning"],
         "url": "https://www.dataiku.com/product/plugins/generalized-linear-models/",
         "licenseInfo": "Apache Software License",
-        "supportLevel": "Experimental"
+        "supportLevel": "NOT_SUPPORTED"
     }
 }
