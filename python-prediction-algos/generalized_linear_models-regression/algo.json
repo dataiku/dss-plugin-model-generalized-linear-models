@@ -1,7 +1,7 @@
 {
         "meta" : {
             "label": "Generalized Linear Model Regression",
-            "description": "Flexible generalization of ordinary linear models to  allow for distributions other than a normal distribution",
+            "description": "Flexible generalization of ordinary linear models to allow for distributions other than a normal distribution",
             "icon": "icon-briefcase"
         },
 
@@ -68,7 +68,7 @@
             {
                 "name": "binomial_link",
                 "label": "Link Functions",
-                "description":"Relates the expected value of the response to the linear predictors in the model",
+                "description":"Relates the expected value of the response to the linear predictors in the model when choosing a binomial distribution",
                 "defaultValue": "logit",
                 "type": "SELECT",
                  "selectChoices": [
@@ -101,7 +101,7 @@
             {
                 "name": "gamma_link",
                 "label": "Link Function",
-                "description":"Relates the expected value of the response to the linear predictors in the model",
+                "description":"Relates the expected value of the response to the linear predictors in the model when choosing a gamma distribution",
                 "defaultValue": "inverse_power",
                 "gridParam": false,
                 "type": "SELECT",
@@ -127,7 +127,7 @@
             {
                 "name": "gaussian_link",
                 "label": "Link Function",
-                "description":"Relates the expected value of the response to the linear predictors in the model",
+                "description":"Relates the expected value of the response to the linear predictors in the model when choosing a gaussian distribution",
                 "defaultValue": "identity",
                 "gridParam": false,
                 "type": "SELECT",
@@ -152,7 +152,7 @@
             {
                 "name": "inverse_gaussian_link",
                 "label": "Link Function",
-                "description":"Relates the expected value of the response to the linear predictors in the model",
+                "description":"Relates the expected value of the response to the linear predictors in the model when choosing an inverse gaussian distribution",
                 "defaultValue": "inverse_squared",
                 "gridParam": false,
                 "type": "SELECT",
@@ -181,7 +181,7 @@
             {
                 "name": "poisson_link",
                 "label": "Link Function",
-                "description":"Relates the expected value of the response to the linear predictors in the model",
+                "description":"Relates the expected value of the response to the linear predictors in the model when choosing a poisson distribution",
                 "defaultValue": "log",
                 "gridParam": false,
                 "type": "SELECT",
@@ -203,7 +203,7 @@
             {
                 "name": "negative_binomial_link",
                 "label": "Link Function",
-                "description":"Relates the expected value of the response to the linear predictors in the model",
+                "description":"Relates the expected value of the response to the linear predictors in the model when choosing a negative binomial distribution",
                 "defaultValue": "log",
                 "gridParam": false,
                 "type": "SELECT",
@@ -234,7 +234,7 @@
                 "name": "tweedie_link",
                 "label": "Link Function",
                 "gridParam": false,
-                "description":"Relates the expected value of the response to the linear predictors in the model",
+                "description":"Relates the expected value of the response to the linear predictors in the model when choosing a tweedie distribution",
                 "defaultValue": "log",
                 "type": "SELECT",
                  "selectChoices": [
