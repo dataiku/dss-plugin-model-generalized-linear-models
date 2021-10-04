@@ -1,7 +1,7 @@
 {
   "meta": {
     "label": "Actual versus Expected",
-    "description" : "Visualize model performance with the Actual versus Expected graph",
+    "description": "Visualize model performance with the Actual versus Expected graph",
     "icon": "icon-sitemap"
   },
 
@@ -9,8 +9,7 @@
   "standardWebAppLibraries": ["dash", "dataiku", "plotly"],
   "hasBackend": "true",
 
-  "roles": [
-    {
+  "roles": [{
       "type": "SAVED_MODEL",
       "contentType": "prediction",
       "targetParamsKey": "modelId",
@@ -22,6 +21,5 @@
       "targetParamsKey": "trainedModelFullModelId"
     }
   ],
-  "params": [
-  ]
+  "params": []
 }
