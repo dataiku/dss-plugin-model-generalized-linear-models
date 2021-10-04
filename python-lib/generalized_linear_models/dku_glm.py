@@ -41,6 +41,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.column_labels = column_labels
         self.training_dataset = training_dataset
         self.removed_indices = None
+        self.assign_family()
 
 
     def get_link_function(self):
@@ -140,7 +141,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         """
         self.classes_ = list(set(y))
 
-        self.assign_family()
         # sets the offset & exposure columns
         offset, self.offset_index = self.get_x_column(X, self.offset_column)
         exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
