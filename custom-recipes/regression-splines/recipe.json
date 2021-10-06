@@ -1,8 +1,8 @@
 {
     "meta": {
         "label": "Regression Splines",
-        "description": "Allows a user to create regression splines",
-        "icon": "icon-puzzle-piece"
+        "description": "Split the variable into B-spline basis, which parametrize a piecewise polynomial spline where pieces meet at each knot",
+        "icon": "icon-tasks"
     },
     "paramsPythonSetup": "project_keys.py",
     "kind": "PYTHON",
@@ -23,8 +23,8 @@
     "outputRoles": [
         {
             "name": "output_dataset",
-            "label": "Output Dataset.",
-            "description": "",
+            "label": "Output Dataset",
+            "description": "The dataset will have additionnal columns",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
@@ -36,7 +36,7 @@
         {
             "name": "column_name",
             "label": "Column Name",
-            "description": "The input column upon which the regression splines will be built",
+            "description": "The input column upon which the regression spline will be built",
             "type": "COLUMN",
             "columnRole": "input_dataset",
             "mandatory": true
@@ -44,12 +44,14 @@
        {
             "name": "knots",
             "label": "Knots",
+            "description": "The knots of the regression spline, ie the points where the pieces of the piecewise polynomial meet",
             "type": "DOUBLES",
             "mandatory": true
         },
         {
             "name": "degree_freedom",
             "label": "Degrees of Freedom",
+            "description": "The degrees of freedom of each piecewise polynomial",
             "type": "INT",
             "mandatory": true
         },
@@ -58,6 +60,7 @@
             "name": "new_col_prefix",
             "label": "New Column Prefix",
             "type": "STRING",
+            "defaultValue": "spline",
             "mandatory": false
         }
     ],
