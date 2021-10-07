@@ -19,7 +19,9 @@
             "type": "INT",
             "description": "The degree of the spline",
             "defaultValue": 1,
-            "mandatory": true
+            "mandatory": true,
+            "maxI": 3,
+            "minI": 1
         },
         {
             "name": "min_value",
@@ -32,7 +34,7 @@
             "name": "max_value",
             "label": "Maximum Value",
             "type": "DOUBLE",
-            "description": "The minimum possible value of the column",
+            "description": "The maximum possible value of the column",
             "mandatory": true
         },
         {

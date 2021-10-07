@@ -50,8 +50,8 @@ dku_config.add_param(
 df = input_dataset.get_dataframe()
 
 # fits splines
-RegSpines = RegressionSplines(dku_config.column_name, dku_config.degree_freedom, dku_config.knots, dku_config.new_col_prefix)
-output_dataset_df = RegSpines.run_spline_creation(df, keep_original=True)
+regression_splines = RegressionSplines(dku_config.column_name, dku_config.degree_freedom, dku_config.knots, dku_config.new_col_prefix)
+output_dataset_df = regression_splines.run_spline_creation(df, keep_original=True)
 
 # Write recipe outputs
 output_dataset.write_with_schema(output_dataset_df)

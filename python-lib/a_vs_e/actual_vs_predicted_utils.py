@@ -66,35 +66,30 @@ def get_ave_grouped():
     ave_data, target, weight = get_ave_data()
     
     if weight==None:
-        weight = 'weight'
-        ave_data[weight] = 1
+        ave_data['weight'] = 1
 
-    prediction = 'prediction'
-    weighted_target = 'weighted_target'
-    weighted_prediction = 'weighted_prediction'
-    weighted_base = 'weighted_base'
-    ave_data['weighted_target'] = ave_data[target] * ave_data[weight]
-    ave_data['weighted_prediction'] = ave_data[prediction] * ave_data[weight]
+    ave_data['weighted_target'] = ave_data[target] * ave_data['weight']
+    ave_data['weighted_prediction'] = ave_data[prediction] * ave_data['weight']
 
-    excluded_columns = [target, prediction, weight, weighted_target, weighted_prediction] + [c for c in ave_data if c[:5]=='base_']
-    feature_names = [c for c in ave_data.columns if c not in excluded_columns]
+    excluded_columns = [target, 'prediction', 'weight', 'weighted_target', 'weighted_prediction'] + [feature for feature in ave_data if c[:5]=='base_']
+    feature_names = [feature for feature in ave_data.columns if feature not in excluded_columns]
 
     # bin numerical features
-    for c in feature_names:
-        ave_data['base_' + c] = ave_data['base_' + c] * ave_data[weight]
-        if is_numeric_dtype(ave_data[c].dtype):
-            if len(ave_data[c].unique())>20:
-                ave_data[c] = [x.left for x in pd.cut(ave_data[c], bins=20)]
+    for feature in feature_names:
+        ave_data['base_' + feature] = ave_data['base_' + feature] * ave_data['weight']
+        if is_numeric_dtype(ave_data[feature].dtype):
+            if len(ave_data[feature].unique())>20:
+                ave_data[feature] = [x.left for x in pd.cut(ave_data[feature], bins=20)]
 
-    ave_grouped = {c: ave_data.rename(columns={'base_' + c: 'weighted_base'}).groupby([c]).agg({weighted_target: 'sum', 
+    ave_grouped = {feature: ave_data.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg({weighted_target: 'sum', 
                                                                                       weighted_prediction: 'sum', 
                                                                                       weight: 'sum',
                                                                                       weighted_base: 'sum'}).reset_index()
-                   for c in feature_names}
+                   for feature in feature_names}
 
-    for c in ave_grouped:
-        ave_grouped[c][weighted_target] = ave_grouped[c][weighted_target]/ave_grouped[c][weight]
-        ave_grouped[c][weighted_prediction] = ave_grouped[c][weighted_prediction]/ave_grouped[c][weight]
-        ave_grouped[c][weighted_base] = ave_grouped[c][weighted_base]/ave_grouped[c][weight]
+    for feature in ave_grouped:
+        ave_grouped[feature]['weighted_target'] = ave_grouped[feature]['weighted_target']/ave_grouped[feature]['weight']
+        ave_grouped[feature]['weighted_prediction'] = ave_grouped[feature]['weighted_prediction']/ave_grouped[feature]['weight']
+        ave_grouped[feature]['weighted_base'] = ave_grouped[feature]['weighted_base']/ave_grouped[feature]['weight']
     
     return ave_grouped

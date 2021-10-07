@@ -4,7 +4,6 @@
         "description": "Split the variable into B-spline basis, which parametrize a piecewise polynomial spline where pieces meet at each knot",
         "icon": "icon-tasks"
     },
-    "paramsPythonSetup": "project_keys.py",
     "kind": "PYTHON",
 
     "selectableFromDataset": "input_dataset",
@@ -24,7 +23,7 @@
         {
             "name": "output_dataset",
             "label": "Output Dataset",
-            "description": "The dataset will have additionnal columns",
+            "description": "The dataset will have additionnal columns representing the basis of the bspline decomposition",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true

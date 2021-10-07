@@ -13,6 +13,13 @@ class RegressionSplines:
         self.degree_freedom = degree_freedom
         self.knots = knots
         self.new_col_prefix = new_col_prefix
+        if not isinstance(self.degree_freedom, int):
+            raise TypeError('degree_freedom must be int')
+        if not isinstance(self.knots, list):
+            raise TypeError('knots must be a list')
+        for knot in self.knots:
+            if not isinstance(knot, (float, int)):
+                raise TypeError('each knot must be numeric')
         self.formula_string = f"bs(train, knots={self.knots}, degree={self.degree_freedom}, include_intercept=False)"
 
     def rename_columns(self, df):
@@ -20,9 +27,8 @@ class RegressionSplines:
         rename columns using the prefix provided by the user
         """
         num_cols = len(df.columns)
-        new_cols = [i + '_' + str(j) for i, j in zip([self.new_col_prefix] * num_cols, range(num_cols))]
+        new_cols = [new_col_prefix + '_' + str(j) for j in range(num_cols)]
         df.columns = new_cols
-        return df
 
     def concatenate(self, original_df, feature_splines, keep_original=True):
         """
@@ -47,7 +53,7 @@ class RegressionSplines:
         main func for running
         """
         feature_splines = self.generate_splines(df)
-        feature_splines = self.rename_columns(feature_splines)
+        self.rename_columns(feature_splines)
 
         new_df = self.concatenate(df, feature_splines, keep_original)
 
