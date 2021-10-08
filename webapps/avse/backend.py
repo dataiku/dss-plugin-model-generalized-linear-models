@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 import sys
 import generalized_linear_models
 sys.modules['generalized_linear_models']=generalized_linear_models
-from a_vs_e.ave_utils import get_ave_grouped
+from a_vs_e.actual_vs_predicted_utils import get_ave_grouped
 
 ave_grouped = get_ave_grouped()
 features = [k for k in ave_grouped.keys()]

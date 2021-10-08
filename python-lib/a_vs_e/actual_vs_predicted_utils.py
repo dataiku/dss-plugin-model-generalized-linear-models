@@ -57,7 +57,7 @@ def compute_base_predictions(model_handler, predictor):
         base_data[feature] = predictor.predict(copy_test_df)
     
     # compile predictions
-    base_predictions = pd.concat([base_data[c] for c in base_data], axis=1)
+    base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
     base_predictions.columns = 'base_' + test_df.columns
     
     return base_predictions
@@ -69,9 +69,9 @@ def get_ave_grouped():
         ave_data['weight'] = 1
 
     ave_data['weighted_target'] = ave_data[target] * ave_data['weight']
-    ave_data['weighted_prediction'] = ave_data[prediction] * ave_data['weight']
+    ave_data['weighted_prediction'] = ave_data['prediction'] * ave_data['weight']
 
-    excluded_columns = [target, 'prediction', 'weight', 'weighted_target', 'weighted_prediction'] + [feature for feature in ave_data if c[:5]=='base_']
+    excluded_columns = [target, 'prediction', 'weight', 'weighted_target', 'weighted_prediction'] + [feature for feature in ave_data if feature[:5]=='base_']
     feature_names = [feature for feature in ave_data.columns if feature not in excluded_columns]
 
     # bin numerical features
@@ -81,10 +81,10 @@ def get_ave_grouped():
             if len(ave_data[feature].unique())>20:
                 ave_data[feature] = [x.left for x in pd.cut(ave_data[feature], bins=20)]
 
-    ave_grouped = {feature: ave_data.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg({weighted_target: 'sum', 
-                                                                                      weighted_prediction: 'sum', 
-                                                                                      weight: 'sum',
-                                                                                      weighted_base: 'sum'}).reset_index()
+    ave_grouped = {feature: ave_data.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg({'weighted_target': 'sum',
+                                                                                      'weighted_prediction': 'sum',
+                                                                                      'weight': 'sum',
+                                                                                      'weighted_base': 'sum'}).reset_index()
                    for feature in feature_names}
 
     for feature in ave_grouped:
