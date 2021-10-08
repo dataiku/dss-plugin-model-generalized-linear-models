@@ -2,13 +2,15 @@
     "meta": {
         "label": "Generalized Linear Model Regression",
         "description": "Flexible generalization of ordinary linear models to allow for distributions other than a normal distribution",
-        "icon": "icon-briefcase"
+        "icon": "icon-bullseye"
     },
 
     "predictionTypes": ["REGRESSION"],
     "gridSearchMode": "MANAGED",
     "supportsSampleWeights": true,
     "acceptsSparseMatrix": false,
+    "paramsPythonSetup": "algo_helper.py",
+    "kind": "PYTHON",
     "params": [{
             "name": "penalty",
             "label": "Elastic Net Penalty",
@@ -242,6 +244,14 @@
             "visibilityCondition": "model.family_name == 'tweedie'",
             "allowDuplicates": false,
             "gridParam": false
+        },
+        {
+            "name": "offset_mode",
+            "label": "Offset Mode",
+            "gridParam": false,
+            "description": "Choose between no offset nor exposure, offset, or exposure",
+            "type": "SELECT",
+            "getChoicesFromPython": true
         },
         {
             "name": "offset_column",

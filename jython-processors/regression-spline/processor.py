@@ -17,9 +17,8 @@ if max(knots)>max_value:
 
 def process(row):
     transformed_x = build_design_matrices([design_info], {'x': [float(row[column])]})[0][0]
-    transformed_x.drop("Intercept", inplace=True, axis=1)
-    num_cols = len(transformed_x.columns)
-    new_cols = [new_col_prefix + '_Spline_' + str(j) for j in range(num_cols)]
-    for i in range(num_cols):
-        row[new_cols[i]] = str(transformed_x.iloc[0, i])
+    num_cols = len(transformed_x)
+    new_cols = [column + '_Spline_' + str(j-1) for j in range(1, num_cols)] # index 0 is intercept
+    for i in range(1, num_cols): # index 0 is intercept
+        row[new_cols[i-1]] = str(transformed_x[i])
     return row
