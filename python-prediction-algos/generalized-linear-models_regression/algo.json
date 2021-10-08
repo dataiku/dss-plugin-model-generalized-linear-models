@@ -243,6 +243,7 @@
             "label": "Offset Mode",
             "gridParam": false,
             "description": "Choose between no offset nor exposure, offset, or exposure",
+            "defaultValue": "BASIC",
             "type": "SELECT",
             "getChoicesFromPython": true
         },
@@ -251,7 +252,7 @@
             "name": "training_dataset",
             "label": "Training dataset",
             "description": "Select the dataset the model is being trained on",
-            "mandatory": true,
+            "mandatory": false,
             "visibilityCondition": "model.offset_mode != 'BASIC'"
         },
         {
@@ -275,12 +276,6 @@
             "mandatory": false,
             "gridParam": false,
             "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
-        },
-        {
-            "name": "separator_hyperparams",
-            "label": "Hyper parameters",
-            "type": "SEPARATOR",
-            "visibilityCondition": "model.family_name == 'tweedie'||model.family_name == 'negative_binomial'"
         },
         {
             "name": "alpha",

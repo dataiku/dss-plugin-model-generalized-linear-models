@@ -247,11 +247,22 @@
             "getChoicesFromPython": true
         },
         {
+            "name": "exposure_column",
+            "label": "Exposure Column",
+            "gridParam": false,
+            "description": "Log of the exposure column will be added to the model, relevant when the log link function is used. The exposure column must be added in the feature handling, with no rescaling",
+            "type": "DATASET_COLUMN",
+            "datasetParamName": "training_dataset",
+            "mandatory": false,
+            "gridParam": false,
+            "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
+        },
+        {
             "type": "DATASET",
             "name": "training_dataset",
             "label": "Training dataset",
             "description": "Select the dataset the model is being trained on",
-            "mandatory": true,
+            "mandatory": false,
             "visibilityCondition": "model.offset_mode != 'BASIC'"
         },
         {
@@ -264,23 +275,6 @@
             "mandatory": false,
             "gridParam": false,
             "visibilityCondition": "model.offset_mode == 'OFFSET'"
-        },
-        {
-            "name": "exposure_column",
-            "label": "Exposure Column",
-            "gridParam": false,
-            "description": "Log of the exposure column will be added to the model, relevant when the log link function is used. The exposure column must be added in the feature handling, with no rescaling",
-            "type": "DATASET_COLUMN",
-            "datasetParamName": "training_dataset",
-            "mandatory": false,
-            "gridParam": false,
-            "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
-        },
-        {
-            "name": "separator_hyperparams",
-            "label": "Hyper parameters",
-            "type": "SEPARATOR",
-            "visibilityCondition": "model.family_name == 'tweedie'||model.family_name == 'negative_binomial'"
         },
         {
             "name": "alpha",
