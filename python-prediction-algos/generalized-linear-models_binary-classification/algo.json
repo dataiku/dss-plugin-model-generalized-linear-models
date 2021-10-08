@@ -9,6 +9,8 @@
     "gridSearchMode": "MANAGED",
     "supportsSampleWeights": true,
     "acceptsSparseMatrix": false,
+    "paramsPythonSetup": "algo_helper.py",
+    "kind": "PYTHON",
     "params": [{
             "name": "penalty",
             "label": "Elastic Net Penalty",
@@ -17,13 +19,6 @@
             "type": "DOUBLES",
             "defaultValue": [0.0],
             "gridParam": true
-        },
-        {
-            "type": "DATASET",
-            "name": "training_dataset",
-            "label": "Training dataset",
-            "description": "Select the dataset the model is being trained on",
-            "mandatory": true
         },
         {
             "name": "family_name",
@@ -244,6 +239,22 @@
             "gridParam": false
         },
         {
+            "name": "offset_mode",
+            "label": "Offset Mode",
+            "gridParam": false,
+            "description": "Choose between no offset nor exposure, offset, or exposure",
+            "type": "SELECT",
+            "getChoicesFromPython": true
+        },
+        {
+            "type": "DATASET",
+            "name": "training_dataset",
+            "label": "Training dataset",
+            "description": "Select the dataset the model is being trained on",
+            "mandatory": true,
+            "visibilityCondition": "model.offset_mode != 'BASIC'"
+        },
+        {
             "name": "offset_column",
             "label": "Offset Column",
             "gridParam": false,
@@ -251,7 +262,8 @@
             "type": "DATASET_COLUMN",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "gridParam": false
+            "gridParam": false,
+            "visibilityCondition": "model.offset_mode == 'OFFSET'"
         },
         {
             "name": "exposure_column",
@@ -262,7 +274,7 @@
             "datasetParamName": "training_dataset",
             "mandatory": false,
             "gridParam": false,
-            "visibilityCondition": "model.binomial_link == 'log'||model.gamma_link == 'log'||model.gaussian_link == 'log'||model.inverse_gaussian_link == 'log'||model.poisson_link == 'log'||model.negative_binomial_link == 'log'||model.tweedie_link == 'log'"
+            "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
         },
         {
             "name": "separator_hyperparams",

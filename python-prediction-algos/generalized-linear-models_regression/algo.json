@@ -21,13 +21,6 @@
             "gridParam": true
         },
         {
-            "type": "DATASET",
-            "name": "training_dataset",
-            "label": "Training dataset",
-            "description": "Select the dataset the model is being trained on",
-            "mandatory": true
-        },
-        {
             "name": "family_name",
             "label": "Distribution",
             "description": "The distribution for the link function",
@@ -254,6 +247,14 @@
             "getChoicesFromPython": true
         },
         {
+            "type": "DATASET",
+            "name": "training_dataset",
+            "label": "Training dataset",
+            "description": "Select the dataset the model is being trained on",
+            "mandatory": true,
+            "visibilityCondition": "model.offset_mode != 'BASIC'"
+        },
+        {
             "name": "offset_column",
             "label": "Offset Column",
             "gridParam": false,
@@ -261,7 +262,8 @@
             "type": "DATASET_COLUMN",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "gridParam": false
+            "gridParam": false,
+            "visibilityCondition": "model.offset_mode == 'OFFSET'"
         },
         {
             "name": "exposure_column",
@@ -272,7 +274,7 @@
             "datasetParamName": "training_dataset",
             "mandatory": false,
             "gridParam": false,
-            "visibilityCondition": "model.binomial_link == 'log'||model.gamma_link == 'log'||model.gaussian_link == 'log'||model.inverse_gaussian_link == 'log'||model.poisson_link == 'log'||model.negative_binomial_link == 'log'||model.tweedie_link == 'log'"
+            "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
         },
         {
             "name": "separator_hyperparams",
