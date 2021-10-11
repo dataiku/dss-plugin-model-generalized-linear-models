@@ -30,13 +30,10 @@ class RegressionSplines:
         new_cols = [new_col_prefix + '_' + str(j) for j in range(num_cols)]
         df.columns = new_cols
 
-    def concatenate(self, original_df, feature_splines, keep_original=True):
+    def concatenate(self, original_df, feature_splines):
         """
         combines the new regression spline columns with the original dataframe
         """
-        if not keep_original:
-            original_df = original_df.drop(self.column_name)
-
         return pd.concat([original_df, feature_splines], axis=1)
 
     def generate_splines(self, df):
