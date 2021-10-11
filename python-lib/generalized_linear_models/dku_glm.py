@@ -203,6 +203,8 @@ class BinaryClassificationGLM(BaseGLM):
         """
         Returns the binary target
         """
+        offset = None
+        exposure = None
         if self.offset_mode == 'OFFSET':
             offset, self.offset_index = self.get_x_column(X, self.offset_column)
         if self.offset_mode == 'EXPOSURE':
