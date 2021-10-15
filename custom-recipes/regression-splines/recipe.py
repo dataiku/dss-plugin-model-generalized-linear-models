@@ -12,10 +12,7 @@ from commons import get_input_output
 recipe_config = get_recipe_config()
 
 
-dku_config = DkuConfig(
-    local_vars=dataiku.Project().get_variables()['local'],
-    local_prefix="GENERALIZED_LINEAR_MODELS_PLUGIN__"
-)
+dku_config = DkuConfig()
 
 # define variables
 dku_config.add_param(
