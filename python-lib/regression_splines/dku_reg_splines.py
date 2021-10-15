@@ -27,7 +27,7 @@ class RegressionSplines:
         rename columns using the prefix provided by the user
         """
         num_cols = len(df.columns)
-        new_cols = [new_col_prefix + '_' + str(j) for j in range(num_cols)]
+        new_cols = [self.new_col_prefix + '_' + str(j) for j in range(num_cols)]
         df.columns = new_cols
 
     def concatenate(self, original_df, feature_splines):
@@ -45,13 +45,13 @@ class RegressionSplines:
         transformed_x.drop('Intercept', axis=1, inplace=True)
         return transformed_x
 
-    def run_spline_creation(self, df, keep_original):
+    def run_spline_creation(self, df):
         """
         main func for running
         """
         feature_splines = self.generate_splines(df)
         self.rename_columns(feature_splines)
 
-        new_df = self.concatenate(df, feature_splines, keep_original)
+        new_df = self.concatenate(df, feature_splines)
 
         return new_df

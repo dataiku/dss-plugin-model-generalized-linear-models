@@ -60,7 +60,7 @@
             "label": "New Column Prefix",
             "type": "STRING",
             "defaultValue": "spline",
-            "mandatory": false
+            "mandatory": true
         }
     ],
 

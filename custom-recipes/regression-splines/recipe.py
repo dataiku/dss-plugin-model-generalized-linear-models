@@ -20,38 +20,38 @@ dku_config = DkuConfig(
 # define variables
 dku_config.add_param(
     name="column_name",
-    value=config.get("column_name"),
+    value=recipe_config.get("column_name"),
     required=True
 )
 
 dku_config.add_param(
     name="knots",
-    value=config.get("knots"),
+    value=recipe_config.get("knots"),
     required=True
 )
 
 dku_config.add_param(
     name="degree_freedom",
-    value=config.get("degree_freedom"),
+    value=recipe_config.get("degree_freedom"),
     checks=[{
         "type": "between",
-        "op": (1, 3)
+        "op": (0, 3)
     }],
     required=True
 )
 
 dku_config.add_param(
     name="new_col_prefix",
-    value=config.get("new_col_prefix"),
+    value=recipe_config.get("new_col_prefix"),
     required=True
 )
-
 
 df = input_dataset.get_dataframe()
 
 # fits splines
-regression_splines = RegressionSplines(dku_config.column_name, dku_config.degree_freedom, dku_config.knots, dku_config.new_col_prefix)
-output_dataset_df = regression_splines.run_spline_creation(df, keep_original=True)
+regression_splines = RegressionSplines(dku_config.column_name, dku_config.degree_freedom,
+                                       dku_config.knots, dku_config.new_col_prefix)
+output_dataset_df = regression_splines.run_spline_creation(df)
 
 # Write recipe outputs
 output_dataset.write_with_schema(output_dataset_df)
