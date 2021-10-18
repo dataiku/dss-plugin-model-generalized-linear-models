@@ -2,7 +2,6 @@
 import dataiku
 from dataiku.customrecipe import get_recipe_config
 import pandas as pd, numpy as np
-from dataiku import pandasutils as pdu
 from dkulib.core.dku_config.dku_config import DkuConfig
 
 from regression_splines.dku_reg_splines import RegressionSplines
@@ -11,13 +10,17 @@ from commons import get_input_output
 (input_dataset, output_dataset) = get_input_output()
 recipe_config = get_recipe_config()
 
-
 dku_config = DkuConfig()
+df = input_dataset.get_dataframe()
 
 # define variables
 dku_config.add_param(
     name="column_name",
     value=recipe_config.get("column_name"),
+    checks=[{
+        "type": "in",
+        "op": df.columns
+    }],
     required=True
 )
 
@@ -42,8 +45,6 @@ dku_config.add_param(
     value=recipe_config.get("new_col_prefix"),
     required=True
 )
-
-df = input_dataset.get_dataframe()
 
 # fits splines
 regression_splines = RegressionSplines(dku_config.column_name, dku_config.degree_freedom,
