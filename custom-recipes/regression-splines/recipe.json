@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Regression Splines",
-        "description": "Split the variable into B-spline basis, which parametrize a piecewise polynomial spline where pieces meet at each knot",
+        "description": "Split the variable into B-spline basis (https://patsy.readthedocs.io/en/latest/spline-regression.html), which parametrizes a piecewise polynomial spline where pieces meet at each knot",
         "icon": "icon-tasks"
     },
     "kind": "PYTHON",
@@ -23,7 +23,7 @@
         {
             "name": "output_dataset",
             "label": "Output Dataset",
-            "description": "The dataset will have additionnal columns representing the basis of the bspline decomposition",
+            "description": "The dataset will have additionnal columns representing the basis of the bspline decomposition, the number of columns added is equal to number of knots plus the degree of the polynomial",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
