@@ -15,25 +15,34 @@ import numpy as np
 from datetime import datetime, timedelta
 import sys
 import generalized_linear_models
-sys.modules['generalized_linear_models']=generalized_linear_models
+
+sys.modules['generalized_linear_models'] = generalized_linear_models
 from a_vs_e.actual_vs_predicted_utils import get_ave_grouped
 
+palette = '#BDD8ED', '#3075AE', '#4F934F'
 ave_grouped = get_ave_grouped()
 features = [k for k in ave_grouped.keys()]
 
 app.config.external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 feature_choice = dcc.RadioItems(
-    id='feature-choice',
+    id='feature-choice1',
     options=[{'label': f, 'value': f}
-              for f in features],
+             for f in features],
     value=features[0],
     labelStyle={'display': 'block'},
     style={"height": "100px",
            "width": "150px",
-         "overflowY": "scroll"}
+           "overflowY": "scroll"}
 
-)  
+)
+
+feature_choice = dcc.Dropdown(
+    id='feature-choice',
+    options=[{'label': f, 'value': f}
+             for f in features],
+    value=features[0]
+)
 
 app.layout = dbc.Container(
     [
@@ -60,35 +69,47 @@ def make_graph(feature, tab):
         return predicted_graph(feature)
     elif tab == 'base':
         return base_graph(feature)
-        
+
+
 def base_graph(feature):
     data = ave_grouped[feature].dropna()
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Bar(x=data[feature], y=data['weight'],
-                name='weight'),
-                secondary_y=False)
+                         name='weight',
+                         marker=dict(color=palette[0])),
+                  secondary_y=False)
     fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_target'],
-                    mode='lines',
-                    name='target'),
-                    secondary_y=True)
+                             mode='lines',
+                             name='target',
+                             line=dict(color=palette[1])),
+                  secondary_y=True)
     fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_base'],
-                    mode='lines',
-                    name='base'),
-                    secondary_y=True)
+                             mode='lines',
+                             name='base',
+                             line=dict(color=palette[2])),
+                  secondary_y=True)
+    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+    fig.layout.yaxis.gridcolor = '#D7DBDE'
     return fig
-    
+
+
 def predicted_graph(feature):
     data = ave_grouped[feature].dropna()
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Bar(x=data[feature], y=data['weight'],
-                name='weight'),
-                secondary_y=False)
+                         name='weight',
+                         marker=dict(color=palette[0])),
+                  secondary_y=False)
     fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_target'],
-                    mode='lines',
-                    name='target'),
-                    secondary_y=True)
+                             mode='lines',
+                             name='target',
+                             line=dict(color=palette[1])),
+                  secondary_y=True)
     fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_prediction'],
-                    mode='lines',
-                    name='prediction'),
-                    secondary_y=True)
+                             mode='lines',
+                             name='prediction',
+                             line=dict(color=palette[2])),
+                  secondary_y=True)
+    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+    fig.layout.yaxis.gridcolor = '#D7DBDE'
     return fig
