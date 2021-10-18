@@ -25,18 +25,6 @@ features = [k for k in ave_grouped.keys()]
 
 app.config.external_stylesheets = [dbc.themes.BOOTSTRAP]
 
-feature_choice = dcc.RadioItems(
-    id='feature-choice1',
-    options=[{'label': f, 'value': f}
-             for f in features],
-    value=features[0],
-    labelStyle={'display': 'block'},
-    style={"height": "100px",
-           "width": "150px",
-           "overflowY": "scroll"}
-
-)
-
 feature_choice = dcc.Dropdown(
     id='feature-choice',
     options=[{'label': f, 'value': f}
@@ -51,11 +39,32 @@ app.layout = dbc.Container(
                 dcc.Tab(label='Predicted', value='predicted'),
                 dcc.Tab(label='Base', value='base'),
             ]),
-            feature_choice,
+            html.Hr(),
+            dbc.Container(id='tab-description'),
+            dbc.Row([
+                dbc.Col(feature_choice, md=4)
+            ]),
             dcc.Graph(id="AvE")
         ])
     ],
     fluid=True)
+
+
+@app.callback(Output('tab-description', 'children'),
+              Input('tabs', 'value'))
+def news_scores(tab):
+    if tab == 'predicted':
+        return html.P("The predicted graph compares target with prediction for each variable. " +
+                      "Numerical variables are automatically binned. " +
+                      "The background bars represent the overall weight (number of observations x weight) of each bin. " +
+                      "The two lines are the weighted target and prediction within each bin.")
+    elif tab == 'base':
+        return html.P(
+            "The base graph displays the target against the base prediction, which is the pure effect of the chosen variable. " +
+            "Numerical variables are automatically binned. " +
+            "The background bars represent the overall weight (number of observations x weight) of each bin. " +
+            "The base prediction of each bin is the weighted prediction when all the variables except the chosen one are at their base value. " +
+            "The base value of a variable is its modal value, meaning the most frequent one (the most frequent bin when numerical).")
 
 
 @app.callback(
@@ -64,7 +73,6 @@ app.layout = dbc.Container(
     Input('tabs', 'value')
 )
 def make_graph(feature, tab):
-    print(feature)
     if tab == 'predicted':
         return predicted_graph(feature)
     elif tab == 'base':
