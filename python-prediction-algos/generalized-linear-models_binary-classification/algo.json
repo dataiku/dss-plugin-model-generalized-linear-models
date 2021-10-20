@@ -95,7 +95,6 @@
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a gamma distribution",
             "defaultValue": "inverse_power",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -120,7 +119,6 @@
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a gaussian distribution",
             "defaultValue": "identity",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -144,7 +142,6 @@
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing an inverse gaussian distribution",
             "defaultValue": "inverse_squared",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -172,7 +169,6 @@
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a poisson distribution",
             "defaultValue": "log",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -193,7 +189,6 @@
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a negative binomial distribution",
             "defaultValue": "log",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -220,7 +215,6 @@
         {
             "name": "tweedie_link",
             "label": "Link Functions",
-            "gridParam": false,
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a tweedie distribution",
             "defaultValue": "log",
             "type": "SELECT",
@@ -247,17 +241,6 @@
             "getChoicesFromPython": true
         },
         {
-            "name": "exposure_column",
-            "label": "Exposure Column",
-            "gridParam": false,
-            "description": "Log of the exposure column will be added to the model, relevant when the log link function is used. The exposure column must be added in the feature handling, with no rescaling",
-            "type": "DATASET_COLUMN",
-            "datasetParamName": "training_dataset",
-            "mandatory": false,
-            "gridParam": false,
-            "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
-        },
-        {
             "type": "DATASET",
             "name": "training_dataset",
             "label": "Training dataset",
@@ -273,8 +256,17 @@
             "type": "DATASET_COLUMN",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "gridParam": false,
             "visibilityCondition": "model.offset_mode == 'OFFSET'"
+        },
+        {
+            "name": "exposure_column",
+            "label": "Exposure Column",
+            "gridParam": false,
+            "description": "Log of the exposure column will be added to the model, relevant when the log link function is used. The exposure column must be added in the feature handling, with no rescaling",
+            "type": "DATASET_COLUMN",
+            "datasetParamName": "training_dataset",
+            "mandatory": false,
+            "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
         },
         {
             "name": "alpha",

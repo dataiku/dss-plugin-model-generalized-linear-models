@@ -112,8 +112,7 @@
 
             ],
             "visibilityCondition": "model.family_name == 'gamma'",
-            "allowDuplicates": false,
-            "gridParam": false
+            "allowDuplicates": false
         },
         {
             "name": "gaussian_link",
@@ -136,8 +135,7 @@
                 }
             ],
             "visibilityCondition": "model.family_name == 'gaussian'",
-            "allowDuplicates": false,
-            "gridParam": false
+            "allowDuplicates": false
         },
         {
             "name": "inverse_gaussian_link",
@@ -164,8 +162,7 @@
                 }
             ],
             "visibilityCondition": "model.family_name == 'inverse_gaussian'",
-            "allowDuplicates": false,
-            "gridParam": false
+            "allowDuplicates": false
         },
         {
             "name": "poisson_link",
@@ -185,8 +182,7 @@
 
             ],
             "visibilityCondition": "model.family_name == 'poisson'",
-            "allowDuplicates": false,
-            "gridParam": false
+            "allowDuplicates": false
         },
         {
             "name": "negative_binomial_link",
@@ -214,8 +210,7 @@
 
             ],
             "visibilityCondition": "model.family_name == 'negative_binomial'",
-            "allowDuplicates": false,
-            "gridParam": false
+            "allowDuplicates": false
         },
         {
             "name": "tweedie_link",
@@ -235,8 +230,7 @@
 
             ],
             "visibilityCondition": "model.family_name == 'tweedie'",
-            "allowDuplicates": false,
-            "gridParam": false
+            "allowDuplicates": false
         },
         {
             "name": "offset_mode",
@@ -263,7 +257,6 @@
             "type": "DATASET_COLUMN",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "gridParam": false,
             "visibilityCondition": "model.offset_mode == 'OFFSET'"
         },
         {
@@ -274,7 +267,6 @@
             "type": "DATASET_COLUMN",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "gridParam": false,
             "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
         },
         {
