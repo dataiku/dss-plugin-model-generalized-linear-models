@@ -20,8 +20,6 @@ def test_link_function():
     ]
 
     actual = []
-    breast_cancer = datasets.load_breast_cancer()
-    X, y = breast_cancer.data, breast_cancer.target
 
     for test in testing_dict:
         test_params = testing_dict[test]

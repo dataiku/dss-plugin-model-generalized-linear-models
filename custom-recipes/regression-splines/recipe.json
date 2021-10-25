@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Regression Splines",
-        "description": "Split the variable into B-spline basis (https://patsy.readthedocs.io/en/latest/spline-regression.html), which parametrizes a piecewise polynomial spline where pieces meet at each knot",
+        "description": "Split the variable into [B-spline basis](https://patsy.readthedocs.io/en/latest/spline-regression.html), which parametrizes a piecewise polynomial spline where pieces meet at each knot",
         "icon": "icon-tasks"
     },
     "kind": "PYTHON",
@@ -23,7 +23,7 @@
         {
             "name": "output_dataset",
             "label": "Output Dataset",
-            "description": "The dataset will have additionnal columns representing the basis of the bspline decomposition, the number of columns added is equal to number of knots plus the degree of the polynomial",
+            "description": "The dataset will have additional columns representing the basis of the bspline decomposition, the number of columns added is equal to number of knots plus the degree of the polynomial",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
@@ -38,7 +38,15 @@
             "description": "The input column upon which the regression spline will be built",
             "type": "COLUMN",
             "columnRole": "input_dataset",
-            "mandatory": true
+            "mandatory": true,
+            "allowedColumnTypes": [
+                "tinyint",
+                "smallint",
+                "int",
+                "bigint",
+                "double",
+                "float"
+              ]
         },
        {
             "name": "knots",
@@ -48,11 +56,13 @@
             "mandatory": true
         },
         {
-            "name": "degree_freedom",
-            "label": "Degrees of Freedom",
-            "description": "The degrees of freedom of each piecewise polynomial",
+            "name": "degree",
+            "label": "Degree",
+            "description": "The degree of each piecewise polynomial, should be between 0 and 3",
             "type": "INT",
-            "mandatory": true
+            "mandatory": true,
+            "minI": 0,
+            "maxI": 3
         },
 
         {

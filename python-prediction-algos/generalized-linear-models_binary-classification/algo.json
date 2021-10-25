@@ -256,7 +256,15 @@
             "type": "DATASET_COLUMN",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "visibilityCondition": "model.offset_mode == 'OFFSET'"
+            "visibilityCondition": "model.offset_mode == 'OFFSET'",
+            "allowedColumnTypes": [
+                "tinyint",
+                "smallint",
+                "int",
+                "bigint",
+                "double",
+                "float"
+              ]
         },
         {
             "name": "exposure_column",
@@ -266,7 +274,15 @@
             "type": "DATASET_COLUMN",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "visibilityCondition": "model.offset_mode == 'EXPOSURE'"
+            "visibilityCondition": "model.offset_mode == 'EXPOSURE'",
+            "allowedColumnTypes": [
+                "tinyint",
+                "smallint",
+                "int",
+                "bigint",
+                "double",
+                "float"
+              ]
         },
         {
             "name": "alpha",
