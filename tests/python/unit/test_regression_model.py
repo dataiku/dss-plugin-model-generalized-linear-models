@@ -4,7 +4,6 @@ import pytest
 from testing_utils import testing_dict
 import numpy as np
 import pandas as pd
-from sklearn import datasets
 
 def test_link_function():
     expected = [
@@ -20,8 +19,6 @@ def test_link_function():
     ]
 
     actual = []
-    breast_cancer = datasets.load_breast_cancer()
-    X, y = breast_cancer.data, breast_cancer.target
 
     for test in testing_dict:
         test_params = testing_dict[test]
