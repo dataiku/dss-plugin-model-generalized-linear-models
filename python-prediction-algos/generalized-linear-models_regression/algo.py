@@ -6,6 +6,10 @@ class CustomPredictionAlgorithm(BaseCustomPredictionAlgorithm):
 
     def __init__(self, prediction_type=None, params=None):
         self.params = params
+        for penalty_value in self.params['penalty']:
+            if penalty_value < 0:
+                raise ValueError("Negative values for the regularization penalty are not supported")
+
         self.clf = RegressionGLM(**params)
         super(CustomPredictionAlgorithm, self).__init__(prediction_type, self.params)
 
