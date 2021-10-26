@@ -56,7 +56,7 @@
             "mandatory": true
         },
         {
-            "name": "degree",
+            "name": "degree_freedom",
             "label": "Degree",
             "description": "The degree of each piecewise polynomial, should be between 0 and 3",
             "type": "INT",
