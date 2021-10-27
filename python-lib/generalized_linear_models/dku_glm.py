@@ -2,7 +2,9 @@ import statsmodels.api as sm
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 import pandas as pd
-
+from dkulib.core.dku_config.dku_config import DkuConfig
+from dataikuapi.dss.project import DSSProject
+import dataiku
 
 class BaseGLM(BaseEstimator, ClassifierMixin):
     """
@@ -15,32 +17,193 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                  var_power, offset_mode, training_dataset=None, offset_column=None, exposure_column=None,
                  column_labels=None):
 
-        self.family_name = family_name
-        self.binomial_link = binomial_link
-        self.gamma_link = gamma_link
-        self.gaussian_link = gaussian_link
-        self.inverse_gaussian_link = inverse_gaussian_link
-        self.poisson_link = poisson_link
-        self.negative_binomial_link = negative_binomial_link
-        self.tweedie_link = tweedie_link
+        dku_config = DkuConfig()
+
+        dku_config.add_param(
+            name="family_name",
+            value=family_name,
+            checks=[{
+                "type": "in",
+                "op": ["binomial", "gamma", "gaussian", "inverse_gaussian", "poisson", "negative_binomial", "tweedie"]
+            }],
+            required=True
+        )
+
+        dku_config.add_param(
+            name="binomial_link",
+            value=binomial_link,
+            checks=[{
+                "type": "in",
+                "op": ["cloglog", "log", "logit", "cauchy", "identity"]
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="gamma_link",
+            value=gamma_link,
+            checks=[{
+                "type": "in",
+                "op": ["log", "identity", "inverse_power"]
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="gaussian_link",
+            value=gaussian_link,
+            checks=[{
+                "type": "in",
+                "op": ["log", "identity", "inverse_power"]
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="inverse_gaussian_link",
+            value=inverse_gaussian_link,
+            checks=[{
+                "type": "in",
+                "op": ["log", "inverse_squared", "identity", "inverse_power"]
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="poisson_link",
+            value=poisson_link,
+            checks=[{
+                "type": "in",
+                "op": ["log", "identity"]
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="negative_binomial_link",
+            value=negative_binomial_link,
+            checks=[{
+                "type": "in",
+                "op": ["log", "cloglog", "identity", "power"]
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="tweedie_link",
+            value=tweedie_link,
+            checks=[{
+                "type": "in",
+                "op": ["log", "power"]
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="alpha",
+            value=alpha,
+            checks=[{
+                "type": "between",
+                "op": (0.01, 2)
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="power",
+            value=power,
+            required=False
+        )
+
+        for i, pnalty in enumerate(penalty):
+            dku_config.add_param(
+                name="penalty_" + str(i),
+                value=pnalty,
+                checks=[{
+                    "type": "sup_eq",
+                    "op": 0
+                }],
+                required=True
+            )
+
+        dku_config.add_param(
+            name="var_power",
+            value=var_power,
+            required=False
+        )
+
+        dku_config.add_param(
+            name="offset_mode",
+            value=offset_mode,
+            checks=[{
+                "type": "in",
+                "op": ['BASIC', 'OFFSET', 'EXPOSURE']
+            }],
+            required=True
+        )
+
+        project_key = dataiku.default_project_key()
+        client = dataiku.api_client()
+
+        project = DSSProject(project_key=project_key, client=client)
+        datasets = [analysis['inputDataset'] for analysis in project.list_analyses()]
+
+        dku_config.add_param(
+            name="training_dataset",
+            value=training_dataset,
+            checks=[{
+                "type": "in",
+                "op": datasets
+            }],
+            required=True
+        )
+
+        dku_config.add_param(
+            name="offset_column",
+            value=offset_column,
+            checks=[{
+                "type": "in",
+                "op": training_dataset.columns
+            }],
+            required=False
+        )
+
+        dku_config.add_param(
+            name="exposure_column",
+            value=exposure_column,
+            checks=[{
+                "type": "in",
+                "op": training_dataset.columns
+            }],
+            required=False
+        )
+
+        self.family_name = dku_config.family_name
+        self.binomial_link = dku_config.binomial_link
+        self.gamma_link = dku_config.gamma_link
+        self.gaussian_link = dku_config.gaussian_link
+        self.inverse_gaussian_link = dku_config.inverse_gaussian_link
+        self.poisson_link = dku_config.poisson_link
+        self.negative_binomial_link = dku_config.negative_binomial_link
+        self.tweedie_link = dku_config.tweedie_link
         self.family = None
-        self.alpha = alpha
-        self.power = power
-        self.penalty = penalty
-        self.var_power = var_power
+        self.alpha = dku_config.alpha
+        self.power = dku_config.power
+        self.penalty = [dku_config["penalty_" + str(i)] for i in range(len(penalty))]
+        self.var_power = dku_config.var_power
         self.fit_intercept = True
         self.intercept_scaling = 1
         self.fitted_model = None
         self.coef_ = None
         self.intercept_ = None
         self.classes_ = None
-        self.offset_mode = offset_mode
+        self.offset_mode = dku_config.offset_mode
         self.offset_column = offset_column
         self.offset_index = None
         self.exposure_column = exposure_column
         self.exposure_index = None
         self.column_labels = column_labels
-        self.training_dataset = training_dataset
+        self.training_dataset = dku_config.training_dataset
         self.removed_index = None
         self.assign_family()
 
