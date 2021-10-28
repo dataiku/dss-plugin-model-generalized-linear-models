@@ -70,3 +70,36 @@ testing_dict = {
         'tweedie_link': 'power'
     }
 }
+
+testing_dict_errors = {
+    'test1': {
+        'family_name': 'binomial',
+        'binomial_link': None,
+        'gamma_link': 'identity',
+        'gaussian_link': None,
+        'inverse_gaussian_link': None,
+        'poisson_link': None,
+        'negative_binomial_link': None,
+        'tweedie_link': None
+    },
+    'test2': {
+        'family_name': 'nimp',
+        'binomial_link': None,
+        'gamma_link': None,
+        'gaussian_link': None,
+        'inverse_gaussian_link': None,
+        'poisson_link': None,
+        'negative_binomial_link': None,
+        'tweedie_link': None
+    },
+    'test3': {
+        'family_name': 'gaussian',
+        'binomial_link': None,
+        'gamma_link': None,
+        'gaussian_link': 'wronglink',
+        'inverse_gaussian_link': None,
+        'poisson_link': None,
+        'negative_binomial_link': None,
+        'tweedie_link': None
+    }
+}

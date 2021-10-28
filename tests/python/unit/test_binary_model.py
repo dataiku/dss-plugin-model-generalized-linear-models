@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets
 
+
 def test_link_function():
     expected = [
         sm.families.links.log(),
@@ -42,6 +43,7 @@ def test_link_function():
 
     for act, exp in zip(actual, expected):
         assert type(act) == type(exp)
+
 
 def test_classification():
     data = sm.datasets.ccard.load()
@@ -98,7 +100,7 @@ def test_classification_prediction():
 
     binary_model.fit(X, y)
     predictions = binary_model.predict(X)
-    predictions_test = [x>0.5 for x in logistic_results.predict(exog)]
+    predictions_test = [x > 0.5 for x in logistic_results.predict(exog)]
 
     for pred1, pred2 in zip(predictions, predictions_test):
         assert pred1 == pred2
