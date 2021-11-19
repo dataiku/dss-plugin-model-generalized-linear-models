@@ -11,15 +11,7 @@
             "label": "Column",
             "type": "COLUMN",
             "description": "The column on which the spline is fitted",
-            "mandatory": true,
-            "allowedColumnTypes": [
-                "tinyint",
-                "smallint",
-                "int",
-                "bigint",
-                "double",
-                "float"
-              ]
+            "mandatory": true
         },
         {
             "name": "degree",
