@@ -298,7 +298,7 @@
         {
             "name": "power",
             "label": "Power",
-            "type": "INT",
+            "type": "DOUBLE",
             "description": "The power used for the power link function",
             "defaultValue": 1,
             "allowDuplicates": false,

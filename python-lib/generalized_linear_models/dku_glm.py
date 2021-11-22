@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 import pandas as pd
 
+
 class BaseGLM(BaseEstimator, ClassifierMixin):
     """
     Base class for GLM
@@ -23,9 +24,21 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.negative_binomial_link = negative_binomial_link
         self.tweedie_link = tweedie_link
         self.family = None
+        if family_name == 'negative_binomial':
+            if alpha < 0.01 or alpha > 2:
+                raise ValueError('alpha should be between 0.01 and 2, current value of ' + str(alpha) + ' unsupported')
         self.alpha = alpha
+        if (family_name == 'negative_binomial' and negative_binomial_link == 'power') or (
+                family_name == 'tweedie' and tweedie_link == 'power'):
+            if not isinstance(type(power), (int, float)):
+                raise ValueError('power should be defined with a numeric value')
         self.power = power
+        if penalty < 0:
+            raise ValueError('penalty should be positive')
         self.penalty = penalty
+        if family_name == 'tweedie':
+            if not isinstance(type(var_power), (int, float)):
+                raise ValueError('var_power should be defined with a numeric value')
         self.var_power = var_power
         self.fit_intercept = True
         self.intercept_scaling = 1
@@ -42,7 +55,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.training_dataset = training_dataset
         self.removed_index = None
         self.assign_family()
-
 
     def get_link_function(self):
         """
@@ -79,7 +91,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             return sm.families.links.inverse_power()
         elif user_link == 'inverse_squared':
             return sm.families.links.inverse_squared()
-
+        else:
+            raise ValueError("Unsupported link")
 
     def get_family(self, link):
         """
@@ -123,12 +136,13 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         returns an array of values specified by column name provided
         by the user
         """
-        if important_column == None:
+        if important_column is None:
             column_values = None
             column_index = None
 
         elif important_column not in self.column_labels:
-            raise ValueError(f'The column name provided: [{important_column}], is not present in the list of columns from the dataset. Please chose one of:{self.column_labels}')
+            raise ValueError(
+                f'The column name provided: [{important_column}], is not present in the list of columns from the dataset. Please chose one of:{self.column_labels}')
         else:
             column_index = self.column_labels.index(important_column)
             column_values = X[:, column_index]
@@ -150,28 +164,27 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         if self.offset_mode == 'EXPOSURE':
             exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
             self.removed_index = self.exposure_index
-        
+
         if self.removed_index is not None:
             X = np.delete(X, self.removed_index, axis=1)
-        
+
         X = sm.add_constant(X)
-        
+
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset, exposure=exposure, var_weights=sample_weight)
-        
-        if self.penalty==0.0:
+
+        if self.penalty == 0.0:
             # fit is 10-100x faster than fit_regularized
             self.fitted_model = model.fit()
         else:
             self.fitted_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
-        
-        
+
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
         # the estimator, we have declared it as a keyword argument in the
         # `__init__` and set it there
         self.column_labels = column_labels
-    
+
     def process_fixed_columns(self, X):
         removed_index = None
         if self.offset_index is not None:
@@ -181,6 +194,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         if removed_index is not None:
             X = np.delete(X, removed_index, axis=1)
         return X
+
 
 class BinaryClassificationGLM(BaseGLM):
 
@@ -195,7 +209,7 @@ class BinaryClassificationGLM(BaseGLM):
         if self.removed_index is not None:
             self.coef_ = np.insert(self.coef_, self.removed_index, 0)
         # statsmodels 0 is 211 sets this to true 0
-        self.coef_= [0 if x==211.03485067364605 else x for x in self.coef_]
+        self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
         self.intercept_ = float(self.fitted_model.params[0])
 
     def predict(self, X):
@@ -208,9 +222,9 @@ class BinaryClassificationGLM(BaseGLM):
             offset, self.offset_index = self.get_x_column(X, self.offset_column)
         if self.offset_mode == 'EXPOSURE':
             exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
-        
+
         X = self.process_fixed_columns(X)
-        
+
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
@@ -229,7 +243,7 @@ class BinaryClassificationGLM(BaseGLM):
             offset, self.offset_index = self.get_x_column(X, self.offset_column)
         if self.offset_mode == 'EXPOSURE':
             exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
-        
+
         X = self.process_fixed_columns(X)
         #  adds a constant
         X = sm.add_constant(X, has_constant='add')
@@ -251,7 +265,6 @@ class RegressionGLM(BaseGLM):
         self.fit_model(X, y, sample_weight)
         X = self.process_fixed_columns(X)
 
-
         #  adds attributes for explainability
         # intercept cant be multidimensional np array like in classification
         # as scoring_base.py func compute_lm_significant hstack method will fail
@@ -260,7 +273,7 @@ class RegressionGLM(BaseGLM):
         if self.removed_index is not None:
             self.coef_ = np.insert(self.coef_, self.removed_index, 0)
         # statsmodels 0 is 211 sets this to true 0
-        self.coef_= [0 if x==211.03485067364605 else x for x in self.coef_]
+        self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
 
         self.intercept_ = float(self.fitted_model.params[0])
 
@@ -277,13 +290,8 @@ class RegressionGLM(BaseGLM):
 
         X = self.process_fixed_columns(X)
         X = sm.add_constant(X, has_constant='add')
-        
+
         # makes predictions and converts to DSS accepted format
         y_pred = np.array(self.fitted_model.predict(X, offset=offset, exposure=exposure))
 
         return y_pred
-
-
-
-
-
