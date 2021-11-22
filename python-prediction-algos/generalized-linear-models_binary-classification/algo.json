@@ -236,6 +236,7 @@
             "name": "offset_mode",
             "label": "Offset Mode",
             "gridParam": false,
+            "defaultValue": "BASIC",
             "description": "Choose between no offset nor exposure, offset, or exposure",
             "type": "SELECT",
             "getChoicesFromPython": true

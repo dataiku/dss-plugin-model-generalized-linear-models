@@ -95,7 +95,6 @@
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a gamma distribution",
             "defaultValue": "inverse_power",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -112,14 +111,14 @@
 
             ],
             "visibilityCondition": "model.family_name == 'gamma'",
-            "allowDuplicates": false
+            "allowDuplicates": false,
+            "gridParam": false
         },
         {
             "name": "gaussian_link",
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a gaussian distribution",
             "defaultValue": "identity",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -135,14 +134,14 @@
                 }
             ],
             "visibilityCondition": "model.family_name == 'gaussian'",
-            "allowDuplicates": false
+            "allowDuplicates": false,
+            "gridParam": false
         },
         {
             "name": "inverse_gaussian_link",
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing an inverse gaussian distribution",
             "defaultValue": "inverse_squared",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -162,14 +161,14 @@
                 }
             ],
             "visibilityCondition": "model.family_name == 'inverse_gaussian'",
-            "allowDuplicates": false
+            "allowDuplicates": false,
+            "gridParam": false
         },
         {
             "name": "poisson_link",
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a poisson distribution",
             "defaultValue": "log",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -182,14 +181,14 @@
 
             ],
             "visibilityCondition": "model.family_name == 'poisson'",
-            "allowDuplicates": false
+            "allowDuplicates": false,
+            "gridParam": false
         },
         {
             "name": "negative_binomial_link",
             "label": "Link Functions",
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a negative binomial distribution",
             "defaultValue": "log",
-            "gridParam": false,
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -210,12 +209,12 @@
 
             ],
             "visibilityCondition": "model.family_name == 'negative_binomial'",
-            "allowDuplicates": false
+            "allowDuplicates": false,
+            "gridParam": false
         },
         {
             "name": "tweedie_link",
             "label": "Link Functions",
-            "gridParam": false,
             "description": "Relates the expected value of the response to the linear predictors in the model when choosing a tweedie distribution",
             "defaultValue": "log",
             "type": "SELECT",
@@ -230,14 +229,15 @@
 
             ],
             "visibilityCondition": "model.family_name == 'tweedie'",
-            "allowDuplicates": false
+            "allowDuplicates": false,
+            "gridParam": false
         },
         {
             "name": "offset_mode",
             "label": "Offset Mode",
             "gridParam": false,
-            "description": "Choose between no offset nor exposure, offset, or exposure",
             "defaultValue": "BASIC",
+            "description": "Choose between no offset nor exposure, offset, or exposure",
             "type": "SELECT",
             "getChoicesFromPython": true
         },
@@ -289,8 +289,8 @@
             "name": "alpha",
             "label": "Alpha",
             "type": "INT",
-            "defaultValue": 1,
             "description": "The ancillary parameter for the negative binomial distribution",
+            "defaultValue": 1,
             "allowDuplicates": false,
             "mandatory": false,
             "visibilityCondition": "model.family_name == 'negative_binomial'",
@@ -299,13 +299,13 @@
         {
             "name": "power",
             "label": "Power",
-            "type": "INT",
-            "defaultValue": 1,
+            "type": "DOUBLE",
             "description": "The power used for the power link function",
+            "defaultValue": 1,
             "allowDuplicates": false,
             "mandatory": false,
             "gridParam": false,
-            "visibilityCondition": "model.negative_binomial_link == 'power'|| model.tweedie_link == 'power'"
+            "visibilityCondition": "(model.family_name == 'negative_binomial' && model.negative_binomial_link == 'power') || (model.family_name == 'tweedie' && model.tweedie_link == 'power')"
         },
         {
             "name": "var_power",
