@@ -51,6 +51,12 @@ if max(dku_config.knots)>dku_config.max_value:
 
 
 def process(row):
+    if not row[dku_config.column].isnumeric():
+        raise ValueError(f"Column must contain numeric data")
+    if float(row[dku_config.column]) < dku_config.min_value:
+        raise ValueError("min value must be lower than all the column values")
+    if float(row[dku_config.column]) > dku_config.max_value:
+        raise ValueError("max value must be greater than all the column values")
     transformed_x = build_design_matrices([design_info], {'x': [float(row[dku_config.column])]})[0][0]
     num_cols = len(transformed_x)
     new_cols = [dku_config.column + '_Spline_' + str(j-1) for j in range(1, num_cols)] # index 0 is intercept

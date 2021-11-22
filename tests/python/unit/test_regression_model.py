@@ -1,10 +1,10 @@
 from generalized_linear_models.dku_glm import RegressionGLM
 import statsmodels.api as sm
 import pytest
-from testing_utils import testing_dict
+from testing_utils import testing_dict, testing_dict_errors
 import numpy as np
 import pandas as pd
-from sklearn import datasets
+
 
 def test_link_function():
     expected = [
@@ -20,8 +20,6 @@ def test_link_function():
     ]
 
     actual = []
-    breast_cancer = datasets.load_breast_cancer()
-    X, y = breast_cancer.data, breast_cancer.target
 
     for test in testing_dict:
         test_params = testing_dict[test]
@@ -72,6 +70,7 @@ def test_regression():
     regression_model.fit(X, y)
 
     assert regression_model.fitted_model.summary().as_csv() == gamma_results.summary().as_csv()
+
 
 def test_regression_regularized():
     data = sm.datasets.scotland.load()
@@ -167,6 +166,7 @@ def test_regression_exposure():
     regression_model.fit(X, y)
 
     assert regression_model.fitted_model.summary().as_csv() == poisson_results.summary().as_csv()
+
 
 def test_regression_prediction():
     data = sm.datasets.scotland.load()

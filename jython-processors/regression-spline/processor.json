@@ -1,7 +1,7 @@
 {
     "meta" : {
         "label": "Regression Spline",
-        "description": "Split the variable into B-spline basis (https://patsy.readthedocs.io/en/latest/spline-regression.html), which parametrizes a piecewise polynomial spline where pieces meet at each knot, the number of columns added is equal to number of knots plus the degree of the polynomial",
+        "description": "Split the variable into [B-spline basis](https://patsy.readthedocs.io/en/latest/spline-regression.html), which parametrizes a piecewise polynomial spline where pieces meet at each knot, the number of columns added is equal to number of knots plus the degree of the polynomial",
         "icon": "icon-tasks"
     },
     "mode": "ROW",
@@ -17,11 +17,11 @@
             "name": "degree",
             "label": "Degree",
             "type": "INT",
-            "description": "The degree of the spline",
+            "description": "The degree of the spline, should be between 0 and 3",
             "defaultValue": 1,
             "mandatory": true,
             "maxI": 3,
-            "minI": 1
+            "minI": 0
         },
         {
             "name": "min_value",
