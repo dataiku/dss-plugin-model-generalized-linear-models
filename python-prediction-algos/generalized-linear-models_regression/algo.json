@@ -237,7 +237,7 @@
             "label": "Offset Mode",
             "gridParam": false,
             "defaultValue": "BASIC",
-            "description": "Choose between no offset nor exposure, offset, or exposure",
+            "description": "Choose between no offset nor exposure, or using some offsets/exposures",
             "type": "SELECT",
             "getChoicesFromPython": true
         },
@@ -250,14 +250,14 @@
             "visibilityCondition": "model.offset_mode != 'BASIC'"
         },
         {
-            "name": "offset_column",
-            "label": "Offset Column",
+            "name": "offset_columns",
+            "label": "Offset Columns",
             "gridParam": false,
-            "description": "Column to offset model predictions. The offset column must be added in the feature handling",
-            "type": "DATASET_COLUMN",
+            "description": "Columns to offset model predictions. The offset columns must be added in the feature handling",
+            "type": "DATASET_COLUMNS",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "visibilityCondition": "model.offset_mode == 'OFFSET'",
+            "visibilityCondition": "model.offset_mode == 'OFFSETS' || model.offset_mode == 'OFFSETS/EXPOSURES'",
             "allowedColumnTypes": [
                 "tinyint",
                 "smallint",
@@ -268,14 +268,14 @@
               ]
         },
         {
-            "name": "exposure_column",
-            "label": "Exposure Column",
+            "name": "exposure_columns",
+            "label": "Exposure Columns",
             "gridParam": false,
-            "description": "Log of the exposure column will be added to the model, relevant when the log link function is used. The exposure column must be added in the feature handling, with no rescaling",
-            "type": "DATASET_COLUMN",
+            "description": "Logs of the exposure columns will be added to the model, relevant when the log link function is used. The exposure columns must be added in the feature handling, with no rescaling",
+            "type": "DATASET_COLUMNS",
             "datasetParamName": "training_dataset",
             "mandatory": false,
-            "visibilityCondition": "model.offset_mode == 'EXPOSURE'",
+            "visibilityCondition": "model.offset_mode == 'OFFSETS/EXPOSURES'",
             "allowedColumnTypes": [
                 "tinyint",
                 "smallint",

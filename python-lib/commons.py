@@ -152,7 +152,7 @@ def check_params(params):
         value=params['offset_mode'],
         checks=[{
             "type": "in",
-            "op": ['BASIC', 'OFFSET', 'EXPOSURE']
+            "op": ['BASIC', 'OFFSETS', 'OFFSETS/EXPOSURES']
         }],
         required=True
     )
@@ -174,26 +174,32 @@ def check_params(params):
         )
         dataset = dataiku.Dataset(params['training_dataset'], project_key)
 
-    if dku_config.get('offset_mode') == 'OFFSET':
-        dku_config.add_param(
-            name="offset_column",
-            value=None if 'offset_column' not in params else params['offset_column'],
-            checks=[{
-                "type": "in",
-                "op": dataset.get_dataframe().columns
-            }],
-            required=False
-        )
+    if dku_config.get('offset_mode') != 'BASIC':
+        for i, offset_column in enumerate(params['offset_columns']):
+            dku_config.add_param(
+                name="offset_column_" + str(i),
+                value=offset_column,
+                checks=[{
+                    "type": "in",
+                    "op": dataset.get_dataframe().columns
+                }],
+                required=False
+            )
+        dku_config.offset_columns = [dku_config.get("offset_column_" + str(i)) for i in
+                                     range(len(params['offset_columns']))]
 
-    if dku_config.get('offset_mode') == 'EXPOSURE':
-        dku_config.add_param(
-            name="exposure_column",
-            value=None if 'exposure_column' not in params else params['exposure_column'],
-            checks=[{
-                "type": "in",
-                "op": dataset.get_dataframe().columns
-            }],
-            required=False
-        )
+    if dku_config.get('offset_mode') == 'OFFSETS/EXPOSURES':
+        for i, exposure_column in enumerate(params['exposure_columns']):
+            dku_config.add_param(
+                name="exposure_column_" + str(i),
+                value=exposure_column,
+                checks=[{
+                    "type": "in",
+                    "op": dataset.get_dataframe().columns
+                }],
+                required=False
+            )
+        dku_config.exposure_columns = [dku_config.get("exposure_column_" + str(i)) for i in
+                                       range(len(params['exposure_columns']))]
 
     return dku_config
