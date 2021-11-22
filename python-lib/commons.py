@@ -148,14 +148,14 @@ def check_params(params):
     project_key = dataiku.get_custom_variables()["projectKey"]
     project = dataiku.api_client().get_project(project_key)
 
-    datasets = [analysis['inputDataset'] for analysis in project.list_analyses()]
+    allowed_datasets_names = [analysis['inputDataset'] for analysis in project.list_analyses()]
 
     dku_config.add_param(
         name="training_dataset",
         value=params['training_dataset'],
         checks=[{
             "type": "in",
-            "op": datasets
+            "op": allowed_datasets_names
         }],
         required=False
     )
