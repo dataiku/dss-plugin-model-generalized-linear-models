@@ -2,6 +2,7 @@ import dataiku
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role
 from dkulib.core.dku_config.dku_config import DkuConfig
 
+
 def get_input_output():
     if len(get_input_names_for_role('input_dataset')) == 0:
         raise ValueError('No input dataset.')
@@ -115,10 +116,10 @@ def check_params(params):
 
     if not isinstance(params['penalty'], list):
         params['penalty'] = [params['penalty']]
-    for i, pnalty in enumerate(params['penalty']):
+    for i, penalty in enumerate(params['penalty']):
         dku_config.add_param(
             name="penalty_" + str(i),
-            value=pnalty,
+            value=penalty,
             checks=[{
                 "type": "sup_eq",
                 "op": 0
