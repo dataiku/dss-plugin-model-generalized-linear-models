@@ -33,8 +33,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             if not isinstance(power, (int, float)):
                 raise ValueError('power should be defined with a numeric value, current value of ' + str(power) + ' unsupported, type: ' + str(type(power)))
         self.power = power
-        if penalty < 0:
-            raise ValueError('penalty should be positive')
+        for p in penalty:
+            if p < 0:
+                raise ValueError('penalty should be positive')
         self.penalty = penalty
         if family_name == 'tweedie':
             if not isinstance(var_power, (int, float)):

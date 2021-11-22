@@ -304,7 +304,7 @@
             "allowDuplicates": false,
             "mandatory": false,
             "gridParam": false,
-            "visibilityCondition": "model.negative_binomial_link == 'power'|| model.tweedie_link == 'power'"
+            "visibilityCondition": "(model.family_name == 'negative_binomial' && model.negative_binomial_link == 'power') || (model.family_name == 'tweedie' && model.tweedie_link == 'power')"
         },
         {
             "name": "var_power",

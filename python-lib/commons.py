@@ -28,91 +28,102 @@ def check_params(params):
         required=True
     )
 
-    dku_config.add_param(
-        name="binomial_link",
-        value=params['binomial_link'],
-        checks=[{
-            "type": "in",
-            "op": ["cloglog", "log", "logit", "cauchy", "identity"]
-        }],
-        required=False
-    )
+    if params.get('family_name') == 'binomial':
+        dku_config.add_param(
+            name="binomial_link",
+            value=params['binomial_link'],
+            checks=[{
+                "type": "in",
+                "op": ["cloglog", "log", "logit", "cauchy", "identity"]
+            }],
+            required=False
+        )
 
-    dku_config.add_param(
-        name="gamma_link",
-        value=params['gamma_link'],
-        checks=[{
-            "type": "in",
-            "op": ["log", "identity", "inverse_power"]
-        }],
-        required=False
-    )
+    if params.get('family_name') == 'gamma':
+        dku_config.add_param(
+            name="gamma_link",
+            value=params['gamma_link'],
+            checks=[{
+                "type": "in",
+                "op": ["log", "identity", "inverse_power"]
+            }],
+            required=False
+        )
 
-    dku_config.add_param(
-        name="gaussian_link",
-        value=params['gaussian_link'],
-        checks=[{
-            "type": "in",
-            "op": ["log", "identity", "inverse_power"]
-        }],
-        required=False
-    )
+    if params.get('family_name') == 'gaussian':
+        dku_config.add_param(
+            name="gaussian_link",
+            value=params['gaussian_link'],
+            checks=[{
+                "type": "in",
+                "op": ["log", "identity", "inverse_power"]
+            }],
+            required=False
+        )
 
-    dku_config.add_param(
-        name="inverse_gaussian_link",
-        value=params['inverse_gaussian_link'],
-        checks=[{
-            "type": "in",
-            "op": ["log", "inverse_squared", "identity", "inverse_power"]
-        }],
-        required=False
-    )
+    if params.get('family_name') == 'inverse_gaussian':
+        dku_config.add_param(
+            name="inverse_gaussian_link",
+            value=params['inverse_gaussian_link'],
+            checks=[{
+                "type": "in",
+                "op": ["log", "inverse_squared", "identity", "inverse_power"]
+            }],
+            required=False
+        )
 
-    dku_config.add_param(
-        name="poisson_link",
-        value=params['poisson_link'],
-        checks=[{
-            "type": "in",
-            "op": ["log", "identity"]
-        }],
-        required=False
-    )
+    if params.get('family_name') == 'poisson':
+        dku_config.add_param(
+            name="poisson_link",
+            value=params['poisson_link'],
+            checks=[{
+                "type": "in",
+                "op": ["log", "identity"]
+            }],
+            required=False
+        )
 
-    dku_config.add_param(
-        name="negative_binomial_link",
-        value=params['negative_binomial_link'],
-        checks=[{
-            "type": "in",
-            "op": ["log", "cloglog", "identity", "power"]
-        }],
-        required=False
-    )
+    if params.get('family_name') == 'negative_binomial':
+        dku_config.add_param(
+            name="negative_binomial_link",
+            value=params['negative_binomial_link'],
+            checks=[{
+                "type": "in",
+                "op": ["log", "cloglog", "identity", "power"]
+            }],
+            required=False
+        )
 
-    dku_config.add_param(
-        name="tweedie_link",
-        value=params['tweedie_link'],
-        checks=[{
-            "type": "in",
-            "op": ["log", "power"]
-        }],
-        required=False
-    )
+    if params.get('family_name') == 'tweedie':
+        dku_config.add_param(
+            name="tweedie_link",
+            value=params['tweedie_link'],
+            checks=[{
+                "type": "in",
+                "op": ["log", "power"]
+            }],
+            required=False
+        )
 
-    dku_config.add_param(
-        name="alpha",
-        value=params['alpha'],
-        checks=[{
-            "type": "between",
-            "op": (0.01, 2)
-        }],
-        required=False
-    )
+    if params.get('family_name') == 'negative_binomial':
+        dku_config.add_param(
+            name="alpha",
+            value=params['alpha'],
+            checks=[{
+                "type": "between",
+                "op": (0.01, 2)
+            }],
+            required=False
+        )
 
-    dku_config.add_param(
-        name="power",
-        value=params['power'],
-        required=False
-    )
+    if (params.get('family_name') == 'negative_binomial' and params.get('negative_binomial_link') == 'power') or (
+            params.get('family_name') == 'tweedie' and params.get('tweedie_link') == 'power'
+    ):
+        dku_config.add_param(
+            name="power",
+            value=params['power'],
+            required=False
+        )
 
     if not isinstance(params['penalty'], list):
         params['penalty'] = [params['penalty']]
@@ -129,11 +140,12 @@ def check_params(params):
 
     dku_config.penalty = [dku_config["penalty_" + str(i)] for i in range(len(params['penalty']))]
 
-    dku_config.add_param(
-        name="var_power",
-        value=params['var_power'],
-        required=False
-    )
+    if params.get('family_name') == 'tweedie':
+        dku_config.add_param(
+            name="var_power",
+            value=params['var_power'],
+            required=False
+        )
 
     dku_config.add_param(
         name="offset_mode",
