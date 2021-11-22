@@ -18,8 +18,7 @@
             "mandatory": true,
             "type": "DOUBLES",
             "defaultValue": [0.0],
-            "gridParam": true,
-            "minD": 0.0
+            "gridParam": true
         },
         {
             "name": "family_name",
