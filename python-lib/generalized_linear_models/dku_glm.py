@@ -30,15 +30,15 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.alpha = alpha
         if (family_name == 'negative_binomial' and negative_binomial_link == 'power') or (
                 family_name == 'tweedie' and tweedie_link == 'power'):
-            if not isinstance(type(power), (int, float)):
-                raise ValueError('power should be defined with a numeric value')
+            if not isinstance(power, (int, float)):
+                raise ValueError('power should be defined with a numeric value, current value of ' + str(power) + ' unsupported, type: ' + str(type(power)))
         self.power = power
         if penalty < 0:
             raise ValueError('penalty should be positive')
         self.penalty = penalty
         if family_name == 'tweedie':
-            if not isinstance(type(var_power), (int, float)):
-                raise ValueError('var_power should be defined with a numeric value')
+            if not isinstance(var_power, (int, float)):
+                raise ValueError('var_power should be defined with a numeric value, current value of ' + str(var_power) + ' unsupported')
         self.var_power = var_power
         self.fit_intercept = True
         self.intercept_scaling = 1

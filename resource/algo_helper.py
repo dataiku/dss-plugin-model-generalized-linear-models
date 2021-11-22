@@ -8,7 +8,7 @@ def get_offset_mode(config):
         "label": "Offset"
     }]
     distributions = ['binomial', 'gamma', 'gaussian', 'inverse_gaussian', 'poisson', 'negative_binomial', 'tweedie']
-    conditions = [(config['family_name']==distribution and config[distribution + '_link']=='log') for distribution in distributions]
+    conditions = [(config['family_name'] == distribution and config[distribution + '_link'] == 'log') for distribution in distributions]
     if any(conditions):
         choices.append({"value": "EXPOSURE",
                         "label": "Exposure"})
