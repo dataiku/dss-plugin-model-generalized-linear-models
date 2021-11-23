@@ -38,6 +38,7 @@ app.layout = dbc.Container(
             dcc.Tabs(id="tabs", value='predicted', children=[
                 dcc.Tab(label='Predicted', value='predicted'),
                 dcc.Tab(label='Base', value='base'),
+                dcc.Tab(label='Ratio', value='ratio')
             ]),
             html.Hr(),
             dbc.Container(id='tab-description'),
@@ -77,6 +78,8 @@ def make_graph(feature, tab):
         return predicted_graph(feature)
     elif tab == 'base':
         return base_graph(feature)
+    elif tab == 'ratio':
+        return ratio_graph(feature)
 
 
 def base_graph(feature):
@@ -117,6 +120,23 @@ def predicted_graph(feature):
                              mode='lines',
                              name='prediction',
                              line=dict(color=palette[2])),
+                  secondary_y=True)
+    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+    fig.layout.yaxis.gridcolor = '#D7DBDE'
+    return fig
+
+
+def ratio_graph(feature):
+    data = ave_grouped[feature].dropna()
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Bar(x=data[feature], y=data['weight'],
+                         name='weight',
+                         marker=dict(color=palette[0])),
+                  secondary_y=False)
+    fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_prediction']/data['weighted_target'],
+                             mode='lines',
+                             name='actual/expected',
+                             line=dict(color=palette[1])),
                   secondary_y=True)
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
     fig.layout.yaxis.gridcolor = '#D7DBDE'
