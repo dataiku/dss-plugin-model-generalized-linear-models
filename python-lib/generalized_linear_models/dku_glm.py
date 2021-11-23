@@ -33,8 +33,12 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             if not isinstance(power, (int, float)):
                 raise ValueError('power should be defined with a numeric value, current value of ' + str(power) + ' unsupported, type: ' + str(type(power)))
         self.power = power
-        for p in penalty:
-            if p < 0:
+        if isinstance(penalty, list):
+            for p in penalty:
+                if p < 0:
+                    raise ValueError('penalty should be positive')
+        else:
+            if penalty < 0:
                 raise ValueError('penalty should be positive')
         self.penalty = penalty
         if family_name == 'tweedie':
@@ -139,7 +143,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         """
         if important_columns is None:
             column_values = None
-            column_index = None
+            column_indices = None
 
         else:
             for important_column in important_columns:
@@ -172,6 +176,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             if self.exposure_indices is not None:
                 if self.removed_indices is not None:
                     self.removed_indices.extend(self.exposure_indices)
+                else:
+                    self.removed_indices = self.exposure_indices
 
         if self.removed_indices is not None:
             X = np.delete(X, self.removed_indices, axis=1)

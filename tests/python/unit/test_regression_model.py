@@ -114,7 +114,7 @@ def test_regression_offset():
 
     regression_model = RegressionGLM(
         penalty=0.0,
-        offset_mode='OFFSET',
+        offset_mode='OFFSETS',
         family_name='gaussian',
         binomial_link=None,
         gamma_link=None,
@@ -126,7 +126,7 @@ def test_regression_offset():
         alpha=1,
         power=1,
         var_power=1,
-        offset_column='COUTAX')
+        offset_columns=['COUTAX'])
 
     regression_model.column_labels = data.exog_name
 
@@ -147,7 +147,7 @@ def test_regression_exposure():
 
     regression_model = RegressionGLM(
         penalty=0.0,
-        offset_mode='EXPOSURE',
+        offset_mode='OFFSETS/EXPOSURES',
         family_name='poisson',
         binomial_link=None,
         gamma_link=None,
@@ -159,7 +159,7 @@ def test_regression_exposure():
         alpha=1,
         power=1,
         var_power=1,
-        exposure_column='COUTAX')
+        exposure_columns=['COUTAX'])
 
     regression_model.column_labels = data.exog_name
 
