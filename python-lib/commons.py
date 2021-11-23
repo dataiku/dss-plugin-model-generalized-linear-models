@@ -1,6 +1,6 @@
 import dataiku
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role
-from dkulib.core.dku_config.dku_config import DkuConfig
+from dku_config import DkuConfig
 
 
 def get_input_output():
