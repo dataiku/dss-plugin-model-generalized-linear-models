@@ -261,7 +261,7 @@ class BinaryClassificationGLM(BaseGLM):
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offset, exposure=exposure))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offsets, exposure=exposures))
         y_pred_final = y_pred.reshape((len(y_pred), -1))
 
         return y_pred_final > 0.5
@@ -283,7 +283,7 @@ class BinaryClassificationGLM(BaseGLM):
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offset, exposure=exposure))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offsets, exposure=exposures))
         y_pred_final = y_pred.reshape((len(y_pred), -1))
 
         # returns p, 1-p prediction probabilities
@@ -316,17 +316,17 @@ class RegressionGLM(BaseGLM):
         """
         Returns the target as 1D array
         """
-        offset = None
-        exposure = None
-        if self.offset_mode == 'OFFSET':
-            offset, self.offset_index = self.get_x_column(X, self.offset_column)
-        if self.offset_mode == 'EXPOSURE':
-            exposure, self.exposure_index = self.get_x_column(X, self.exposure_column)
+        offsets = None
+        exposures = None
+        if self.offset_mode == 'OFFSETS':
+            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
+        if self.offset_mode == 'OFFSETS/EXPOSURES':
+            exposures, self.exposure_indices = self.get_x_column(X, self.exposure_columns)
 
         X = self.process_fixed_columns(X)
         X = sm.add_constant(X, has_constant='add')
 
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offset, exposure=exposure))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offsets, exposure=exposures))
 
         return y_pred
