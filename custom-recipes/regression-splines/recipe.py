@@ -1,8 +1,5 @@
-
-import dataiku
 from dataiku.customrecipe import get_recipe_config
-import pandas as pd, numpy as np
-from dkulib.core.dku_config.dku_config import DkuConfig
+from dku_config import DkuConfig
 
 from regression_splines.dku_reg_splines import RegressionSplines
 from commons import get_input_output

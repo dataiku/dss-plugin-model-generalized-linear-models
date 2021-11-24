@@ -1,6 +1,5 @@
 from patsy import dmatrix, build_design_matrices
-from dkulib.core.dku_config.dku_config import DkuConfig
-import dataiku
+from dku_config import DkuConfig
 
 dku_config = DkuConfig()
 
