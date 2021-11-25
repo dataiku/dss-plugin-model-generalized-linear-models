@@ -17,11 +17,14 @@ import sys
 import generalized_linear_models
 
 sys.modules['generalized_linear_models'] = generalized_linear_models
-from a_vs_e.actual_vs_predicted_utils import get_ave_grouped
+from a_vs_e.actual_vs_predicted_utils import get_ave_grouped, get_original_model_handler
 
 palette = '#BDD8ED', '#3075AE', '#4F934F'
 ave_grouped = get_ave_grouped()
 features = [k for k in ave_grouped.keys()]
+
+model_handler = get_original_model_handler()
+predictor = model_handler.get_predictor()
 
 app.config.external_stylesheets = [dbc.themes.BOOTSTRAP]
 
@@ -38,15 +41,36 @@ app.layout = dbc.Container(
             dcc.Tabs(id="tabs", value='predicted', children=[
                 dcc.Tab(label='Predicted', value='predicted'),
                 dcc.Tab(label='Base', value='base'),
-                dcc.Tab(label='Ratio', value='ratio')
             ]),
-            html.Hr(),
-            dbc.Container(id='tab-description'),
-            dbc.Row([
-                dbc.Col(feature_choice, md=4)
-            ]),
+            feature_choice,
             dcc.Graph(id="AvE")
+        ]),
+        html.Div([
+            html.H1("Metrics")
+        ], style={'textAlign': 'center',
+                  'marginBottom': '100px'}),
+
+        html.Div([
+            html.Div([
+                html.H2("BIC Score ", style={'textAlign': 'center', 'marginBottom': '50px'}),
+                html.H3(f"{np.round(predictor._clf.fitted_model.bic, 2):,}", style={'textAlign': 'center'})
+
+            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '33%'}),
+
+            html.Div([
+                html.H2("AIC Score ", style={'textAlign': 'center', 'marginBottom': '50px'}),
+                html.H3(f"{np.round(predictor._clf.fitted_model.aic, 2):,}", style={'textAlign': 'center'})
+
+            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '33%'}),
+
+            html.Div([
+                html.H2("Deviance ", style={'textAlign': 'center', 'marginBottom': '50px'}),
+                html.H3(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}", style={'textAlign': 'center'})
+
+            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '33%'}),
+
         ])
+
     ],
     fluid=True)
 
