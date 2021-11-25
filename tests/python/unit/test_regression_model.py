@@ -180,7 +180,7 @@ def test_regression_prediction():
 
     regression_model = RegressionGLM(
         penalty=0.0,
-        offset_mode='EXPOSURE',
+        offset_mode='OFFSETS/EXPOSURES',
         family_name='poisson',
         binomial_link=None,
         gamma_link=None,
@@ -192,7 +192,7 @@ def test_regression_prediction():
         alpha=1,
         power=1,
         var_power=1,
-        exposure_column='COUTAX')
+        exposure_columns=['COUTAX'])
 
     regression_model.column_labels = data.exog_name
 
