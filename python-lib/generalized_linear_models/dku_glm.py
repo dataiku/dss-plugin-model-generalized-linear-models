@@ -156,6 +156,24 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         return column_values, column_indices
 
+    def compute_aggregate_offset(self, offsets, exposures):
+        offset_output = None
+        if offsets is not None:
+            offsets = offsets.sum(axis=1)
+            offset_output = offsets
+
+        if exposures is not None:
+            if (exposures <= 0).any():
+                raise ValueError('Exposure columns contains some negative values')
+            exposures = np.log(exposures)
+            exposures = exposures.sum(axis=1)
+            if offset_output is None:
+                offset_output = exposures
+            else:
+                offset_output = offset_output + exposures
+
+        return offset_output
+
     def fit_model(self, X, y, sample_weight=None):
         """
         fits a GLM model
@@ -184,20 +202,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         X = sm.add_constant(X)
 
-        offset_output = None
-        if offsets is not None:
-            offsets = offsets.sum(axis=1)
-            offset_output = offsets
-
-        if exposures is not None:
-            if (exposures <= 0).any():
-                raise ValueError('Exposure columns contains some negative values')
-            exposures = np.log(exposures)
-            exposures = exposures.sum(axis=1)
-            if offset_output is None:
-                offset_output = exposures
-            else:
-                offset_output = offset_output + exposures
+        offset_output = self.compute_aggregate_offset(offsets, exposures)
 
         #  fits and stores statsmodel glm
         model = sm.GLM(y, X, family=self.family, offset=offset_output, var_weights=sample_weight)
@@ -254,14 +259,17 @@ class BinaryClassificationGLM(BaseGLM):
         if self.offset_mode == 'OFFSETS':
             offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
         if self.offset_mode == 'OFFSETS/EXPOSURES':
+            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
             exposures, self.exposure_indices = self.get_x_column(X, self.exposure_columns)
 
         X = self.process_fixed_columns(X)
 
         X = sm.add_constant(X, has_constant='add')
 
+        offset_output = self.compute_aggregate_offset(offsets, exposures)
+
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offsets, exposure=exposures))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
         y_pred_final = y_pred.reshape((len(y_pred), -1))
 
         return y_pred_final > 0.5
@@ -282,8 +290,10 @@ class BinaryClassificationGLM(BaseGLM):
         #  adds a constant
         X = sm.add_constant(X, has_constant='add')
 
+        offset_output = self.compute_aggregate_offset(offsets, exposures)
+
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offsets, exposure=exposures))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
         y_pred_final = y_pred.reshape((len(y_pred), -1))
 
         # returns p, 1-p prediction probabilities
@@ -321,12 +331,15 @@ class RegressionGLM(BaseGLM):
         if self.offset_mode == 'OFFSETS':
             offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
         if self.offset_mode == 'OFFSETS/EXPOSURES':
+            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
             exposures, self.exposure_indices = self.get_x_column(X, self.exposure_columns)
 
         X = self.process_fixed_columns(X)
         X = sm.add_constant(X, has_constant='add')
 
+        offset_output = self.compute_aggregate_offset(offsets, exposures)
+
         # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offsets, exposure=exposures))
+        y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
 
         return y_pred
