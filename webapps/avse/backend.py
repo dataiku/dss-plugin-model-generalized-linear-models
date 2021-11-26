@@ -44,6 +44,7 @@ app.layout = dbc.Container(
             dcc.Tabs(id="tabs", value='predicted', children=[
                 dcc.Tab(label='Predicted', value='predicted'),
                 dcc.Tab(label='Base', value='base'),
+                dcc.Tab(label='Ratio', value='ratio'),
             ], style={'margin-right': '15px','margin-left': '15px'}),
             html.Div([
                 html.H4("Select a Feature", style={'display': 'inline-block','vertical-align': 'center', 'width': '10%','margin-left': '15px','margin-top':'33px','margin-bottom':'15px'}),
