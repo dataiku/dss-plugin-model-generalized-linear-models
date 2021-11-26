@@ -32,19 +32,25 @@ feature_choice = dcc.Dropdown(
     id='feature-choice',
     options=[{'label': f, 'value': f}
              for f in features],
-    value=features[0]
+    value=features[0], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '62%','margin-top':'15px','margin-bottom':'15px'}
 )
 
 app.layout = dbc.Container(
     [
+        html.H1("Generalized Linear Model Analysis", style={'margin-top':'15px'}),
+        html.H6("The predicted tab show the blah vs blah"),
+        html.H6("The base tab show the blah vs blah"),
         html.Div([
-            html.H4("Actual Vs Expected Graph",style={'margin-left': '15px'}),
             dcc.Tabs(id="tabs", value='predicted', children=[
                 dcc.Tab(label='Predicted', value='predicted'),
                 dcc.Tab(label='Base', value='base'),
+            ], style={'margin-right': '15px','margin-left': '15px'}),
+            html.Div([
+                html.H4("Select a Feature", style={'display': 'inline-block','vertical-align': 'center', 'width': '10%','margin-left': '15px','margin-top':'33px','margin-bottom':'15px'}),
+                feature_choice
             ]),
-            feature_choice,
-            dcc.Graph(id="AvE")
+            html.H4("Actual Vs Expected Graph",style={'margin-left': '15px','margin-bottom':'15px'}),
+            dcc.Graph(id="AvE", style={'margin-right': '15px','margin-left': '15px','margin-top':'15px','margin-bottom':'15px'})
         ], style={'border-radius': '15px','box-shadow': '8px 8px 8px grey','background-color': '#f9f9f9',
                        'padding': '10px','margin-bottom': '50px','margin-top': '50px',}),
 
@@ -78,6 +84,7 @@ app.layout = dbc.Container(
 
     ],
     fluid=True)
+
 
 @app.callback(Output('tab-description', 'children'),
               Input('tabs', 'value'))
