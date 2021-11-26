@@ -38,7 +38,7 @@ feature_choice = dcc.Dropdown(
 app.layout = dbc.Container(
     [
         html.Div([
-            html.H3("Actual Vs Expected Graph",style={'margin-left': '15px'}),
+            html.H4("Actual Vs Expected Graph",style={'margin-left': '15px'}),
             dcc.Tabs(id="tabs", value='predicted', children=[
                 dcc.Tab(label='Predicted', value='predicted'),
                 dcc.Tab(label='Base', value='base'),
