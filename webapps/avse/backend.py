@@ -38,42 +38,46 @@ feature_choice = dcc.Dropdown(
 app.layout = dbc.Container(
     [
         html.Div([
+            html.H3("Actual Vs Expected Graph",style={'margin-left': '15px'}),
             dcc.Tabs(id="tabs", value='predicted', children=[
                 dcc.Tab(label='Predicted', value='predicted'),
                 dcc.Tab(label='Base', value='base'),
             ]),
             feature_choice,
             dcc.Graph(id="AvE")
-        ]),
-        html.Div([
-            html.H1("Metrics")
-        ], style={'textAlign': 'center',
-                  'marginBottom': '100px'}),
+        ], style={'border-radius': '15px','box-shadow': '8px 8px 8px grey','background-color': '#f9f9f9',
+                       'padding': '10px','margin-bottom': '50px','margin-top': '50px',}),
+
 
         html.Div([
             html.Div([
-                html.H2("BIC Score ", style={'textAlign': 'center', 'marginBottom': '50px'}),
-                html.H3(f"{np.round(predictor._clf.fitted_model.bic, 2):,}", style={'textAlign': 'center'})
+                html.H4("BIC Score ", style={'textAlign': 'left', 'marginBottom': '50px'}),
+                html.H1(f"{np.round(predictor._clf.fitted_model.bic, 2):,}", style={'textAlign': 'center','margin-bottom': '50px'})
 
-            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '33%'}),
-
-            html.Div([
-                html.H2("AIC Score ", style={'textAlign': 'center', 'marginBottom': '50px'}),
-                html.H3(f"{np.round(predictor._clf.fitted_model.aic, 2):,}", style={'textAlign': 'center'})
-
-            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '33%'}),
+            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '32%',
+                      'border-radius': '15px','box-shadow': '8px 8px 8px grey','background-color': '#f9f9f9',
+                       'padding': '10px','margin-right': '30px'}),
 
             html.Div([
-                html.H2("Deviance ", style={'textAlign': 'center', 'marginBottom': '50px'}),
-                html.H3(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}", style={'textAlign': 'center'})
+                html.H4("AIC Score ", style={'textAlign': 'left', 'marginBottom': '50px'}),
+                html.H1(f"{np.round(predictor._clf.fitted_model.aic, 2):,}", style={'textAlign': 'center','margin-bottom': '50px'})
 
-            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '33%'}),
+            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '32%',
+                      'border-radius': '15px','box-shadow': '8px 8px 8px grey','background-color': '#f9f9f9',
+                       'padding': '10px','margin-left': '15px','margin-right': '15px'}),
+
+            html.Div([
+                html.H4("Deviance ", style={'textAlign': 'left', 'marginBottom': '50px'}),
+                html.H1(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}", style={'textAlign': 'center','margin-bottom': '50px'})
+
+            ], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '32%',
+                      'border-radius': '15px','box-shadow': '8px 8px 8px grey','background-color': '#f9f9f9',
+                       'padding': '10px','margin-left': '30px'}),
 
         ])
 
     ],
     fluid=True)
-
 
 @app.callback(Output('tab-description', 'children'),
               Input('tabs', 'value'))
