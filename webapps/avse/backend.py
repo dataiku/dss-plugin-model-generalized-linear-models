@@ -17,11 +17,14 @@ import sys
 import generalized_linear_models
 
 sys.modules['generalized_linear_models'] = generalized_linear_models
-from a_vs_e.actual_vs_predicted_utils import get_ave_grouped
+from a_vs_e.actual_vs_predicted_utils import get_ave_grouped, get_original_model_handler
 
 palette = '#BDD8ED', '#3075AE', '#4F934F'
 ave_grouped = get_ave_grouped()
 features = [k for k in ave_grouped.keys()]
+
+model_handler = get_original_model_handler()
+predictor = model_handler.get_predictor()
 
 app.config.external_stylesheets = [dbc.themes.BOOTSTRAP]
 
@@ -29,26 +32,73 @@ feature_choice = dcc.Dropdown(
     id='feature-choice',
     options=[{'label': f, 'value': f}
              for f in features],
-    value=features[0]
+    value=features[0], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '64%',
+                              'margin-top': '1em',
+                              'margin-bottom': '1em'}
 )
 
 app.layout = dbc.Container(
     [
-        html.Div([
-            dcc.Tabs(id="tabs", value='predicted', children=[
-                dcc.Tab(label='Predicted', value='predicted'),
-                dcc.Tab(label='Base', value='base'),
-                dcc.Tab(label='Ratio', value='ratio')
-            ]),
-            html.Hr(),
-            dbc.Container(id='tab-description'),
-            dbc.Row([
-                dbc.Col(feature_choice, md=4)
-            ]),
-            dcc.Graph(id="AvE")
-        ])
-    ],
-    fluid=True)
+        html.H1("Generalized Linear Model Analysis", style={'margin-top': '1em'}),
+        # html.Div([
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    dcc.Tabs(id="tabs", value='predicted', children=[
+                        dcc.Tab(label='Predicted', value='predicted'),
+                        dcc.Tab(label='Base', value='base'),
+                        dcc.Tab(label='Ratio', value='ratio'),
+                    ], style={'margin-right': '1em', 'margin-left': '1em'}),
+                    html.Div([
+                        html.H4("Select a Feature",
+                                style={'display': 'inline-block', 'vertical-align': 'center', 'width': '10%',
+                                       'margin-left': '1em', 'margin-top': '1em', 'margin-bottom': '1em'}),
+                        feature_choice
+                    ]),
+                    html.H4("Actual Vs Expected Graph", style={'margin-left': '1em', 'margin-bottom': '1em'}),
+                    dbc.Container(id='tab-description'),
+                    dcc.Graph(id="AvE", style={'margin-right': '1em', 'margin-left': '1em', 'margin-top': '1em',
+                                               'margin-bottom': '1em'})
+                ]), style={'margin-bottom': '1em'}
+        ),
+
+        dbc.Row([
+            dbc.Col([
+                dbc.Card(
+                    dbc.CardBody(
+                        [
+                            html.H4("BIC Score ", style={'textAlign': 'left', 'marginBottom': '2em'}),
+                            html.H1(f"{np.round(predictor._clf.fitted_model.bic, 2):,}",
+                                    style={'textAlign': 'center', 'margin-bottom': '1em'})
+
+                        ]), style={'margin-bottom': '1em'}
+                )
+            ], md=4),
+
+            dbc.Col([
+                dbc.Card(
+                    dbc.CardBody(
+                        [
+                html.H4("AIC Score ", style={'textAlign': 'left', 'marginBottom': '2em'}),
+                html.H1(f"{np.round(predictor._clf.fitted_model.aic, 2):,}",
+                        style={'textAlign': 'center', 'margin-bottom': '1em'})
+
+            ]), style={'margin-bottom': '1em'}
+                )
+                ], md=4),
+        dbc.Col([
+            dbc.Card(
+                    dbc.CardBody(
+                        [
+                html.H4("Deviance ", style={'textAlign': 'left', 'marginBottom': '2em'}),
+                html.H1(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}",
+                        style={'textAlign': 'center', 'margin-bottom': '1em'})
+
+            ]), style={'margin-bottom': '1em'}
+            )
+        ], md=4)
+    ])
+], fluid=True)
 
 
 @app.callback(Output('tab-description', 'children'),
@@ -66,6 +116,10 @@ def news_scores(tab):
             "The background bars represent the overall weight (number of observations x weight) of each bin. " +
             "The base prediction of each bin is the weighted prediction when all the variables except the chosen one are at their base value. " +
             "The base value of a variable is its modal value, meaning the most frequent one (the most frequent bin when numerical).")
+    elif tab == 'ratio':
+        return html.P("The ratio graph uses the same data as the predicted graphs. " +
+                      "Instead of comparing expected and predicted side by side, " +
+                      "the predicted value is divided by the expected value for each bin.")
 
 
 @app.callback(
@@ -133,7 +187,7 @@ def ratio_graph(feature):
                          name='weight',
                          marker=dict(color=palette[0])),
                   secondary_y=False)
-    fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_prediction']/data['weighted_target'],
+    fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_prediction'] / data['weighted_target'],
                              mode='lines',
                              name='actual/expected',
                              line=dict(color=palette[1])),
