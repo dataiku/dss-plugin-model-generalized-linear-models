@@ -50,8 +50,11 @@ if max(dku_config.knots)>dku_config.max_value:
 
 
 def process(row):
-    if not row[dku_config.column].isnumeric():
-        raise ValueError(f"Column must contain numeric data")
+
+    try:
+        float(row[dku_config.column])
+    except:
+        raise ValueError(f"Column must contain numeric data not {type(row[dku_config.column])}")
     if float(row[dku_config.column]) < dku_config.min_value:
         raise ValueError("min value must be lower than all the column values")
     if float(row[dku_config.column]) > dku_config.max_value:
