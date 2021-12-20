@@ -1,0 +1,79 @@
+{
+    "meta": {
+        "label": "Regression Splines",
+        "description": "Split the variable into [B-spline basis](https://patsy.readthedocs.io/en/latest/spline-regression.html), which parametrizes a piecewise polynomial spline where pieces meet at each knot",
+        "icon": "icon-tasks"
+    },
+    "kind": "PYTHON",
+
+    "selectableFromDataset": "input_dataset",
+    "inputRoles": [
+        {
+            "name": "input_dataset",
+            "label": "Input Dataset",
+            "description": "Input Dataset",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true,
+            "acceptsFolder": false
+        }
+    ],
+
+    "outputRoles": [
+        {
+            "name": "output_dataset",
+            "label": "Output Dataset",
+            "description": "The dataset will have additional columns representing the basis of the bspline decomposition, the number of columns added is equal to number of knots plus the degree of the polynomial",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        }
+    ],
+
+
+    "params": [
+        {
+            "name": "column_name",
+            "label": "Column Name",
+            "description": "The input column upon which the regression spline will be built",
+            "type": "COLUMN",
+            "columnRole": "input_dataset",
+            "mandatory": true,
+            "allowedColumnTypes": [
+                "tinyint",
+                "smallint",
+                "int",
+                "bigint",
+                "double",
+                "float"
+              ]
+        },
+       {
+            "name": "knots",
+            "label": "Knots",
+            "description": "The knots of the regression spline, ie the points where the pieces of the piecewise polynomial meet",
+            "type": "DOUBLES",
+            "mandatory": true
+        },
+        {
+            "name": "degree_freedom",
+            "label": "Degree",
+            "description": "The degree of each piecewise polynomial, should be between 0 and 3",
+            "type": "INT",
+            "mandatory": true,
+            "minI": 0,
+            "maxI": 3
+        },
+
+        {
+            "name": "new_col_prefix",
+            "label": "New Column Prefix",
+            "type": "STRING",
+            "defaultValue": "spline",
+            "mandatory": true
+        }
+    ],
+
+    "resourceKeys": []
+
+}

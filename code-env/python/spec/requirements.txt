@@ -1,0 +1,6 @@
+dash==2.0
+dash_bootstrap_components==0.13
+scipy==1.5
+scikit-learn==0.21
+statsmodels==0.12
+xgboost==1.4

@@ -1,0 +1,49 @@
+{
+    "meta" : {
+        "label": "Regression Spline",
+        "description": "Split the variable into [B-spline basis](https://patsy.readthedocs.io/en/latest/spline-regression.html), which parametrizes a piecewise polynomial spline where pieces meet at each knot, the number of columns added is equal to number of knots plus the degree of the polynomial",
+        "icon": "icon-tasks"
+    },
+    "mode": "ROW",
+    "params": [
+        {
+            "name": "column",
+            "label": "Column",
+            "type": "COLUMN",
+            "description": "The column on which the spline is fitted",
+            "mandatory": true
+        },
+        {
+            "name": "degree",
+            "label": "Degree",
+            "type": "INT",
+            "description": "The degree of the spline, should be between 0 and 3",
+            "defaultValue": 1,
+            "mandatory": true,
+            "maxI": 3,
+            "minI": 0
+        },
+        {
+            "name": "min_value",
+            "label": "Minimum Value",
+            "type": "DOUBLE",
+            "description": "The minimum possible value of the column",
+            "mandatory": true
+        },
+        {
+            "name": "max_value",
+            "label": "Maximum Value",
+            "type": "DOUBLE",
+            "description": "The maximum possible value of the column",
+            "mandatory": true
+        },
+        {
+            "name": "knots",
+            "label": "Knots",
+            "type": "DOUBLES",
+            "description": "The knots of the spline",
+            "mandatory": true
+        }
+    ],
+    "useKernel" : true
+}

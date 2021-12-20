@@ -4,10 +4,11 @@
     "meta": {
         "label": "Generalized Linear Models",
         "description": "Train and deploy Generalized Linear Models",
-        "author": "Dataiku (Matthew Galloway)",
-        "icon": "icon-briefcase",
+        "author": "Dataiku (Matthew Galloway, David Behar)",
+        "icon": "icon-bullseye",
         "tags": ["Machine Learning"],
-        "url": "",
-        "licenseInfo": "Apache Software License"
+        "url": "https://www.dataiku.com/product/plugins/generalized-linear-models/",
+        "licenseInfo": "Apache Software License",
+        "supportLevel": "NOT_SUPPORTED"
     }
 }
