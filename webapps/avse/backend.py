@@ -1,9 +1,9 @@
 from dataiku.customwebapp import *
 import dash
-import dash_html_components as html
+from dash import html
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_table
+from dash import dcc
+from dash import dash_table
 from dash.dependencies import Input, Output, State
 import pandas as pd
 from pandas.api.types import is_numeric_dtype

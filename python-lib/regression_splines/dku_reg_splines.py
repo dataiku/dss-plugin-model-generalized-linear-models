@@ -49,7 +49,7 @@ class RegressionSplines:
         """
         main func for running
         """
-        if df[self.column_name].dtype not in [np.dtype('float64'), np.dtype('int')]:
+        if not pd.to_numeric(df[self.column_name], errors='coerce').notnull().all():
             raise TypeError('Column on which splines are fit must contain numeric data')
 
         feature_splines = self.generate_splines(df)
