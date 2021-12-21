@@ -144,7 +144,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         if important_columns is None:
             column_values = None
             column_indices = None
-
+        elif len(important_columns)==0:
+            column_values = None
+            column_indices = None
         else:
             for important_column in important_columns:
                 if important_column not in self.column_labels:

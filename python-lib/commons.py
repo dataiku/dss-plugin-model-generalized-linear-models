@@ -170,9 +170,9 @@ def check_params(params):
                 "type": "in",
                 "op": allowed_datasets_names
             }],
-            required=False
+            required=True
         )
-        dataset = dataiku.Dataset(params['training_dataset'], project_key)
+        dataset = dataiku.Dataset(params.get('training_dataset'), project_key)
 
     if dku_config.get('offset_mode') != 'BASIC':
         for i, offset_column in enumerate(params['offset_columns']):
