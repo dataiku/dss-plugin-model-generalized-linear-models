@@ -15,80 +15,221 @@ import numpy as np
 from datetime import datetime, timedelta
 import sys
 import generalized_linear_models
-sys.modules['generalized_linear_models']=generalized_linear_models
-from a_vs_e.actual_vs_predicted_utils import get_ave_grouped
 
+sys.modules['generalized_linear_models'] = generalized_linear_models
+from a_vs_e.actual_vs_predicted_utils import get_ave_grouped, get_original_model_handler
+
+palette = '#BDD8ED', '#3075AE', '#4F934F'
 ave_grouped = get_ave_grouped()
 features = [k for k in ave_grouped.keys()]
 
+model_handler = get_original_model_handler()
+predictor = model_handler.get_predictor()
+
 app.config.external_stylesheets = [dbc.themes.BOOTSTRAP]
 
-feature_choice = dcc.RadioItems(
+feature_choice = dcc.Dropdown(
     id='feature-choice',
     options=[{'label': f, 'value': f}
-              for f in features],
-    value=features[0],
-    labelStyle={'display': 'block'},
-    style={"height": "100px",
-           "width": "150px",
-         "overflowY": "scroll"}
-
-)  
+             for f in features],
+    value=features[0], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '32%',
+                              'margin-top': '1em',
+                              'margin-bottom': '1em'}
+)
 
 app.layout = dbc.Container(
     [
-        html.Div([
-            dcc.Tabs(id="tabs", value='predicted', children=[
-                dcc.Tab(label='Predicted', value='predicted'),
-                dcc.Tab(label='Base', value='base'),
-            ]),
-            feature_choice,
-            dcc.Graph(id="AvE")
-        ])
-    ],
-    fluid=True)
+        html.H4("Generalized Linear Model Analysis", style={'margin-top': '1em'}),
+        html.H5("Model Metrics", style={'margin-top': '1em'}),
+        dbc.Row([
+            dbc.Col([
+                dbc.Card(
+                    dbc.CardBody(
+                        [
+                            html.H5("BIC Score ", style={'textAlign': 'left'}),
+                            html.H5(f"{np.round(predictor._clf.fitted_model.bic, 2):,}",
+                                    style={'textAlign': 'center'})
+
+                        ]), style={'margin-bottom': '1em'}
+                )
+            ], md=2),
+
+            dbc.Col([
+                dbc.Card(
+                    dbc.CardBody(
+                        [
+                            html.H5("AIC Score ", style={'textAlign': 'left'}),
+                            html.H5(f"{np.round(predictor._clf.fitted_model.aic, 2):,}",
+                                    style={'textAlign': 'center'})
+
+                        ]), style={'margin-bottom': '1em'}
+                )
+            ], md=2),
+            dbc.Col([
+                dbc.Card(
+                    dbc.CardBody(
+                        [
+                            html.H5("Deviance ", style={'textAlign': 'left'}),
+                            html.H5(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}",
+                                    style={'textAlign': 'center'})
+
+                        ]), style={'margin-bottom': '1em'}
+                )
+            ], md=2)
+        ]),
+
+        html.H5("Variable Analysis", style={'margin-top': '1em'}),
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.Div([
+                        html.H5("Select a Feature",
+                                style={'display': 'inline-block', 'vertical-align': 'center', 'width': '10%',
+                                       'margin-left': '1em', 'margin-top': '1em', 'margin-bottom': '1em'}),
+                        feature_choice
+                    ]),
+                    html.H5("Actual Vs Expected Graph", style={'margin-left': '1em', 'margin-bottom': '1em'}),
+
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Card(
+                                dcc.Graph(id="AvE")
+                            )
+                        ], md=6),
+
+                        dbc.Col([
+                            dbc.Card(
+                                html.P(
+                                    "The base graph displays the target against the base prediction, which is the pure effect of the chosen variable. " +
+                                    "Numerical variables are automatically binned. " +
+                                    "The background bars represent the overall weight (number of observations x weight) of each bin. " +
+                                    "The base prediction of each bin is the weighted prediction when all the variables except the chosen one are at their base value. " +
+                                    "The base value of a variable is its modal value, meaning the most frequent one (the most frequent bin when numerical).",
+                                    style={'margin-top': '1em', 'margin-bottom': '1em', 'margin-right': '1em',
+                                           'margin-left': '1em'}
+                                ),
+
+                            )
+                        ], md=3)
+                    ]),
+
+                    html.H5("Predicted Graph",
+                            style={'margin-top': '1em', 'margin-left': '1em', 'margin-bottom': '1em'}),
+
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Card(
+                                dcc.Graph(id="predicted_graph")
+                            )
+                        ], md=6),
+
+                        dbc.Col([
+                            dbc.Card(
+                                html.P("The predicted graph compares target with prediction for each variable. " +
+                                       "Numerical variables are automatically binned. " +
+                                       "The background bars represent the overall weight (number of observations x weight) of each bin. " +
+                                       "The two lines are the weighted target and prediction within each bin.",
+                                       style={'margin-top': '1em', 'margin-bottom': '1em', 'margin-right': '1em',
+                                              'margin-left': '1em'}
+                                       )
+                            )
+                        ], md=3)
+                    ]),
+
+                    html.H5("Ratio Graph", style={'margin-top': '1em', 'margin-left': '1em', 'margin-bottom': '1em'}),
+
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Card(
+                                dcc.Graph(id="ratio_graph")
+                            )
+                        ], md=6),
+
+                        dbc.Col([
+                            dbc.Card(
+                                html.P("The ratio graph uses the same data as the predicted graphs. " +
+                                       "Instead of comparing expected and predicted side by side, " +
+                                       "the predicted value is divided by the expected value for each bin.",
+                                       style={'margin-top': '1em', 'margin-bottom': '1em', 'margin-right': '1em',
+                                              'margin-left': '1em'}
+                                       )
+                            )
+                        ], md=3)
+                    ]),
+
+                ]), style={'margin-bottom': '1em'}
+        )
+    ], fluid=True)
 
 
 @app.callback(
     Output('AvE', 'figure'),
-    Input('feature-choice', 'value'),
-    Input('tabs', 'value')
+    Input('feature-choice', 'value')
 )
-def make_graph(feature, tab):
-    print(feature)
-    if tab == 'predicted':
-        return predicted_graph(feature)
-    elif tab == 'base':
-        return base_graph(feature)
-        
 def base_graph(feature):
     data = ave_grouped[feature].dropna()
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Bar(x=data[feature], y=data['weight'],
-                name='weight'),
-                secondary_y=False)
+                         name='weight',
+                         marker=dict(color=palette[0])),
+                  secondary_y=False)
     fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_target'],
-                    mode='lines',
-                    name='target'),
-                    secondary_y=True)
+                             mode='lines',
+                             name='target',
+                             line=dict(color=palette[1])),
+                  secondary_y=True)
     fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_base'],
-                    mode='lines',
-                    name='base'),
-                    secondary_y=True)
+                             mode='lines',
+                             name='base',
+                             line=dict(color=palette[2])),
+                  secondary_y=True)
+    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+    fig.layout.yaxis.gridcolor = '#D7DBDE'
     return fig
-    
+
+
+@app.callback(
+    Output('predicted_graph', 'figure'),
+    Input('feature-choice', 'value')
+)
 def predicted_graph(feature):
     data = ave_grouped[feature].dropna()
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Bar(x=data[feature], y=data['weight'],
-                name='weight'),
-                secondary_y=False)
+                         name='weight',
+                         marker=dict(color=palette[0])),
+                  secondary_y=False)
     fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_target'],
-                    mode='lines',
-                    name='target'),
-                    secondary_y=True)
+                             mode='lines',
+                             name='target',
+                             line=dict(color=palette[1])),
+                  secondary_y=True)
     fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_prediction'],
-                    mode='lines',
-                    name='prediction'),
-                    secondary_y=True)
+                             mode='lines',
+                             name='prediction',
+                             line=dict(color=palette[2])),
+                  secondary_y=True)
+    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+    fig.layout.yaxis.gridcolor = '#D7DBDE'
+    return fig
+
+
+@app.callback(
+    Output('ratio_graph', 'figure'),
+    Input('feature-choice', 'value')
+)
+def ratio_graph(feature):
+    data = ave_grouped[feature].dropna()
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Bar(x=data[feature], y=data['weight'],
+                         name='weight',
+                         marker=dict(color=palette[0])),
+                  secondary_y=False)
+    fig.add_trace(go.Scatter(x=data[feature], y=data['weighted_prediction'] / data['weighted_target'],
+                             mode='lines',
+                             name='actual/expected',
+                             line=dict(color=palette[1])),
+                  secondary_y=True)
+    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+    fig.layout.yaxis.gridcolor = '#D7DBDE'
     return fig
