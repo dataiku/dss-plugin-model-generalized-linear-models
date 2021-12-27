@@ -20,7 +20,7 @@ def check_params(params):
 
     dku_config.add_param(
         name="family_name",
-        value=params['family_name'],
+        value=params.get('family_name'),
         checks=[{
             "type": "in",
             "op": ["binomial", "gamma", "gaussian", "inverse_gaussian", "poisson", "negative_binomial", "tweedie"]
@@ -31,7 +31,7 @@ def check_params(params):
     if params.get('family_name') == 'binomial':
         dku_config.add_param(
             name="binomial_link",
-            value=params['binomial_link'],
+            value=params.get('binomial_link'),
             checks=[{
                 "type": "in",
                 "op": ["cloglog", "log", "logit", "cauchy", "identity"]
@@ -42,7 +42,7 @@ def check_params(params):
     if params.get('family_name') == 'gamma':
         dku_config.add_param(
             name="gamma_link",
-            value=params['gamma_link'],
+            value=params.get('gamma_link'),
             checks=[{
                 "type": "in",
                 "op": ["log", "identity", "inverse_power"]
@@ -53,7 +53,7 @@ def check_params(params):
     if params.get('family_name') == 'gaussian':
         dku_config.add_param(
             name="gaussian_link",
-            value=params['gaussian_link'],
+            value=params.get('gaussian_link'),
             checks=[{
                 "type": "in",
                 "op": ["log", "identity", "inverse_power"]
@@ -64,7 +64,7 @@ def check_params(params):
     if params.get('family_name') == 'inverse_gaussian':
         dku_config.add_param(
             name="inverse_gaussian_link",
-            value=params['inverse_gaussian_link'],
+            value=params.get('inverse_gaussian_link'),
             checks=[{
                 "type": "in",
                 "op": ["log", "inverse_squared", "identity", "inverse_power"]
@@ -75,7 +75,7 @@ def check_params(params):
     if params.get('family_name') == 'poisson':
         dku_config.add_param(
             name="poisson_link",
-            value=params['poisson_link'],
+            value=params.get('poisson_link'),
             checks=[{
                 "type": "in",
                 "op": ["log", "identity"]
@@ -86,7 +86,7 @@ def check_params(params):
     if params.get('family_name') == 'negative_binomial':
         dku_config.add_param(
             name="negative_binomial_link",
-            value=params['negative_binomial_link'],
+            value=params.get('negative_binomial_link'),
             checks=[{
                 "type": "in",
                 "op": ["log", "cloglog", "identity", "power"]
@@ -97,7 +97,7 @@ def check_params(params):
     if params.get('family_name') == 'tweedie':
         dku_config.add_param(
             name="tweedie_link",
-            value=params['tweedie_link'],
+            value=params.get('tweedie_link'),
             checks=[{
                 "type": "in",
                 "op": ["log", "power"]
@@ -108,7 +108,7 @@ def check_params(params):
     if params.get('family_name') == 'negative_binomial':
         dku_config.add_param(
             name="alpha",
-            value=params['alpha'],
+            value=params.get('alpha'),
             checks=[{
                 "type": "between",
                 "op": (0.01, 2)
@@ -121,13 +121,13 @@ def check_params(params):
     ):
         dku_config.add_param(
             name="power",
-            value=params['power'],
+            value=params.get('power'),
             required=False
         )
 
-    if not isinstance(params['penalty'], list):
-        params['penalty'] = [params['penalty']]
-    for i, penalty in enumerate(params['penalty']):
+    if not isinstance(params.get('penalty'), list):
+        params['penalty'] = [params.get('penalty')]
+    for i, penalty in enumerate(params.get('penalty')):
         dku_config.add_param(
             name="penalty_" + str(i),
             value=penalty,
@@ -138,18 +138,18 @@ def check_params(params):
             required=True
         )
 
-    dku_config.penalty = [dku_config["penalty_" + str(i)] for i in range(len(params['penalty']))]
+    dku_config.penalty = [dku_config.get("penalty_" + str(i)) for i in range(len(params.get('penalty')))]
 
     if params.get('family_name') == 'tweedie':
         dku_config.add_param(
             name="var_power",
-            value=params['var_power'],
+            value=params.get('var_power'),
             required=False
         )
 
     dku_config.add_param(
         name="offset_mode",
-        value=params['offset_mode'],
+        value=params.get('offset_mode'),
         checks=[{
             "type": "in",
             "op": ['BASIC', 'OFFSETS', 'OFFSETS/EXPOSURES']
@@ -165,7 +165,7 @@ def check_params(params):
 
         dku_config.add_param(
             name="training_dataset",
-            value=params['training_dataset'],
+            value=params.get('training_dataset'),
             checks=[{
                 "type": "in",
                 "op": allowed_datasets_names
@@ -175,7 +175,7 @@ def check_params(params):
         dataset = dataiku.Dataset(params.get('training_dataset'), project_key)
 
     if dku_config.get('offset_mode') != 'BASIC':
-        for i, offset_column in enumerate(params['offset_columns']):
+        for i, offset_column in enumerate(params.get('offset_columns')):
             dku_config.add_param(
                 name="offset_column_" + str(i),
                 value=offset_column,
@@ -186,10 +186,10 @@ def check_params(params):
                 required=False
             )
         dku_config.offset_columns = [dku_config.get("offset_column_" + str(i)) for i in
-                                     range(len(params['offset_columns']))]
+                                     range(len(params.get('offset_columns')))]
 
     if dku_config.get('offset_mode') == 'OFFSETS/EXPOSURES':
-        for i, exposure_column in enumerate(params['exposure_columns']):
+        for i, exposure_column in enumerate(params.get('exposure_columns')):
             dku_config.add_param(
                 name="exposure_column_" + str(i),
                 value=exposure_column,
@@ -200,6 +200,6 @@ def check_params(params):
                 required=False
             )
         dku_config.exposure_columns = [dku_config.get("exposure_column_" + str(i)) for i in
-                                       range(len(params['exposure_columns']))]
+                                       range(len(params.get('exposure_columns')))]
 
     return dku_config
