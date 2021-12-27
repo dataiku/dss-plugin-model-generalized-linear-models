@@ -8,7 +8,6 @@ class CustomPredictionAlgorithm(BaseCustomPredictionAlgorithm):
     def __init__(self, prediction_type=None, params=None):
 
         self.params = check_params(params)
-        print(params)
         self.clf = RegressionGLM(**params)
         super(CustomPredictionAlgorithm, self).__init__(prediction_type, self.params)
 
