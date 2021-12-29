@@ -106,8 +106,8 @@ def test_regression_offset():
     data = sm.datasets.scotland.load()
     X = data.exog
     y = data.endog
-    offset = data.exog[:, 0]
-    exog = data.exog[:, 1:]
+    offset = data.exog[:, [0, -1]].sum(axis=1)
+    exog = data.exog[:, 1:-1]
     exog = sm.add_constant(exog)
     gaussian_model = sm.GLM(data.endog, exog, family=sm.families.Gaussian(), offset=offset)
     gaussian_results = gaussian_model.fit()
@@ -126,7 +126,7 @@ def test_regression_offset():
         alpha=1,
         power=1,
         var_power=1,
-        offset_columns=['COUTAX'])
+        offset_columns=['COUTAX', 'COUTAX_FEMALEUNEMP'])
 
     regression_model.column_labels = data.exog_name
 
@@ -140,9 +140,11 @@ def test_regression_exposure():
     X = data.exog
     y = data.endog
     exposure = data.exog[:, 0]
-    exog = data.exog[:, 1:]
+    offset = data.exog[:, 1]
+    exog = data.exog[:, 2:]
     exog = sm.add_constant(exog)
-    poisson_model = sm.GLM(data.endog, exog, family=sm.families.Poisson(sm.families.links.log()), exposure=exposure)
+    poisson_model = sm.GLM(data.endog, exog, family=sm.families.Poisson(sm.families.links.log()),
+                           offset=offset, exposure=exposure)
     poisson_results = poisson_model.fit()
 
     regression_model = RegressionGLM(
@@ -159,6 +161,7 @@ def test_regression_exposure():
         alpha=1,
         power=1,
         var_power=1,
+        offset_columns=['UNEMPF'],
         exposure_columns=['COUTAX'])
 
     regression_model.column_labels = data.exog_name

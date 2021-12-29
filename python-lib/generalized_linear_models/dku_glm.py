@@ -136,9 +136,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         link = self.get_link_function()
         self.family = self.get_family(link)
 
-    def get_x_column(self, X, important_columns):
+    def get_columns(self, X, important_columns):
         """
-        returns an array of values specified by column name provided
+        returns an array of values specified by column names provided
         by the user
         """
         if important_columns is None:
@@ -183,12 +183,12 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         exposures = None
         # sets the offset & exposure columns
         if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
             self.removed_indices = self.offset_indices
 
         if self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_x_column(X, self.exposure_columns)
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
             if self.offset_indices is not None:
                 self.removed_indices = self.offset_indices
             if self.exposure_indices is not None:
@@ -212,6 +212,20 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             self.fitted_model = model.fit()
         else:
             self.fitted_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
+
+        #  adds attributes for explainability
+        # intercept cant be multidimensional np array like in classification
+        # as scoring_base.py func compute_lm_significant hstack method will fail
+        self.coef_ = np.array(self.fitted_model.params[1:])  # removes first value which is the intercept
+        # insert 0 coefs for exposure and offset
+        if self.removed_indices is not None:
+            self.removed_indices = list(set(self.removed_indices))
+            for index in sorted(self.removed_indices):
+                self.coef_ = np.insert(self.coef_, index, 0)
+        # statsmodels 0 is 211 sets this to true 0
+        self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
+
+        self.intercept_ = float(self.fitted_model.params[0])
 
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
@@ -241,14 +255,6 @@ class BinaryClassificationGLM(BaseGLM):
         takes in training data and fits a model
         """
         self.fit_model(X, y, sample_weight)
-        #  adds attributes for explainability
-        self.coef_ = np.array(self.fitted_model.params[1:])
-        # insert 0 coefs for exposure and offset
-        if self.removed_indices is not None:
-            self.coef_ = np.insert(self.coef_, self.removed_indices, 0)
-        # statsmodels 0 is 211 sets this to true 0
-        self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
-        self.intercept_ = float(self.fitted_model.params[0])
 
     def predict(self, X):
         """
@@ -257,10 +263,10 @@ class BinaryClassificationGLM(BaseGLM):
         offsets = None
         exposures = None
         if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
         if self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_x_column(X, self.exposure_columns)
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
 
         X = self.process_fixed_columns(X)
 
@@ -281,10 +287,10 @@ class BinaryClassificationGLM(BaseGLM):
         offsets = None
         exposures = None
         if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
         if self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_x_column(X, self.exposure_columns)
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
 
         X = self.process_fixed_columns(X)
         #  adds a constant
@@ -307,20 +313,6 @@ class RegressionGLM(BaseGLM):
         takes in training data and fits a model
         """
         self.fit_model(X, y, sample_weight)
-        X = self.process_fixed_columns(X)
-
-        #  adds attributes for explainability
-        # intercept cant be multidimensional np array like in classification
-        # as scoring_base.py func compute_lm_significant hstack method will fail
-        self.coef_ = np.array(self.fitted_model.params[1:])  # removes first value which is the intercept
-        # insert 0 coefs for exposure and offset
-        if self.removed_indices is not None:
-            self.removed_indices = list(set(self.removed_indices))
-            self.coef_ = np.insert(self.coef_, self.removed_indices, 0)
-        # statsmodels 0 is 211 sets this to true 0
-        self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
-
-        self.intercept_ = float(self.fitted_model.params[0])
 
     def predict(self, X):
         """
@@ -329,10 +321,10 @@ class RegressionGLM(BaseGLM):
         offsets = None
         exposures = None
         if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
         if self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_x_column(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_x_column(X, self.exposure_columns)
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
 
         X = self.process_fixed_columns(X)
         X = sm.add_constant(X, has_constant='add')
