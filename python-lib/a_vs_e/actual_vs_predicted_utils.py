@@ -26,7 +26,7 @@ def get_ave_data():
     model_handler = get_original_model_handler()
     predictor = model_handler.get_predictor()
     test_df = model_handler.get_test_df()[0]
-    predicted = predictor.predict(test_df)
+    predicted = predictor.predict(test_df)['prediction'].astype(float)
     base_predictions = compute_base_predictions(model_handler, predictor)
     ave_data = pd.concat([test_df, predicted, base_predictions], axis=1)
     target_variable = model_handler.get_target_variable()
@@ -55,20 +55,21 @@ def compute_base_predictions(model_handler, predictor):
         for other_feature in [col for col in test_df.columns if col!=feature]:
             copy_test_df[other_feature] = base_params[other_feature]
         base_data[feature] = predictor.predict(copy_test_df)
-    
+
     # compile predictions
-    base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
+    base_predictions = pd.concat([base_data[feature]['prediction'].astype(float) for feature in base_data], axis=1)
     base_predictions.columns = 'base_' + test_df.columns
     
     return base_predictions
 
 def get_ave_grouped():
+
     ave_data, target, weight = get_ave_data()
-    
+
     if weight==None:
         ave_data['weight'] = 1
 
-    ave_data['weighted_target'] = ave_data[target] * ave_data['weight']
+    ave_data['weighted_target'] = ave_data[target].astype(float) * ave_data['weight']
     ave_data['weighted_prediction'] = ave_data['prediction'] * ave_data['weight']
 
     excluded_columns = [target, 'prediction', 'weight', 'weighted_target', 'weighted_prediction'] + [feature for feature in ave_data if feature[:5]=='base_']
@@ -80,6 +81,7 @@ def get_ave_grouped():
         if is_numeric_dtype(ave_data[feature].dtype):
             if len(ave_data[feature].unique())>20:
                 ave_data[feature] = [x.left for x in pd.cut(ave_data[feature], bins=20)]
+
 
     ave_grouped = {feature: ave_data.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg({'weighted_target': 'sum',
                                                                                       'weighted_prediction': 'sum',
