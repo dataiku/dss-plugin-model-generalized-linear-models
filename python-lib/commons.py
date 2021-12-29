@@ -184,7 +184,7 @@ def check_params(params):
                         "type": "in",
                         "op": dataset.get_dataframe().columns
                     }],
-                    required=False
+                    required=True
                 )
             dku_config.offset_columns = params.get('offset_columns')
 
@@ -198,7 +198,7 @@ def check_params(params):
                         "type": "in",
                         "op": dataset.get_dataframe().columns
                     }],
-                    required=False
+                    required=True
                 )
             dku_config.exposure_columns = params.get('exposure_columns')
 

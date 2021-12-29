@@ -12,7 +12,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
     def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
                  poisson_link, negative_binomial_link, tweedie_link, alpha, power, penalty,
-                 var_power, offset_mode, training_dataset=None, offset_columns=[], exposure_columns=[],
+                 var_power, offset_mode, training_dataset=None, offset_columns=None, exposure_columns=None,
                  column_labels=None):
 
         self.family_name = family_name
@@ -54,9 +54,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.intercept_ = None
         self.classes_ = None
         self.offset_mode = offset_mode
-        self.offset_columns = offset_columns if offset_columns else []
+        self.offset_columns = offset_columns
         self.offset_indices = []
-        self.exposure_columns = exposure_columns if exposure_columns else []
+        self.exposure_columns = exposure_columns
         self.exposure_indices = []
         self.column_labels = column_labels
         self.training_dataset = training_dataset
@@ -143,6 +143,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         returns an array of values specified by column names provided
         by the user
         """
+        if important_columns is None:
+            important_columns = []
         if len(important_columns) == 0:
             column_values = []
             column_indices = []
