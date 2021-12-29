@@ -160,11 +160,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
     def compute_aggregate_offset(self, offsets, exposures):
         offset_output = None
-        if len(offsets)>0:
+        if len(offsets) > 0:
             offsets = offsets.sum(axis=1)
             offset_output = offsets
 
-        if len(exposures)>0:
+        if len(exposures) > 0:
             if (exposures <= 0).any():
                 raise ValueError('Exposure columns contains some negative values')
             exposures = np.log(exposures)
