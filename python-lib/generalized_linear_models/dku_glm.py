@@ -31,7 +31,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         if (family_name == 'negative_binomial' and negative_binomial_link == 'power') or (
                 family_name == 'tweedie' and tweedie_link == 'power'):
             if not isinstance(power, (int, float)):
-                raise ValueError('power should be defined with a numeric value, current value of ' + str(power) + ' unsupported, type: ' + str(type(power)))
+                raise ValueError('power should be defined with a numeric value, current value of ' + str(
+                    power) + ' unsupported, type: ' + str(type(power)))
         self.power = power
         if isinstance(penalty, list):
             for p in penalty:
@@ -43,7 +44,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.penalty = penalty
         if family_name == 'tweedie':
             if not isinstance(var_power, (int, float)):
-                raise ValueError('var_power should be defined with a numeric value, current value of ' + str(var_power) + ' unsupported')
+                raise ValueError('var_power should be defined with a numeric value, current value of ' + str(
+                    var_power) + ' unsupported')
         self.var_power = var_power
         self.fit_intercept = True
         self.intercept_scaling = 1
@@ -52,10 +54,10 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.intercept_ = None
         self.classes_ = None
         self.offset_mode = offset_mode
-        self.offset_columns = offset_columns
-        self.offset_indices = None
-        self.exposure_columns = exposure_columns
-        self.exposure_indices = None
+        self.offset_columns = offset_columns if offset_columns else []
+        self.offset_indices = []
+        self.exposure_columns = exposure_columns if exposure_columns else []
+        self.exposure_indices = []
         self.column_labels = column_labels
         self.training_dataset = training_dataset
         self.removed_indices = None
@@ -141,9 +143,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         returns an array of values specified by column names provided
         by the user
         """
-        if important_columns is None:
-            column_values = None
-            column_indices = None
+        if len(important_columns) == 0:
+            column_values = []
+            column_indices = []
 
         else:
             for important_column in important_columns:
@@ -158,11 +160,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
     def compute_aggregate_offset(self, offsets, exposures):
         offset_output = None
-        if offsets is not None:
+        if len(offsets)>0:
             offsets = offsets.sum(axis=1)
             offset_output = offsets
 
-        if exposures is not None:
+        if len(exposures)>0:
             if (exposures <= 0).any():
                 raise ValueError('Exposure columns contains some negative values')
             exposures = np.log(exposures)
@@ -179,15 +181,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         fits a GLM model
         """
         self.classes_ = list(set(y))
-        offsets = None
-        exposures = None
-        # sets the offset & exposure columns
-        if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-
-        if self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
+        offsets, exposures = self.get_offsets_and_exposures(X)
 
         X = self.process_fixed_columns(X)
         X = sm.add_constant(X)
@@ -245,13 +239,19 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         return X
 
     def get_offsets_and_exposures(self, X):
-        offsets = None
-        exposures = None
+        offsets = []
+        exposures = []
         if self.offset_mode == 'OFFSETS':
             offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+            if len(offsets) == 0:
+                raise ValueError('OFFSETS mode is selected but no offset column is defined')
         if self.offset_mode == 'OFFSETS/EXPOSURES':
             offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
             exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
+            if len(offsets) == 0 and len(exposures) == 0:
+                raise ValueError('OFFSETS/EXPOSURES mode is selected but neither offset nor exposure columns are '
+                                 'defined')
+
         return offsets, exposures
 
     def predict_target(self, X):
@@ -265,6 +265,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         # makes predictions and converts to DSS accepted format
         y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
         return y_pred
+
 
 class BinaryClassificationGLM(BaseGLM):
 
