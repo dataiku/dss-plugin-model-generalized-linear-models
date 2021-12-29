@@ -184,22 +184,12 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         # sets the offset & exposure columns
         if self.offset_mode == 'OFFSETS':
             offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-            self.removed_indices = self.offset_indices
 
         if self.offset_mode == 'OFFSETS/EXPOSURES':
             offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
             exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
-            if self.offset_indices is not None:
-                self.removed_indices = self.offset_indices
-            if self.exposure_indices is not None:
-                if self.removed_indices is not None:
-                    self.removed_indices.extend(self.exposure_indices)
-                else:
-                    self.removed_indices = self.exposure_indices
 
-        if self.removed_indices is not None:
-            X = np.delete(X, self.removed_indices, axis=1)
-
+        X = self.process_fixed_columns(X)
         X = sm.add_constant(X)
 
         offset_output = self.compute_aggregate_offset(offsets, exposures)
@@ -213,19 +203,26 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         else:
             self.fitted_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
 
-        #  adds attributes for explainability
-        # intercept cant be multidimensional np array like in classification
-        # as scoring_base.py func compute_lm_significant hstack method will fail
-        self.coef_ = np.array(self.fitted_model.params[1:])  # removes first value which is the intercept
-        # insert 0 coefs for exposure and offset
+        self.compute_coefs()
+        self.intercept_ = float(self.fitted_model.params[0])
+
+    def compute_coefs(self):
+        """
+        adds attributes for explainability
+        """
+        # removes first value which is the intercept
+        # other values correspond to fitted coefs (hence excludes offsets and exposures)
+        self.coef_ = np.array(self.fitted_model.params[1:])
+        # the column labels include offsets and exposures
+        # so we need to insert 0 coefs for these columns to ensure consistency
         if self.removed_indices is not None:
             self.removed_indices = list(set(self.removed_indices))
+            # 0 are inserted one by one in ascending order
+            # because inserting a value at index = len + 1 fails
             for index in sorted(self.removed_indices):
                 self.coef_ = np.insert(self.coef_, index, 0)
         # statsmodels 0 is 211 sets this to true 0
         self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
-
-        self.intercept_ = float(self.fitted_model.params[0])
 
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
@@ -234,19 +231,40 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.column_labels = column_labels
 
     def process_fixed_columns(self, X):
-        removed_indices = None
+        self.removed_indices = None
         if self.offset_indices is not None:
-            removed_indices = self.offset_indices
+            self.removed_indices = self.offset_indices
         if self.exposure_indices is not None:
-            if removed_indices is not None:
-                removed_indices.extend(self.exposure_indices)
+            if self.removed_indices is not None:
+                self.removed_indices.extend(self.exposure_indices)
             else:
-                removed_indices = self.exposure_indices
-        if removed_indices is not None:
-            removed_indices = list(set(removed_indices))
-            X = np.delete(X, removed_indices, axis=1)
+                self.removed_indices = self.exposure_indices
+        if self.removed_indices is not None:
+            self.removed_indices = list(set(self.removed_indices))
+            X = np.delete(X, self.removed_indices, axis=1)
         return X
 
+    def get_offsets_and_exposures(self, X):
+        offsets = None
+        exposures = None
+        if self.offset_mode == 'OFFSETS':
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+        if self.offset_mode == 'OFFSETS/EXPOSURES':
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
+        return offsets, exposures
+
+    def predict_target(self, X):
+        offsets, exposures = self.get_offsets_and_exposures(X)
+        X = self.process_fixed_columns(X)
+
+        X = sm.add_constant(X, has_constant='add')
+
+        offset_output = self.compute_aggregate_offset(offsets, exposures)
+
+        # makes predictions and converts to DSS accepted format
+        y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
+        return y_pred
 
 class BinaryClassificationGLM(BaseGLM):
 
@@ -260,22 +278,7 @@ class BinaryClassificationGLM(BaseGLM):
         """
         Returns the binary target
         """
-        offsets = None
-        exposures = None
-        if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-        if self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
-
-        X = self.process_fixed_columns(X)
-
-        X = sm.add_constant(X, has_constant='add')
-
-        offset_output = self.compute_aggregate_offset(offsets, exposures)
-
-        # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
+        y_pred = self.predict_target(X)
         y_pred_final = y_pred.reshape((len(y_pred), -1))
 
         return y_pred_final > 0.5
@@ -284,22 +287,7 @@ class BinaryClassificationGLM(BaseGLM):
         """
         Return the prediction proba
         """
-        offsets = None
-        exposures = None
-        if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-        if self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
-
-        X = self.process_fixed_columns(X)
-        #  adds a constant
-        X = sm.add_constant(X, has_constant='add')
-
-        offset_output = self.compute_aggregate_offset(offsets, exposures)
-
-        # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
+        y_pred = self.predict_target(X)
         y_pred_final = y_pred.reshape((len(y_pred), -1))
 
         # returns p, 1-p prediction probabilities
@@ -318,20 +306,4 @@ class RegressionGLM(BaseGLM):
         """
         Returns the target as 1D array
         """
-        offsets = None
-        exposures = None
-        if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-        if self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
-
-        X = self.process_fixed_columns(X)
-        X = sm.add_constant(X, has_constant='add')
-
-        offset_output = self.compute_aggregate_offset(offsets, exposures)
-
-        # makes predictions and converts to DSS accepted format
-        y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
-
-        return y_pred
+        return self.predict_target(X)
