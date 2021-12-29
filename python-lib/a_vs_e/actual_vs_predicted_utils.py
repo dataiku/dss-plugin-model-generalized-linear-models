@@ -26,17 +26,23 @@ def get_ave_data():
     model_handler = get_original_model_handler()
     predictor = model_handler.get_predictor()
     test_df = model_handler.get_test_df()[0]
-    predicted = predictor.predict(test_df)['prediction'].astype(float)
-    base_predictions = compute_base_predictions(model_handler, predictor)
+    predicted = predictor.predict(test_df)
+    class_map = None
+    if len(predicted.columns) == 3: #classification
+        base_class = predicted.columns[1].split('_')[1]
+        other_class = predicted.columns[2].split('_')[1]
+        class_map = {base_class: 0, other_class: 1}
+        predicted = pd.Series([class_map[prediction] for prediction in predicted['prediction']], name='prediction')
+    base_predictions = compute_base_predictions(model_handler, predictor, class_map)
     ave_data = pd.concat([test_df, predicted, base_predictions], axis=1)
     target_variable = model_handler.get_target_variable()
     weights = model_handler.get_sample_weight_variable()
-    return ave_data, target_variable, weights
+    return ave_data, target_variable, weights, class_map
 
 # base predictions are defined as the prediction when
 # all the features except the feature of interest are
 # at their base value (the mode of their distribution)
-def compute_base_predictions(model_handler, predictor):
+def compute_base_predictions(model_handler, predictor, class_map=None):
     train_df = model_handler.get_train_df()[0]
     # categorize numeric variables
     for feature in train_df.columns:
@@ -54,22 +60,29 @@ def compute_base_predictions(model_handler, predictor):
         copy_test_df = test_df.copy()
         for other_feature in [col for col in test_df.columns if col!=feature]:
             copy_test_df[other_feature] = base_params[other_feature]
-        base_data[feature] = predictor.predict(copy_test_df)
+        predictions = predictor.predict(copy_test_df)
+        if class_map is not None: # classification
+            base_data[feature] = pd.Series([class_map[prediction] for prediction in predictions['prediction']])
+        else:
+            base_data[feature] = predictions
 
     # compile predictions
-    base_predictions = pd.concat([base_data[feature]['prediction'].astype(float) for feature in base_data], axis=1)
+    base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
     base_predictions.columns = 'base_' + test_df.columns
     
     return base_predictions
 
 def get_ave_grouped():
 
-    ave_data, target, weight = get_ave_data()
+    ave_data, target, weight, class_map = get_ave_data()
 
     if weight==None:
         ave_data['weight'] = 1
 
-    ave_data['weighted_target'] = ave_data[target].astype(float) * ave_data['weight']
+    if class_map is not None: # classification
+        ave_data[target] = pd.Series([class_map[target_value] for target_value in ave_data[target]], name=target)
+
+    ave_data['weighted_target'] = ave_data[target] * ave_data['weight']
     ave_data['weighted_prediction'] = ave_data['prediction'] * ave_data['weight']
 
     excluded_columns = [target, 'prediction', 'weight', 'weighted_target', 'weighted_prediction'] + [feature for feature in ave_data if feature[:5]=='base_']
