@@ -12,7 +12,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
     def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
                  poisson_link, negative_binomial_link, tweedie_link, alpha, power, penalty,
-                 var_power, offset_mode, training_dataset=None, offset_columns=None, exposure_columns=None,
+                 var_power, offset_mode, training_dataset=None, offset_columns=[], exposure_columns=[],
                  column_labels=None):
 
         self.family_name = family_name
