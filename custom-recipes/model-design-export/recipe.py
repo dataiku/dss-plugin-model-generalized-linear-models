@@ -1,69 +1,62 @@
-# Code for custom code recipe model-design-export (imported from a Python recipe)
-
-# To finish creating your custom recipe from your original PySpark recipe, you need to:
-#  - Declare the input and output roles in recipe.json
-#  - Replace the dataset names by roles access in your code
-#  - Declare, if any, the params of your custom recipe in recipe.json
-#  - Replace the hardcoded params values by acccess to the configuration map
-
-# See sample code below for how to do that.
-# The code of your original recipe is included afterwards for convenience.
-# Please also see the "recipe.json" file for more information.
-
-# import the classes for accessing DSS objects from the recipe
 import dataiku
-# Import the helpers for custom recipes
 from dataiku.customrecipe import *
-
-# Inputs and outputs are defined by roles. In the recipe's I/O tab, the user can associate one
-# or more dataset to each input and output role.
-# Roles need to be defined in recipe.json, in the inputRoles and outputRoles fields.
-
-# To  retrieve the datasets of an input role named 'input_A' as an array of dataset names:
-input_A_names = get_input_names_for_role('input_A_role')
-# The dataset objects themselves can then be created like this:
-input_A_datasets = [dataiku.Dataset(name) for name in input_A_names]
-
-# For outputs, the process is the same:
-output_A_names = get_output_names_for_role('main_output')
-output_A_datasets = [dataiku.Dataset(name) for name in output_A_names]
-
-
-# The configuration consists of the parameters set up by the user in the recipe Settings tab.
-
-# Parameters must be added to the recipe.json file so that DSS can prompt the user for values in
-# the Settings tab of the recipe. The field "params" holds a list of all the params for wich the
-# user will be prompted for values.
-
-# The configuration is simply a map of parameters, and retrieving the value of one of them is simply:
-my_variable = get_recipe_config()['parameter_name']
-
-# For optional parameters, you should provide a default value in case the parameter is not present:
-my_variable = get_recipe_config().get('parameter_name', None)
-
-# Note about typing:
-# The configuration of the recipe is passed through a JSON object
-# As such, INT parameters of the recipe are received in the get_recipe_config() dict as a Python float.
-# If you absolutely require a Python int, use int(get_recipe_config()["my_int_param"])
-
-
-#############################
-# Your original recipe
-#############################
-
-# -------------------------------------------------------------------------------- NOTEBOOK-CELL: CODE
-# -*- coding: utf-8 -*-
-import dataiku
 import pandas as pd, numpy as np
-from dataiku import pandasutils as pdu
+# from dataiku import pandasutils as pdu
+import sys
+import re
+import generalized_linear_models
 
-# -------------------------------------------------------------------------------- NOTEBOOK-CELL: CODE
+sys.modules['generalized_linear_models'] = generalized_linear_models
+
+saved_model = get_input_names_for_role('saved_model')[0]
+model = dataiku.Model(saved_model)
+predictor = model.get_predictor()
+# For outputs, the process is the same:
+model_design = get_output_names_for_role('model_design')[0]
+coefficients = get_output_names_for_role('coefficients')[0]
 # Read recipe inputs
 # Claim Frequency
-model_1 = dataiku.Model("RQYmjroH")
-pred_1 = model_1.get_predictor()
+parameters = []
+values = []
+
+link_function = predictor._clf.get_link_function()
+link_find = re.search('<statsmodels.genmod.families.links.(.*) object', str(link_function))
+link = link_find.group(1)
+
+family_distribution = predictor._clf.family
+family_find = re.search('<statsmodels.genmod.families.family.(.*) object', str(family_distribution))
+family = family_find.group(1)
+
+parameters.append('family')
+values.append(family)
+parameters.append('link')
+values.append(link)
+parameters.append('penalty')
+values.append(predictor._clf.penalty)
+parameters.append('offset_mode')
+values.append(predictor._clf.offset_mode)
+if predictor._clf.offset_mode != 'BASIC':
+    parameters.append('offsets')
+    values.append(predictor._clf.offset_columns)
+if predictor._clf.offset_mode == 'OFFSETS/EXPOSURES':
+    parameters.append('exposures')
+    values.append(predictor._clf.exposure_columns)
+if family == 'NegativeBinomial':
+    parameters.append('alpha')
+    values.append(predictor._clf.alpha)
+if link == 'Power':
+    parameters.append('power')
+    values.append(predictor._clf.power)
+if family == 'Tweedie':
+    parameters.append('var_power')
+    values.append(predictor._clf.var_power)
 
 # -------------------------------------------------------------------------------- NOTEBOOK-CELL: CODE
 # Write recipe outputs
-model_design = dataiku.Dataset("model_design")
-model_design.write_with_schema(model_design_df)
+model_design_df = pd.DataFrame({'parameter': parameters, 'value': values})
+model_design_dataset = dataiku.Dataset(model_design)
+model_design_dataset.write_with_schema(model_design_df)
+
+coefficients_df = pd.DataFrame({'name': predictor._clf.column_labels, 'coefficient': predictor._clf.coef_})
+coefficients_dataset = dataiku.Dataset(coefficients)
+coefficients_dataset.write_with_schema(coefficients_df)
