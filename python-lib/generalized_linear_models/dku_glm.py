@@ -153,7 +153,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             for important_column in important_columns:
                 if important_column not in self.column_labels:
                     raise ValueError(
-                        f'The column names provided: [{important_column}], is not present in the list of columns from the dataset. Please chose one of:{self.column_labels}')
+                        f'The column names provided: [{important_column}], is not present in the list of columns from the dataset. Please check that the column is selected in feature handing.')
 
             column_indices = [self.column_labels.index(important_column) for important_column in important_columns]
             column_values = X[:, column_indices]
@@ -168,7 +168,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         if len(exposures) > 0:
             if (exposures <= 0).any():
-                raise ValueError('Exposure columns contains some negative values')
+                raise ValueError('Exposure columns contains some negative values. Please make sure that the exposure column is not rescaled in feature handling.')
             exposures = np.log(exposures)
             exposures = exposures.sum(axis=1)
             if offset_output is None:
@@ -247,7 +247,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
             if len(offsets) == 0:
                 raise ValueError('OFFSETS mode is selected but no offset column is defined')
-        if self.offset_mode == 'OFFSETS/EXPOSURES':
+        elif self.offset_mode == 'OFFSETS/EXPOSURES':
             offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
             exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
             if len(offsets) == 0 and len(exposures) == 0:
