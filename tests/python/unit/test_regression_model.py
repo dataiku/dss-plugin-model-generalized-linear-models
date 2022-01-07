@@ -106,15 +106,15 @@ def test_regression_offset():
     data = sm.datasets.scotland.load()
     X = data.exog
     y = data.endog
-    offset = data.exog[:, 0]
-    exog = data.exog[:, 1:]
+    offset = data.exog[:, [0, -1]].sum(axis=1)
+    exog = data.exog[:, 1:-1]
     exog = sm.add_constant(exog)
     gaussian_model = sm.GLM(data.endog, exog, family=sm.families.Gaussian(), offset=offset)
     gaussian_results = gaussian_model.fit()
 
     regression_model = RegressionGLM(
         penalty=0.0,
-        offset_mode='OFFSET',
+        offset_mode='OFFSETS',
         family_name='gaussian',
         binomial_link=None,
         gamma_link=None,
@@ -126,7 +126,7 @@ def test_regression_offset():
         alpha=1,
         power=1,
         var_power=1,
-        offset_column='COUTAX')
+        offset_columns=['COUTAX', 'COUTAX_FEMALEUNEMP'])
 
     regression_model.column_labels = data.exog_name
 
@@ -140,14 +140,16 @@ def test_regression_exposure():
     X = data.exog
     y = data.endog
     exposure = data.exog[:, 0]
-    exog = data.exog[:, 1:]
+    offset = data.exog[:, 1]
+    exog = data.exog[:, 2:]
     exog = sm.add_constant(exog)
-    poisson_model = sm.GLM(data.endog, exog, family=sm.families.Poisson(sm.families.links.log()), exposure=exposure)
+    poisson_model = sm.GLM(data.endog, exog, family=sm.families.Poisson(sm.families.links.log()),
+                           offset=offset, exposure=exposure)
     poisson_results = poisson_model.fit()
 
     regression_model = RegressionGLM(
         penalty=0.0,
-        offset_mode='EXPOSURE',
+        offset_mode='OFFSETS/EXPOSURES',
         family_name='poisson',
         binomial_link=None,
         gamma_link=None,
@@ -159,7 +161,8 @@ def test_regression_exposure():
         alpha=1,
         power=1,
         var_power=1,
-        exposure_column='COUTAX')
+        offset_columns=['UNEMPF'],
+        exposure_columns=['COUTAX'])
 
     regression_model.column_labels = data.exog_name
 
@@ -180,7 +183,7 @@ def test_regression_prediction():
 
     regression_model = RegressionGLM(
         penalty=0.0,
-        offset_mode='EXPOSURE',
+        offset_mode='OFFSETS/EXPOSURES',
         family_name='poisson',
         binomial_link=None,
         gamma_link=None,
@@ -192,7 +195,7 @@ def test_regression_prediction():
         alpha=1,
         power=1,
         var_power=1,
-        exposure_column='COUTAX')
+        exposure_columns=['COUTAX'])
 
     regression_model.column_labels = data.exog_name
 
