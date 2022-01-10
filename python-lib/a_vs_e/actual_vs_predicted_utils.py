@@ -25,7 +25,10 @@ def get_original_model_handler():
 def get_ave_data():
     model_handler = get_original_model_handler()
     predictor = model_handler.get_predictor()
-    test_df = model_handler.get_test_df()[0]
+    if model_handler.use_full_df():
+        test_df = model_handler.get_full_df()[0]
+    else:
+        test_df = model_handler.get_test_df()[0]
     predicted = predictor.predict(test_df)
     class_map = None
     if len(predicted.columns) == 3: #classification
@@ -43,7 +46,10 @@ def get_ave_data():
 # all the features except the feature of interest are
 # at their base value (the mode of their distribution)
 def compute_base_predictions(model_handler, predictor, class_map=None):
-    train_df = model_handler.get_train_df()[0]
+    if model_handler.use_full_df():
+        train_df = model_handler.get_full_df()[0]
+    else:
+        train_df = model_handler.get_train_df()[0]
     # categorize numeric variables
     for feature in train_df.columns:
         if is_numeric_dtype(train_df[feature].dtype):
@@ -53,7 +59,10 @@ def compute_base_predictions(model_handler, predictor, class_map=None):
     base_params = {col: train_df[col].mode()[0] for col in train_df.columns}
     
     # compute base predictions
-    test_df = model_handler.get_test_df()[0]
+    if model_handler.use_full_df():
+        test_df = model_handler.get_full_df()[0]
+    else:
+        test_df = model_handler.get_test_df()[0]
     
     base_data = dict()
     for feature in test_df.columns:

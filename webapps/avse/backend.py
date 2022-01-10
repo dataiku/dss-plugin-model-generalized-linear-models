@@ -25,6 +25,8 @@ features = [k for k in ave_grouped.keys()]
 
 model_handler = get_original_model_handler()
 predictor = model_handler.get_predictor()
+if not hasattr(predictor._clf, 'fitted_model'):
+    raise ValueError('GLM Summary is only available for GLMs')
 
 app.config.external_stylesheets = [dbc.themes.BOOTSTRAP, 'plugins/generalize-linear-models/webapps/avse/dss_style.css']
 
