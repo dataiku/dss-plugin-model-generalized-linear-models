@@ -17,10 +17,13 @@ import sys
 import generalized_linear_models
 
 sys.modules['generalized_linear_models'] = generalized_linear_models
-from a_vs_e.actual_vs_predicted_utils import get_ave_grouped, get_original_model_handler
+from glm_summary.graph_utils import get_ave_grouped
+from glm_summary.dku_utils import get_ave_data, get_original_model_handler
+from shutil import copytree
 
 palette = '#BDD8ED', '#3075AE', '#4F934F'
-ave_grouped = get_ave_grouped()
+ave_data, target, weight, class_map = get_ave_data()
+ave_grouped = get_ave_grouped(ave_data, target, weight, class_map)
 features = [k for k in ave_grouped.keys()]
 
 model_handler = get_original_model_handler()
@@ -28,7 +31,18 @@ predictor = model_handler.get_predictor()
 if not hasattr(predictor._clf, 'fitted_model'):
     raise ValueError('GLM Summary is only available for GLMs')
 
-app.config.external_stylesheets = [dbc.themes.BOOTSTRAP, 'plugins/generalize-linear-models/webapps/avse/dss_style.css']
+FA = "https://use.fontawesome.com/releases/v5.12.1/css/all.css"
+
+webapp_plugin_assets = os.path.join(
+    get_webapp_resource(), "../webapps/avse/assets"
+)
+dash_webapp_assets = app.config.assets_folder
+print(
+    f"Copying Webapp assets from directory '{webapp_plugin_assets}' into directory '{dash_webapp_assets}'"
+)
+copytree(webapp_plugin_assets, dash_webapp_assets)
+
+app.config.external_stylesheets = ['dss_style.css', dbc.themes.BOOTSTRAP, FA]
 
 feature_choice = dcc.Dropdown(
     id='feature-choice',
@@ -42,138 +56,127 @@ app.layout = dbc.Row([
     dbc.Col([
         dbc.Container(
             [
-                html.H4("Generalized Linear Model Analysis", style={'margin-top': '1em'}),
-                html.H5("Model Metrics", style={'margin-top': '1em'}),
+                html.H3("Generalized Linear Model Analysis"),
+                html.Hr(),
+                html.H4("Model Metrics", style={'margin-left': '1em'}),
                 dbc.Row([
                     dbc.Col([
-                        dbc.Card(
-                            dbc.CardBody(
-                                [
-                                    html.H5("BIC Score ", style={'textAlign': 'left'}),
-                                    html.H5(f"{np.round(predictor._clf.fitted_model.bic, 2):,}",
-                                            style={'textAlign': 'center'})
-
-                                ]), style={'margin-bottom': '1em'}
-                        )
-                    ], md=4),
-
+                        html.Table(
+                            [html.Tr([
+                                html.Td(["Bayesian Information Criterion (BIC) ",
+                                         html.I(className="fa fa-question-circle mr-2",
+                                               title="Criterion for model selection, models with lower BIC are generally preferred")]),
+                                html.Th(f"{np.round(predictor._clf.fitted_model.bic, 2):,}")
+                            ]),
+                                html.Tr([
+                                    html.Td(["Akaike Information Criterion (AIC) ",
+                                    html.I(className="fa fa-question-circle mr-2",
+                                             title="Criterion for model selection, models with lower AIC are generally preferred")]),
+                                    html.Th(f"{np.round(predictor._clf.fitted_model.aic, 2):,}")
+                                ]),
+                                html.Tr([
+                                    html.Td(["Deviance ",
+                                    html.I(className="fa fa-question-circle mr-2",
+                                             title="Measure of the error, using the likelihood function")]),
+                                    html.Th(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}")
+                                ])
+                            ],
+                            className="detailed-metrics-table")
+                    ], md=8),
                     dbc.Col([
-                        dbc.Card(
-                            dbc.CardBody(
-                                [
-                                    html.H5("AIC Score ", style={'textAlign': 'left'}),
-                                    html.H5(f"{np.round(predictor._clf.fitted_model.aic, 2):,}",
-                                            style={'textAlign': 'center'})
+                                    html.P(
+                                        "Metrics blabla blabla blabla blabla blabla blabla blabla blabla blabla "
+                                        "blabla blabla blabla blabla blabla blabla blabla blabla blabla blabla",
+                                        className="explanation")
+                                ], md=4)
 
-                                ]), style={'margin-bottom': '1em'}
-                        )
-                    ], md=4),
-                    dbc.Col([
-                        dbc.Card(
-                            dbc.CardBody(
-                                [
-                                    html.H5("Deviance ", style={'textAlign': 'left'}),
-                                    html.H5(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}",
-                                            style={'textAlign': 'center'})
-
-                                ]), style={'margin-bottom': '1em'}
-                        )
-                    ], md=4)
                 ]),
+                html.Hr(),
+                html.H4("Variable Analysis", style={'margin-left': '1em'}),
+                #dbc.Card(
+                    #dbc.CardBody(
+                        #[
 
-                html.H5("Variable Analysis", style={'margin-top': '1em'}),
-                dbc.Card(
-                    dbc.CardBody(
-                        [
-                            html.Div([
-                                html.H5("Select a Feature",
-                                        style={'display': 'inline-block', 'vertical-align': 'centre', 'width': '20%',
-                                               'margin-left': '1em', 'margin-bottom': '1em'}),
-                                feature_choice
+                            dbc.Row([
+                                dbc.Col(html.Div(), md=2),
+                                dbc.Col(
+                                    html.H5("Select a Feature",
+                                            style={'display': 'inline-block', 'vertical-align': 'bottom',
+                                                   'margin-top': '0.5em'}),
+                                    md=2),
+                                dbc.Col(feature_choice, md=8)
                             ]),
-                            html.H5("Actual Vs Expected Graph", style={'margin-left': '1em', 'margin-bottom': '1em'}),
+                            dbc.Row(
+                                dbc.Col(
+                            html.H5("Base Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
+                            ),
 
                             dbc.Row([
                                 dbc.Col([
-                                    dbc.Card(
-                                        dcc.Graph(id="AvE")
-                                    )
+                                    #dbc.Card(
+                                        dcc.Graph(id="AvE", style={'height': '50vh'})
+                                    #)
                                 ], md=8),
 
                                 dbc.Col([
-                                    dbc.Card(
-                                        html.P(
-                                            "The base graph displays the target against the base prediction, which is the pure effect of the chosen variable. " +
-                                            "Numerical variables are automatically binned. " +
-                                            "The background bars represent the overall weight (number of observations x weight) of each bin. " +
-                                            "The base prediction of each bin is the weighted prediction when all the variables except the chosen one are at their base value. " +
-                                            "The base value of a variable is its modal value, meaning the most frequent one (the most frequent bin when numerical).",
-                                            style={'margin-top': '1em', 'margin-bottom': '1em', 'margin-right': '1em',
-                                                   'margin-left': '1em', 'fontSize': '13px', 'color': '#222222'}
-                                        ),
-                                        style={'box-shadow': '0px 0px 0px 0px',
-                                               'background-color': 'rgba(135, 206, 250, 0.5)'})
+                                    html.P(
+                                        "The base graph displays the target against the base prediction, which is the pure effect of the chosen variable. " +
+                                        "Numerical variables are automatically binned. " +
+                                        "The background bars represent the overall weight (number of observations x weight) of each bin. " +
+                                        "The base prediction of each bin is the weighted prediction when all the variables except the chosen one are at their base value. " +
+                                        "The base value of a variable is its modal value, meaning the most frequent one (the most frequent bin when numerical).",
+                                        className="explanation")
                                 ], md=4)
                             ]),
 
-                            html.H5("Predicted Graph",
-                                    style={'margin-top': '1em', 'margin-left': '1em', 'margin-bottom': '1em'}),
+                            dbc.Row(
+                                dbc.Col(
+                                    html.H5("Predicted Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    #dbc.Card(
+                                        dcc.Graph(id="predicted_graph", style={'height': '50vh'})
+                                    #)
+                                ], md=8),
+
+                                dbc.Col([
+                                    html.P(
+                                        "The predicted graph compares target with prediction for each variable. " +
+                                        "Numerical variables are automatically binned. " +
+                                        "The background bars represent the overall weight (number of observations x weight) of each bin. " +
+                                        "The two lines are the weighted target and prediction within each bin.",
+                                        className="explanation")
+                                ], md=4)
+                            ]),
+
+                            dbc.Row(
+                                dbc.Col(
+                                    html.H5("Ratio Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
+                            ),
 
                             dbc.Row([
                                 dbc.Col([
-                                    dbc.Card(
-                                        dcc.Graph(id="predicted_graph")
-                                    )
+                                    #dbc.Card(
+                                        dcc.Graph(id="ratio_graph", style={'height': '50vh'})
+                                    #)
                                 ], md=8),
 
                                 dbc.Col([
-                                    dbc.Card(
-                                        html.P(
-                                            "The predicted graph compares target with prediction for each variable. " +
-                                            "Numerical variables are automatically binned. " +
-                                            "The background bars represent the overall weight (number of observations x weight) of each bin. " +
-                                            "The two lines are the weighted target and prediction within each bin.",
-                                            style={'margin-top': '1em', 'margin-bottom': '1em', 'margin-right': '1em',
-                                                   'margin-left': '1em', 'fontSize': '13px', 'color': '#222222'}
-                                            ),
-                                        style={'box-shadow': '0px 0px 0px 0px',
-                                               'background-color': 'rgba(135, 206, 250, 0.5)'}
-                                    )
+                                    html.P("The ratio graph uses the same data as the predicted graphs. " +
+                                           "Instead of comparing expected and predicted side by side, " +
+                                           "the predicted value is divided by the expected value for each bin.",
+                                           className="explanation")
                                 ], md=4)
                             ]),
 
-                            html.H5("Ratio Graph",
-                                    style={'margin-top': '1em', 'margin-left': '1em', 'margin-bottom': '1em'}),
-
-                            dbc.Row([
-                                dbc.Col([
-                                    dbc.Card(
-                                        dcc.Graph(id="ratio_graph")
-                                    )
-                                ], md=8),
-
-                                dbc.Col([
-                                    dbc.Card(
-                                        html.P("The ratio graph uses the same data as the predicted graphs. " +
-                                               "Instead of comparing expected and predicted side by side, " +
-                                               "the predicted value is divided by the expected value for each bin.",
-                                               style={'margin-top': '1em', 'margin-bottom': '1em',
-                                                      'margin-right': '1em', 'margin-left': '1em', 'fontSize': '13px',
-                                                      'color': '#222222'}
-                                               ),
-                                        style={'box-shadow': '0px 0px 0px 0px',
-                                               'background-color': 'rgba(135, 206, 250, 0.5)'}
-                                    )
-                                ], md=4)
-                            ]),
-
-                        ]), style={'margin-bottom': '1em'}
-                )
+                        #]), style={'margin-bottom': '1em'}
+                #)
             ], fluid=True)
-    ], md=11),
-    dbc.Col([
+    ], md=12),
+    #dbc.Col([
 
-    ], style={'background-color': '#f2f2f2'}, md=1)
+    #], style={'background-color': '#f2f2f2'}, md=1)
 ])
 
 
@@ -200,6 +203,10 @@ def base_graph(feature):
                   secondary_y=True)
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
     fig.layout.yaxis.gridcolor = '#D7DBDE'
+    fig.layout.margin.t = 10
+    fig.update_xaxes(title=feature)
+    fig.update_yaxes(title='weight', secondary_y=False)
+    fig.update_yaxes(title=target, secondary_y=True)
     return fig
 
 
@@ -226,6 +233,10 @@ def predicted_graph(feature):
                   secondary_y=True)
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
     fig.layout.yaxis.gridcolor = '#D7DBDE'
+    fig.layout.margin.t = 10
+    fig.update_xaxes(title=feature)
+    fig.update_yaxes(title='weight', secondary_y=False)
+    fig.update_yaxes(title=target, secondary_y=True)
     return fig
 
 
@@ -247,4 +258,8 @@ def ratio_graph(feature):
                   secondary_y=True)
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
     fig.layout.yaxis.gridcolor = '#D7DBDE'
+    fig.layout.margin.t = 10
+    fig.update_xaxes(title=feature)
+    fig.update_yaxes(title='weight', secondary_y=False)
+    fig.update_yaxes(title=target, secondary_y=True)
     return fig
