@@ -28,7 +28,7 @@ predictor = model_handler.get_predictor()
 if not hasattr(predictor._clf, 'fitted_model'):
     raise ValueError('GLM Summary is only available for GLMs')
 
-app.config.external_stylesheets = [dbc.themes.BOOTSTRAP, 'plugins/generalize-linear-models/webapps/avse/dss_style.css']
+app.config.external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 feature_choice = dcc.Dropdown(
     id='feature-choice',
