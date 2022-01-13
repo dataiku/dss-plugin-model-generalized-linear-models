@@ -19,7 +19,6 @@ def get_original_model_handler():
         model = dataiku.Model(webapp_config["modelId"])
         version_id = webapp_config.get("versionId")
         original_model_handler = get_model_handler(model, version_id)
-        name = model.get_name()
     else:
         original_model_handler = PredictionModelInformationHandler.from_full_model_id(fmi)
     return original_model_handler
