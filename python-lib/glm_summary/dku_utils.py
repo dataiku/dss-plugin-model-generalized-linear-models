@@ -13,10 +13,11 @@ def get_model_handler(model, version_id=None):
 
 
 def get_original_model_handler():
-    fmi = get_webapp_config().get("trainedModelFullModelId")
+    webapp_config = get_webapp_config()
+    fmi = webapp_config.get("trainedModelFullModelId")
     if fmi is None:
-        model = dataiku.Model(get_webapp_config()["modelId"])
-        version_id = get_webapp_config().get("versionId")
+        model = dataiku.Model(webapp_config["modelId"])
+        version_id = webapp_config.get("versionId")
         original_model_handler = get_model_handler(model, version_id)
         name = model.get_name()
     else:
