@@ -1,18 +1,11 @@
 from dataiku.customwebapp import *
-import dash
 from dash import html
 import dash_bootstrap_components as dbc
 from dash import dcc
-from dash import dash_table
-from dash.dependencies import Input, Output, State
-import pandas as pd
-from pandas.api.types import is_numeric_dtype
-import dataiku
-import plotly.express as px
+from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-from datetime import datetime, timedelta
 import sys
 import generalized_linear_models
 
@@ -48,7 +41,7 @@ feature_choice = dcc.Dropdown(
     id='feature-choice',
     options=[{'label': f, 'value': f}
              for f in features],
-    value=features[0], style={'display': 'inline-block', 'vertical-align': 'top', 'width': '60%',
+    value=features[0], style={'display': 'inline-block', 'width': '60%',
                               'margin-bottom': '1em'}
 )
 
@@ -65,118 +58,105 @@ app.layout = dbc.Row([
                             [html.Tr([
                                 html.Td(["Bayesian Information Criterion (BIC) ",
                                          html.I(className="fa fa-question-circle mr-2",
-                                               title="Criterion for model selection, models with lower BIC are generally preferred")]),
+                                                title="Criterion for model selection, models with lower BIC are generally preferred")]),
                                 html.Th(f"{np.round(predictor._clf.fitted_model.bic, 2):,}")
                             ]),
                                 html.Tr([
                                     html.Td(["Akaike Information Criterion (AIC) ",
-                                    html.I(className="fa fa-question-circle mr-2",
-                                             title="Criterion for model selection, models with lower AIC are generally preferred")]),
+                                             html.I(className="fa fa-question-circle mr-2",
+                                                    title="Criterion for model selection, models with lower AIC are generally preferred")]),
                                     html.Th(f"{np.round(predictor._clf.fitted_model.aic, 2):,}")
                                 ]),
                                 html.Tr([
                                     html.Td(["Deviance ",
-                                    html.I(className="fa fa-question-circle mr-2",
-                                             title="Measure of the error, using the likelihood function")]),
+                                             html.I(className="fa fa-question-circle mr-2",
+                                                    title="Measure of the error, using the likelihood function")]),
                                     html.Th(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}")
                                 ])
                             ],
                             className="detailed-metrics-table")
                     ], md=8),
                     dbc.Col([
-                                    html.P(
-                                        "Metrics blabla blabla blabla blabla blabla blabla blabla blabla blabla "
-                                        "blabla blabla blabla blabla blabla blabla blabla blabla blabla blabla",
-                                        className="explanation")
-                                ], md=4)
+                        html.Div([
+                        html.P(
+                            "BIC, AIC and Deviance are metrics built using the log likelihood of the data with regards to the fitted model."),
+                        html.Code("BIC = k * ln(n) - 2 ln(L)"),
+                        html.Code("AIC = 2 * k - 2 ln(L)"),
+                        html.Code("Deviance = 2 * (ln(L_s) - ln(L))")
+                            ], style={'display': 'block'}, className="explanation")
+                    ], md=4)
 
                 ]),
                 html.Hr(),
                 html.H4("Variable Analysis", style={'margin-left': '1em'}),
-                #dbc.Card(
-                    #dbc.CardBody(
-                        #[
+                dbc.Row([
+                    dbc.Col(html.Div(), md=2),
+                    dbc.Col(
+                        html.H5("Select a Feature",
+                                style={'display': 'inline-block', 'vertical-align': 'bottom',
+                                       'margin-top': '0.5em'}),
+                        md=2),
+                    dbc.Col(feature_choice, md=8)
+                ]),
+                dbc.Row(
+                    dbc.Col(
+                        html.H5("Base Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
+                ),
 
-                            dbc.Row([
-                                dbc.Col(html.Div(), md=2),
-                                dbc.Col(
-                                    html.H5("Select a Feature",
-                                            style={'display': 'inline-block', 'vertical-align': 'bottom',
-                                                   'margin-top': '0.5em'}),
-                                    md=2),
-                                dbc.Col(feature_choice, md=8)
-                            ]),
-                            dbc.Row(
-                                dbc.Col(
-                            html.H5("Base Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
-                            ),
+                dbc.Row([
+                    dbc.Col([
+                        dcc.Graph(id="AvE", style={'height': '50vh'})
+                    ], md=8),
 
-                            dbc.Row([
-                                dbc.Col([
-                                    #dbc.Card(
-                                        dcc.Graph(id="AvE", style={'height': '50vh'})
-                                    #)
-                                ], md=8),
+                    dbc.Col([
+                        html.P(
+                            "A base graph shows the pure dependence of the predicted response and the actual response on a single feature. The x axis displays the value "
+                            "of the selected feature, while the y axis displays the base prediction along with the actual response. The base prediction of each bin is the weighted "
+                            "prediction when all the variables except the chosen one are at their base value. " +
+                            "The base value of a variable is its modal value, meaning the most frequent "
+                            "one (the most frequent bin when numerical).",
+                            className="explanation")
+                    ], md=4)
+                ]),
 
-                                dbc.Col([
-                                    html.P(
-                                        "The base graph displays the target against the base prediction, which is the pure effect of the chosen variable. " +
-                                        "Numerical variables are automatically binned. " +
-                                        "The background bars represent the overall weight (number of observations x weight) of each bin. " +
-                                        "The base prediction of each bin is the weighted prediction when all the variables except the chosen one are at their base value. " +
-                                        "The base value of a variable is its modal value, meaning the most frequent one (the most frequent bin when numerical).",
-                                        className="explanation")
-                                ], md=4)
-                            ]),
+                dbc.Row(
+                    dbc.Col(
+                        html.H5("Predicted Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
+                ),
+                dbc.Row([
+                    dbc.Col([
+                        dcc.Graph(id="predicted_graph", style={'height': '50vh'})
+                    ], md=8),
 
-                            dbc.Row(
-                                dbc.Col(
-                                    html.H5("Predicted Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
-                            ),
-                            dbc.Row([
-                                dbc.Col([
-                                    #dbc.Card(
-                                        dcc.Graph(id="predicted_graph", style={'height': '50vh'})
-                                    #)
-                                ], md=8),
+                    dbc.Col([
+                        html.P(
+                            "A predicted graph shows the value of the predicted and the actual response on a single "
+                            "feature. The x axis displays the value "
+                            "of the selected feature, while the y axis displays the weighted prediction and the "
+                            "weighted actual response.",
+                            className="explanation")
+                    ], md=4)
+                ]),
 
-                                dbc.Col([
-                                    html.P(
-                                        "The predicted graph compares target with prediction for each variable. " +
-                                        "Numerical variables are automatically binned. " +
-                                        "The background bars represent the overall weight (number of observations x weight) of each bin. " +
-                                        "The two lines are the weighted target and prediction within each bin.",
-                                        className="explanation")
-                                ], md=4)
-                            ]),
+                dbc.Row(
+                    dbc.Col(
+                        html.H5("Ratio Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
+                ),
 
-                            dbc.Row(
-                                dbc.Col(
-                                    html.H5("Ratio Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
-                            ),
+                dbc.Row([
+                    dbc.Col([
+                        dcc.Graph(id="ratio_graph", style={'height': '50vh'})
+                    ], md=8),
 
-                            dbc.Row([
-                                dbc.Col([
-                                    #dbc.Card(
-                                        dcc.Graph(id="ratio_graph", style={'height': '50vh'})
-                                    #)
-                                ], md=8),
-
-                                dbc.Col([
-                                    html.P("The ratio graph uses the same data as the predicted graphs. " +
-                                           "Instead of comparing expected and predicted side by side, " +
-                                           "the predicted value is divided by the expected value for each bin.",
-                                           className="explanation")
-                                ], md=4)
-                            ]),
-
-                        #]), style={'margin-bottom': '1em'}
-                #)
+                    dbc.Col([
+                        html.P("The ratio graph uses the same data as the predicted graph. " +
+                               "Instead of comparing expected and predicted side by side, " +
+                               "the predicted value is divided by the expected value for each bin.",
+                               className="explanation")
+                    ], md=4)
+                ]),
             ], fluid=True)
     ], md=12),
-    #dbc.Col([
-
-    #], style={'background-color': '#f2f2f2'}, md=1)
 ])
 
 

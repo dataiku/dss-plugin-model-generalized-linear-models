@@ -98,6 +98,16 @@ h5 {
     margin-bottom: 0;
 }
 
+code {
+    color: inherit;
+    /*padding: 2px 4px;*/
+    background-color: #f7f7f9;
+    border: 1px solid #e1e1e8;
+    white-space: nowrap;
+    display: block;
+    font-family: Monaco, Menlo, Consolas, "Courier New", monospace
+}
+
 /* Buttons */
 
 .btn {
@@ -301,6 +311,12 @@ table > .icon:only-child {
     max-width: 100%;
 }
 
-.Select-value {
+.Select-control {
+    -webkit-appearance: none;
+    -webkit-border-radius: 0px;
+    height: 25px;
+}
 
+.Select--single>.Select-control .Select-value, .Select-placeholder {
+    line-height: 24px;
 }
