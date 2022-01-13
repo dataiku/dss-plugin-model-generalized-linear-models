@@ -36,7 +36,7 @@ def compute_base_predictions(train_df, test_df, predictor, class_map=None):
 
 
 def get_ave_grouped(ave_data, target, weight, class_map):
-    if weight == None:
+    if weight is None:
         ave_data['weight'] = 1
 
     if class_map is not None:  # classification
