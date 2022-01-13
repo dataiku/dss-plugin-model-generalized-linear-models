@@ -35,7 +35,8 @@ def get_ave_data():
         test_df = model_handler.get_test_df()[0]
     predicted = predictor.predict(test_df)
     class_map = None
-    if len(predicted.columns) == 3:  # classification
+    prediction_type = model_handler.get_prediction_type()
+    if prediction_type == "BINARY_CLASSIFICATION":
         base_class = predicted.columns[1].split('_')[1]
         other_class = predicted.columns[2].split('_')[1]
         class_map = {base_class: 0, other_class: 1}
