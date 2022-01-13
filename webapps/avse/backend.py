@@ -14,7 +14,7 @@ from glm_summary.graph_utils import get_ave_grouped
 from glm_summary.dku_utils import get_ave_data, get_original_model_handler
 from shutil import copytree
 
-palette = '#BDD8ED', '#3075AE', '#4F934F'
+palette = '#D5D9D9', '#3075AE', '#4F934F'
 ave_data, target, weight, class_map = get_ave_data()
 ave_grouped = get_ave_grouped(ave_data, target, weight, class_map)
 features = [k for k in ave_grouped.keys()]
@@ -79,9 +79,12 @@ app.layout = dbc.Row([
                     dbc.Col([
                         html.Div([
                         html.P(
-                            "BIC, AIC and Deviance are metrics built using the log likelihood of the data with regards to the fitted model."),
+                            "BIC, AIC and Deviance are metrics built using the log likelihood of the data with regards to the fitted model.",
+                        style={'margin-bottom': 0}),
                         html.Code("BIC = k * ln(n) - 2 ln(L)"),
+                        html.Br(),
                         html.Code("AIC = 2 * k - 2 ln(L)"),
+                        html.Br(),
                         html.Code("Deviance = 2 * (ln(L_s) - ln(L))")
                             ], style={'display': 'block'}, className="explanation")
                     ], md=4)
