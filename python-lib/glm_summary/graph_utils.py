@@ -56,7 +56,7 @@ def get_ave_grouped(ave_data, target, weight, class_map):
         ave_data['base_' + feature] = ave_data['base_' + feature] * ave_data['weight']
         if is_numeric_dtype(ave_data[feature].dtype):
             if len(ave_data[feature].unique()) > 20:
-                ave_data[feature] = [x.left for x in pd.cut(ave_data[feature], bins=20)]
+                ave_data[feature] = [(x.left + x.right)/2 for x in pd.cut(ave_data[feature], bins=20)]
 
     ave_grouped = {feature: ave_data.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
         {'weighted_target': 'sum',
