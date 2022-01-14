@@ -6,10 +6,6 @@ from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-import sys
-import generalized_linear_models
-
-sys.modules['generalized_linear_models'] = generalized_linear_models
 from glm_summary.graph_utils import get_ave_grouped
 from glm_summary.dku_utils import get_ave_data, get_original_model_handler
 from shutil import copytree

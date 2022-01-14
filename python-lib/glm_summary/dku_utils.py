@@ -23,10 +23,11 @@ def get_original_model_handler():
         original_model_handler = PredictionModelInformationHandler.from_full_model_id(fmi)
     return original_model_handler
 
-
-# outputs all the data necessary to build the
-# AvsE graphs.
 def get_ave_data():
+    """
+    :return: all the data necessary to build the
+    Actual versus Expected graphs.
+    """
     model_handler = get_original_model_handler()
     predictor = model_handler.get_predictor()
     if model_handler.use_full_df():

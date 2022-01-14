@@ -1,7 +1,6 @@
 import statsmodels.api as sm
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-import pandas as pd
 
 
 class BaseGLM(BaseEstimator, ClassifierMixin):
