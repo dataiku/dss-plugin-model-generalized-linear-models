@@ -75,15 +75,14 @@ app.layout = dbc.Row([
                     dbc.Col([
                         html.Div([
                         html.P(
-                            "BIC, AIC and Deviance are metrics built using the log likelihood of the data with "
-                            "regards to the fitted model.",
+                            "BIC, AIC and Deviance are metrics built as follows, with L the fitted likelihood "
+                            "and L_s the saturated likelihood",
                         style={'margin-bottom': 0}),
                         html.Code("BIC = nb_feature * ln(nb_observation) - 2 ln(L)"),
                         html.Br(),
                         html.Code("AIC = 2 * nb_feature - 2 ln(L)"),
                         html.Br(),
-                        html.Code("Deviance = 2 * (ln(L_s) - ln(L))"),
-                        html.P("with L the fitted model likelihood and L_s the saturated model likelihood.")
+                        html.Code("Deviance = 2 * (ln(L_s) - ln(L))")
                             ], style={'display': 'block'}, className="explanation")
                     ], md=4)
 
