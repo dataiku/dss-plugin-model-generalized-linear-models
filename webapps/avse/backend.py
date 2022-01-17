@@ -47,7 +47,7 @@ app.layout = dbc.Row([
             [
                 html.H3("Generalized Linear Model Analysis"),
                 html.Hr(),
-                html.H4("Model Metrics", style={'margin-left': '1em'}),
+                html.H4("Model Metrics"),
                 dbc.Row([
                     dbc.Col([
                         html.Table(
@@ -89,7 +89,7 @@ app.layout = dbc.Row([
 
                 ]),
                 html.Hr(),
-                html.H4("Variable Analysis", style={'margin-left': '1em'}),
+                html.H4("Variable Analysis"),
                 dbc.Row([
                     dbc.Col(html.Div(), md=2),
                     dbc.Col(
