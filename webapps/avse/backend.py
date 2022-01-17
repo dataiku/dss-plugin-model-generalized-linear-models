@@ -10,7 +10,7 @@ from glm_summary.graph_utils import get_ave_grouped
 from glm_summary.dku_utils import get_ave_data, get_original_model_handler
 from shutil import copytree
 
-palette = '#D5D9D9', '#3075AE', '#4F934F'
+palette = '#D5D9D9', '#3075AE', '#ff7e0b'
 ave_data, target, weight, class_map = get_ave_data()
 ave_grouped = get_ave_grouped(ave_data, target, weight, class_map)
 features = [k for k in ave_grouped.keys()]
@@ -37,8 +37,7 @@ feature_choice = dcc.Dropdown(
     id='feature-choice',
     options=[{'label': f, 'value': f}
              for f in features],
-    value=features[0], style={'display': 'inline-block', 'width': '60%',
-                              'margin-bottom': '1em'}
+    value=features[0], style={'display': 'inline-block', 'width': '60%'}
 )
 
 app.layout = dbc.Row([
@@ -47,27 +46,30 @@ app.layout = dbc.Row([
             [
                 html.H3("Generalized Linear Model Analysis"),
                 html.Hr(),
-                html.H4("Model Metrics"),
                 dbc.Row([
                     dbc.Col([
+                        html.H4("Model Metrics"),
                         html.Table(
                             [html.Tr([
                                 html.Td(["Bayesian Information Criterion (BIC) ",
                                          html.I(className="fa fa-question-circle mr-2",
                                                 title="Criterion for model selection, models with lower BIC are generally preferred")]),
-                                html.Th(f"{np.round(predictor._clf.fitted_model.bic, 2):,}")
+                                html.Th(f"{np.round(predictor._clf.fitted_model.bic, 2):,}",
+                                            className="table-metric")
                             ]),
                                 html.Tr([
                                     html.Td(["Akaike Information Criterion (AIC) ",
                                              html.I(className="fa fa-question-circle mr-2",
                                                     title="Criterion for model selection, models with lower AIC are generally preferred")]),
-                                    html.Th(f"{np.round(predictor._clf.fitted_model.aic, 2):,}")
+                                    html.Th(f"{np.round(predictor._clf.fitted_model.aic, 2):,}",
+                                            className="table-metric")
                                 ]),
                                 html.Tr([
                                     html.Td(["Deviance ",
                                              html.I(className="fa fa-question-circle mr-2",
                                                     title="Measure of the error, using the likelihood function")]),
-                                    html.Th(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}")
+                                    html.Th(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}",
+                                            className="table-metric")
                                 ])
                             ],
                             className="detailed-metrics-table")
@@ -89,26 +91,19 @@ app.layout = dbc.Row([
 
                 ]),
                 html.Hr(),
-                html.H4("Variable Analysis"),
                 dbc.Row([
-                    dbc.Col(html.Div(), md=2),
+                    dbc.Col(html.H4("Variable Analysis"), md=2),
                     dbc.Col(
                         html.H5("Select a Feature",
-                                style={'display': 'inline-block', 'vertical-align': 'bottom',
-                                       'margin-top': '0.5em'}),
+                                style={'text-align': 'right', 'margin-top': '0.2em'}),
                         md=2),
                     dbc.Col(feature_choice, md=8)
                 ]),
-                dbc.Row(
-                    dbc.Col(
-                        html.H5("Base Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
-                ),
-
                 dbc.Row([
                     dbc.Col([
+                        html.H4("Base Graph", style={'text-align': 'center'}),
                         dcc.Graph(id="AvE", style={'height': '50vh'})
-                    ], md=8),
-
+                        ], md=8),
                     dbc.Col([
                         html.P(
                             "A base graph shows the pure dependence of the predicted response and the actual response on a single feature. The x axis displays the value "
@@ -118,17 +113,15 @@ app.layout = dbc.Row([
                             "one (the most frequent bin when numerical).",
                             className="explanation")
                     ], md=4)
-                ]),
-
-                dbc.Row(
-                    dbc.Col(
-                        html.H5("Predicted Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
+                    ]
                 ),
+
                 dbc.Row([
                     dbc.Col([
+                        html.H4("Predicted Graph", style={'text-align': 'center'}),
                         dcc.Graph(id="predicted_graph", style={'height': '50vh'})
-                    ], md=8),
-
+                        ]
+                        , md=8),
                     dbc.Col([
                         html.P(
                             "A predicted graph shows the value of the predicted and the actual response on a single "
@@ -137,25 +130,21 @@ app.layout = dbc.Row([
                             "weighted actual response.",
                             className="explanation")
                     ], md=4)
-                ]),
-
-                dbc.Row(
-                    dbc.Col(
-                        html.H5("Ratio Graph", style={'text-align': 'center', 'margin-left': '1em'}), md=8)
+                    ]
                 ),
 
                 dbc.Row([
                     dbc.Col([
-                        dcc.Graph(id="ratio_graph", style={'height': '50vh'})
-                    ], md=8),
-
+                        html.H4("Ratio Graph", style={'text-align': 'center'}),
+                        dcc.Graph(id="ratio_graph", style={'height': '50vh'})]
+                        , md=8),
                     dbc.Col([
                         html.P("The ratio graph uses the same data as the predicted graph. " +
                                "Instead of comparing expected and predicted side by side, " +
                                "the predicted value is divided by the expected value for each bin.",
                                className="explanation")
-                    ], md=4)
-                ]),
+                    ], md=4)]
+                ),
             ], fluid=True)
     ], md=12),
 ])
