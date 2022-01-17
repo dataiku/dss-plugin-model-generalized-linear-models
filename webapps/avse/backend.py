@@ -74,10 +74,11 @@ app.layout = dbc.Row([
                     ], md=8),
                     dbc.Col([
                         html.Div([
-                        html.P(
-                            "BIC, AIC and Deviance are metrics built as follows, with L the fitted likelihood "
-                            "and L_s the saturated likelihood",
-                        style={'margin-bottom': 0}),
+                            dcc.Markdown('''
+                            [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion), 
+                            [AIC](https://en.wikipedia.org/wiki/Akaike_information_criterion) and [
+                            Deviance](https://en.wikipedia.org/wiki/Deviance_(statistics)) are metrics built as follows, with L the fitted likelihood and L_s the saturated likelihood: 
+                            '''),
                         html.Code("BIC = nb_feature * ln(nb_observation) - 2 ln(L)"),
                         html.Br(),
                         html.Code("AIC = 2 * nb_feature - 2 ln(L)"),

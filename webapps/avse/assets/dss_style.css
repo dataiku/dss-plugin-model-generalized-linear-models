@@ -108,6 +108,10 @@ code {
     font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
 }
 
+p {
+    margin-bottom: 0
+}
+
 /* Buttons */
 
 .btn {
