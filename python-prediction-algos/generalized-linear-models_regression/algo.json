@@ -23,7 +23,7 @@
         {
             "name": "family_name",
             "label": "Distribution",
-            "description": "The distribution for the link function",
+            "description": "The distribution family of the response",
             "type": "SELECT",
             "defaultValue": "gaussian",
             "selectChoices": [{
@@ -60,8 +60,8 @@
         },
         {
             "name": "binomial_link",
-            "label": "Link Functions",
-            "description": "Relates the expected value of the response to the linear predictors in the model when choosing a binomial distribution",
+            "label": "Link Function",
+            "description": "Relates the expected value of the response to the linear predictors in the model",
             "defaultValue": "logit",
             "type": "SELECT",
             "selectChoices": [{
@@ -92,8 +92,8 @@
         },
         {
             "name": "gamma_link",
-            "label": "Link Functions",
-            "description": "Relates the expected value of the response to the linear predictors in the model when choosing a gamma distribution",
+            "label": "Link Function",
+            "description": "Relates the expected value of the response to the linear predictors in the model",
             "defaultValue": "inverse_power",
             "type": "SELECT",
             "selectChoices": [{
@@ -116,8 +116,8 @@
         },
         {
             "name": "gaussian_link",
-            "label": "Link Functions",
-            "description": "Relates the expected value of the response to the linear predictors in the model when choosing a gaussian distribution",
+            "label": "Link Function",
+            "description": "Relates the expected value of the response to the linear predictors in the model",
             "defaultValue": "identity",
             "type": "SELECT",
             "selectChoices": [{
@@ -139,8 +139,8 @@
         },
         {
             "name": "inverse_gaussian_link",
-            "label": "Link Functions",
-            "description": "Relates the expected value of the response to the linear predictors in the model when choosing an inverse gaussian distribution",
+            "label": "Link Function",
+            "description": "Relates the expected value of the response to the linear predictors in the model",
             "defaultValue": "inverse_squared",
             "type": "SELECT",
             "selectChoices": [{
@@ -166,8 +166,8 @@
         },
         {
             "name": "poisson_link",
-            "label": "Link Functions",
-            "description": "Relates the expected value of the response to the linear predictors in the model when choosing a poisson distribution",
+            "label": "Link Function",
+            "description": "Relates the expected value of the response to the linear predictors in the model",
             "defaultValue": "log",
             "type": "SELECT",
             "selectChoices": [{
@@ -186,8 +186,8 @@
         },
         {
             "name": "negative_binomial_link",
-            "label": "Link Functions",
-            "description": "Relates the expected value of the response to the linear predictors in the model when choosing a negative binomial distribution",
+            "label": "Link Function",
+            "description": "Relates the expected value of the response to the linear predictors in the model",
             "defaultValue": "log",
             "type": "SELECT",
             "selectChoices": [{
@@ -214,8 +214,8 @@
         },
         {
             "name": "tweedie_link",
-            "label": "Link Functions",
-            "description": "Relates the expected value of the response to the linear predictors in the model when choosing a tweedie distribution",
+            "label": "Link Function",
+            "description": "Relates the expected value of the response to the linear predictors in the model",
             "defaultValue": "log",
             "type": "SELECT",
             "selectChoices": [{

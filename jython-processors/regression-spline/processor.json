@@ -10,7 +10,7 @@
             "name": "column",
             "label": "Column",
             "type": "COLUMN",
-            "description": "The column on which the spline is fitted",
+            "description": "The column upon which the regression spline will be built",
             "mandatory": true
         },
         {
@@ -41,7 +41,7 @@
             "name": "knots",
             "label": "Knots",
             "type": "DOUBLES",
-            "description": "The knots of the spline",
+            "description": "The knots of the spline, ie the points where the pieces of the piecewise polynomial meet",
             "mandatory": true
         }
     ],
