@@ -1,6 +1,6 @@
 {
     "meta": {
-        "label": "Regression Splines",
+        "label": "Regression Spline",
         "description": "Split the variable into [B-spline basis](https://patsy.readthedocs.io/en/latest/spline-regression.html), which parametrizes a piecewise polynomial spline where pieces meet at each knot, the number of columns added is equal to number of knots plus the degree of the polynomial",
         "icon": "icon-tasks"
     },
