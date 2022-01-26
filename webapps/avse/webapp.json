@@ -1,7 +1,7 @@
 {
   "meta": {
-    "label": "Actual versus Expected",
-    "description": "Visualize model performance with the Actual versus Expected graph",
+    "label": "Generalized Linear Model Summary",
+    "description": "Visualize model performance with metrics and graphs",
     "icon": "icon-sitemap"
   },
 
