@@ -8,6 +8,7 @@ from plotly.subplots import make_subplots
 import numpy as np
 from glm_summary.graph_utils import get_ave_grouped
 from glm_summary.dku_utils import get_ave_data, get_original_model_handler
+from generalized_linear_models.dku_glm import BaseGLM
 from shutil import copytree
 
 palette = '#D5D9D9', '#3075AE', '#ff7e0b'
@@ -17,7 +18,7 @@ features = [k for k in ave_grouped.keys()]
 
 model_handler = get_original_model_handler()
 predictor = model_handler.get_predictor()
-if not hasattr(predictor._clf, 'fitted_model'):
+if not isinstance(predictor._clf, BaseGLM):
     raise ValueError('GLM Summary is only available for GLMs')
 
 FA = "https://use.fontawesome.com/releases/v5.12.1/css/all.css"
