@@ -38,6 +38,8 @@ def compute_base_predictions(train_df, test_df, predictor, class_map=None):
 def get_ave_grouped(ave_data, target, weight, class_map):
     if weight is None:
         ave_data['weight'] = 1
+    else:
+        ave_data['weight'] = ave_data[weight]
 
     if class_map is not None:  # classification
         ave_data[target] = pd.Series([class_map[target_value] for target_value in ave_data[target]], name=target)
