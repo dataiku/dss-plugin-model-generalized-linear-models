@@ -1,7 +1,6 @@
 import dataiku
 from dataiku import pandasutils as pdu
 from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
-from dataiku.customwebapp import get_webapp_config
 import pandas as pd
 from glm_summary.graph_utils import compute_base_predictions
 
@@ -12,8 +11,7 @@ def get_model_handler(model, version_id=None):
                                              params.model_folder)
 
 
-def get_original_model_handler():
-    webapp_config = get_webapp_config()
+def get_original_model_handler(webapp_config):
     fmi = webapp_config.get("trainedModelFullModelId")
     if fmi is None:
         model = dataiku.Model(webapp_config["modelId"])
@@ -23,12 +21,12 @@ def get_original_model_handler():
         original_model_handler = PredictionModelInformationHandler.from_full_model_id(fmi)
     return original_model_handler
 
-def get_ave_data():
+def get_ave_data(webapp_config):
     """
     :return: all the data necessary to build the
     Actual versus Expected graphs.
     """
-    model_handler = get_original_model_handler()
+    model_handler = get_original_model_handler(webapp_config)
     predictor = model_handler.get_predictor()
     if model_handler.use_full_df():
         test_df = model_handler.get_full_df()[0]

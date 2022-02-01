@@ -10,13 +10,15 @@ from glm_summary.graph_utils import get_ave_grouped
 from glm_summary.dku_utils import get_ave_data, get_original_model_handler
 from generalized_linear_models.dku_glm import BaseGLM
 from shutil import copytree
+from dataiku.customwebapp import get_webapp_config
 
+webapp_config = get_webapp_config()
 palette = '#D5D9D9', '#3075AE', '#ff7e0b'
-ave_data, target, weight, class_map = get_ave_data()
+ave_data, target, weight, class_map = get_ave_data(webapp_config)
 ave_grouped = get_ave_grouped(ave_data, target, weight, class_map)
 features = [k for k in ave_grouped.keys()]
 
-model_handler = get_original_model_handler()
+model_handler = get_original_model_handler(webapp_config)
 predictor = model_handler.get_predictor()
 if not isinstance(predictor._clf, BaseGLM):
     raise ValueError('GLM Summary is only available for GLMs')
