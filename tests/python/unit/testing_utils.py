@@ -1,6 +1,6 @@
 import pandas as pd
 from io import StringIO
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.preprocessing import OneHotEncoder
 
 testing_dict = {
@@ -181,6 +181,7 @@ test_df = pd.read_csv(StringIO('ClaimNb,Exposure,ClaimFrequency,Power,CarAge,Dri
              '0.4666666666666667,0.0\n'))
 
 
+
 class Predictor:
     def __init__(self):
         self.model = LinearRegression()
@@ -197,3 +198,24 @@ class Predictor:
     def predict(self, df):
         X, _ = self.process(df)
         return pd.DataFrame({'prediction': self.model.predict(X)})
+
+
+class PredictorClassif:
+    def __init__(self):
+        self.model = LogisticRegression()
+
+    def process(self, df):
+        X = df.iloc[:, [4, 5]]
+        y = df.iloc[:, 1] > 0.5
+        return X, y
+
+    def fit(self, df):
+        X, y = self.process(df)
+        self.model.fit(X, y)
+
+    def predict(self, df):
+        X, _ = self.process(df)
+        proba = self.model.predict(X)
+        return pd.DataFrame({'probaTrue': proba,
+                             'probaFalse': 1-proba,
+                             'prediction': proba > 0.5})
