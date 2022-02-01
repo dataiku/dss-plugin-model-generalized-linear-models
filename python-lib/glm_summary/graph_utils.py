@@ -12,7 +12,7 @@ def compute_base_predictions(train_df, test_df, predictor, class_map=None):
     for feature in train_df.columns:
         if is_numeric_dtype(train_df[feature].dtype):
             if len(train_df[feature].unique()) > 20:
-                train_df[feature] = [(x.left + x.right) / 2 for x in pd.cut(train_df[feature], bins=20)]
+                train_df[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(train_df[feature], bins=20)]
 
     base_params = {col: train_df[col].mode()[0] for col in train_df.columns}
 
@@ -40,7 +40,7 @@ def get_ave_grouped(ave_data, target, weight, class_map):
         ave_data['weight'] = 1
     else:
         ave_data['weight'] = ave_data[weight]
-    
+
     if class_map is not None:  # classification
         ave_data[target] = pd.Series([class_map[target_value] for target_value in ave_data[target]], name=target)
 
@@ -58,7 +58,7 @@ def get_ave_grouped(ave_data, target, weight, class_map):
         ave_data['base_' + feature] = ave_data['base_' + feature] * ave_data['weight']
         if is_numeric_dtype(ave_data[feature].dtype):
             if len(ave_data[feature].unique()) > 20:
-                ave_data[feature] = [(x.left + x.right)/2 for x in pd.cut(ave_data[feature], bins=20)]
+                ave_data[feature] = [(x.left + x.right)/2 if isinstance(x, pd.Interval) else x for x in pd.cut(ave_data[feature], bins=20)]
 
     ave_grouped = {feature: ave_data.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
         {'weighted_target': 'sum',
