@@ -206,7 +206,7 @@ class PredictorClassif:
 
     def process(self, df):
         X = df.iloc[:, [4, 5]]
-        y = df.iloc[:, 1] > 0.5
+        y = [str(y_i) for y_i in df.iloc[:, 1] > 0.5]
         return X, y
 
     def fit(self, df):
@@ -215,7 +215,7 @@ class PredictorClassif:
 
     def predict(self, df):
         X, _ = self.process(df)
-        proba = self.model.predict(X)
-        return pd.DataFrame({'probaTrue': proba,
-                             'probaFalse': 1-proba,
-                             'prediction': proba > 0.5})
+        proba = self.model.predict_proba(X)[:, 0]
+        return pd.DataFrame({'proba_True': proba,
+                             'proba_False': 1-proba,
+                             'prediction': [str(prob > 0.5) for prob in proba]})

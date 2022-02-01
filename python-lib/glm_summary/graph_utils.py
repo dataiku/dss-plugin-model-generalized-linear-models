@@ -15,7 +15,7 @@ def compute_base_predictions(train_df, test_df, predictor, class_map=None):
                 train_df[feature] = [(x.left + x.right) / 2 for x in pd.cut(train_df[feature], bins=20)]
 
     base_params = {col: train_df[col].mode()[0] for col in train_df.columns}
-
+    print(class_map)
     # compute base predictions
     base_data = dict()
     for feature in test_df.columns:
