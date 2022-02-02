@@ -1,4 +1,5 @@
 import statsmodels.api as sm
+from statsmodels.genmod.generalized_linear_model import GLMResults
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 
@@ -196,7 +197,10 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             # fit is 10-100x faster than fit_regularized
             self.fitted_model = model.fit()
         else:
-            self.fitted_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
+            regularized_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
+            self.fitted_model = GLMResults(regularized_model.model, regularized_model.params,
+                       np.linalg.pinv(np.dot(np.matrix(regularized_model.params).T, np.matrix(regularized_model.params))),
+                       regularized_model.model.scale)
 
         self.compute_coefs()
         self.intercept_ = float(self.fitted_model.params[0])
