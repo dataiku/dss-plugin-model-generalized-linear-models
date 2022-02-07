@@ -44,27 +44,7 @@ def test_ave_grouped_classif():
     ave_data[target_variable] = [str(x > 0.5) for x in ave_data[target_variable]]
     check_ave_data = ave_data.copy()
     ave_grouped = get_ave_grouped(ave_data, target_variable, weights, class_map)
-    check_ave_grouped = dict()
-    check_ave_data['weight'] = 1
-    check_ave_data[target_variable] = pd.Series([class_map[target_value] for target_value in check_ave_data[target_variable]], name=target_variable)
-    for feature in test_df.columns:
-        if feature != target_variable:
-            if is_numeric_dtype(ave_data[feature].dtype):
-                if len(ave_data[feature].unique()) > 20:
-                    check_ave_data[feature] = [(x.left + x.right) / 2 for x in pd.cut(ave_data[feature], bins=20)]
-    for feature in test_df.columns:
-        if feature != target_variable:
-            ave = check_ave_data.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
-                {'Exposure': 'sum',
-                 'prediction': 'sum',
-                 'weight': 'sum',
-                 'weighted_base': 'sum'
-                 }).reset_index()
-            ave.columns = [feature, 'weighted_target', 'weighted_prediction',
-                           'weight', 'weighted_base']
-            ave['weighted_target'] = ave['weighted_target'] / ave['weight']
-            ave['weighted_prediction'] = ave['weighted_prediction'] / ave['weight']
-            ave['weighted_base'] = ave['weighted_base'] / ave['weight']
-            check_ave_grouped[feature] = ave
-    for feature in ave_grouped:
-        pd.testing.assert_frame_equal(ave_grouped[feature], check_ave_grouped[feature])
+    check_ave_grouped = {'Power': [0.3095238095238096, 0.6047619047619046, 2.857142857142857, 0.0],
+                         'Density': [3778.3888888888887, 0.3611111111111111, 0.6388888888888888, 1.1111111111111112, 0.0]}
+    assert ave_grouped['Power'].mean().tolist() == check_ave_grouped['Power']
+    assert ave_grouped['Density'].mean().tolist() == check_ave_grouped['Density']
