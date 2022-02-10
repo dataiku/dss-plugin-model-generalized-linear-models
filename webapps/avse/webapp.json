@@ -1,7 +1,7 @@
 {
   "meta": {
-    "label": "Generalized Linear Model Summary",
-    "description": "Visualize model performance with metrics and graphs",
+    "label": "GLM Summary",
+    "description": "Visualize model summary metrics and Actual versus Expected graphs",
     "icon": "icon-sitemap"
   },
 

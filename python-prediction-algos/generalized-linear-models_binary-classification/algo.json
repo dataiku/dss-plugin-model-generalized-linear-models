@@ -311,7 +311,7 @@
             "name": "var_power",
             "label": "Variance Power",
             "defaultValue": 1,
-            "type": "INT",
+            "type": "DOUBLE",
             "description": "The power of the variance function of the tweedie distribution",
             "allowDuplicates": false,
             "mandatory": false,
