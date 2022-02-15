@@ -1,9 +1,9 @@
 # Changelog
 
-## [Version 0.1.0] - Initial Release - 2021-10
+## [Version 0.1.0] - Initial Release - 2022-02
 
-* GLM regression in the doctor
-* GLM binary classification in the doctor
+* GLM regression in the Visual ML
+* GLM binary classification in the Visual ML
 * Elastic Net Penalization
 * Sample Weighting
 * Multi Offset and Exposure Support
