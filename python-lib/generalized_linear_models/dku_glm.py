@@ -178,7 +178,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         return offset_output
 
-    def fit_model(self, X, y, sample_weight=None):
+    def fit_model(self, X, y, sample_weight=None, prediction_is_classification=False):
         """
         fits a GLM model
         """
@@ -202,10 +202,13 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                        np.linalg.pinv(np.dot(np.matrix(regularized_model.params).T, np.matrix(regularized_model.params))),
                        regularized_model.model.scale)
 
-        self.compute_coefs()
-        self.intercept_ = float(self.fitted_model.params[0])
+        self.compute_coefs(prediction_is_classification)
+        if prediction_is_classification:
+            self.intercept_ = [float(self.fitted_model.params[0])]
+        else:
+            self.intercept_ = float(self.fitted_model.params[0])
 
-    def compute_coefs(self):
+    def compute_coefs(self, prediction_is_classification):
         """
         adds attributes for explainability
         """
@@ -221,7 +224,10 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             for index in sorted(self.removed_indices):
                 self.coef_ = np.insert(self.coef_, index, 0)
         # statsmodels 0 is 211 sets this to true 0
-        self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
+        if prediction_is_classification:
+            self.coef_ = [[0 if x == 211.03485067364605 else x for x in self.coef_]]
+        else:
+            self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
 
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
@@ -278,7 +284,7 @@ class BinaryClassificationGLM(BaseGLM):
         """
         takes in training data and fits a model
         """
-        self.fit_model(X, y, sample_weight)
+        self.fit_model(X, y, sample_weight, True)
 
     def predict(self, X):
         """
@@ -306,7 +312,7 @@ class RegressionGLM(BaseGLM):
         """
         takes in training data and fits a model
         """
-        self.fit_model(X, y, sample_weight)
+        self.fit_model(X, y, sample_weight, False)
 
     def predict(self, X):
         """
