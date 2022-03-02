@@ -1,6 +1,6 @@
 # Changelog
 
-## [Version 0.1.0] - Initial Release - 2022-03
+## [Version 0.1.1] - Initial Release - 2022-03
 
 * GLM regression in the Visual ML
 * GLM binary classification in the Visual ML
