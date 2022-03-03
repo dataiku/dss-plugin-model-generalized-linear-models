@@ -7,7 +7,7 @@
         "author": "Dataiku (Matthew Galloway, David Behar)",
         "icon": "icon-bullseye",
         "tags": ["Machine Learning"],
-        "url": "https://www.dataiku.com/product/plugins/generalized-linear-models/",
+        "url": "https://www.dataiku.com/product/plugins/glm",
         "licenseInfo": "Apache Software License",
         "supportLevel": "NOT_SUPPORTED"
     }
