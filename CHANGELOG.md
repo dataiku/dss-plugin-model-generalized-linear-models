@@ -1,5 +1,9 @@
 # Changelog
 
+## [Version 1.0.2] - Bugfix Release - 2022-07
+
+* Fixed binary classification prediction output format to fit v11 stricter format
+
 ## [Version 1.0.1] - Bugfix Release - 2022-04
 
 * Fixed package requirement dependency issue with python 3.7 for the custom view
