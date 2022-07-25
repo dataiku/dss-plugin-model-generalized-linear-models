@@ -291,9 +291,8 @@ class BinaryClassificationGLM(BaseGLM):
         Returns the binary target
         """
         y_pred = self.predict_target(X)
-        y_pred_final = y_pred.reshape((len(y_pred), -1))
 
-        return y_pred_final > 0.5
+        return y_pred > 0.5
 
     def predict_proba(self, X):
         """
