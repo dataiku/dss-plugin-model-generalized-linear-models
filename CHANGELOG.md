@@ -1,5 +1,9 @@
 # Changelog
 
+## [Version 1.0.3] - Upgrade Release - 2023-05
+
+* Update code env description to support python versions 3.7, 3.8, 3.9, and 3.10
+
 ## [Version 1.0.2] - Bugfix Release - 2022-07
 
 * Fixed binary classification prediction output format to fit v11 stricter format
