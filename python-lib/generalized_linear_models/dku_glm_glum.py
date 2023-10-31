@@ -39,8 +39,13 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             if not isinstance(var_power, (int, float)):
                 raise ValueError('var_power should be defined with a numeric value, current value of ' + str(
                     var_power) + ' unsupported')
-        if l1_ratio < 0 or l1_ratio > 1:
-                raise ValueError('l1_ratio should be between 0 and 1, current value of ' + str(l1_ratio) + ' unsupported')
+        if isinstance(l1_ratio, list):
+            for l in l1_ratio:
+                if l < 0 or l > 1:
+                    raise ValueError('l1_ratio should be between 0 and 1')
+        else:
+            if l1_ratio < 0 or l1_ratio > 1:
+                raise ValueError('l1_ratio should be between 0 and 1')
         self.l1_ratio = l1_ratio
         self.var_power = var_power
         self.fit_intercept = True
