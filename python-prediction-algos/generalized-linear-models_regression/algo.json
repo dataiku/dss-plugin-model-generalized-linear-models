@@ -12,12 +12,21 @@
     "paramsPythonSetup": "algo_helper.py",
     "kind": "PYTHON",
     "params": [{
-            "name": "penalty",
-            "label": "Elastic Net Penalty",
+        "name": "penalty",
+        "label": "Elastic Net Penalty",
             "description": "The penalty weight of the Elastic Net regularization",
             "mandatory": true,
             "type": "DOUBLES",
             "defaultValue": [0.0],
+            "gridParam": true
+        },
+        {
+            "name": "l1_ratio",
+            "label": "L1 Ratio",
+            "description": "Share of L1 penalty versus L2 penalty",
+            "mandatory": true,
+            "type": "DOUBLES",
+            "defaultValue": [0.5],
             "gridParam": true
         },
         {
@@ -77,10 +86,6 @@
                     "label": "Logit"
                 },
                 {
-                    "value": "cauchy",
-                    "label": "Cauchy"
-                },
-                {
                     "value": "identity",
                     "label": "Identity"
                 }
@@ -94,7 +99,7 @@
             "name": "gamma_link",
             "label": "Link Function",
             "description": "Relates the expected value of the response to the linear predictors in the model",
-            "defaultValue": "inverse_power",
+            "defaultValue": "log",
             "type": "SELECT",
             "selectChoices": [{
                     "value": "log",
@@ -103,10 +108,6 @@
                 {
                     "value": "identity",
                     "label": "Identity"
-                },
-                {
-                    "value": "inverse_power",
-                    "label": "Inverse Power"
                 }
 
             ],
@@ -127,10 +128,6 @@
                 {
                     "value": "identity",
                     "label": "Identity"
-                },
-                {
-                    "value": "inverse_power",
-                    "label": "Inverse Power"
                 }
             ],
             "visibilityCondition": "model.family_name == 'gaussian'",
@@ -148,16 +145,8 @@
                     "label": "Log"
                 },
                 {
-                    "value": "inverse_squared",
-                    "label": "Inverse Squared"
-                },
-                {
                     "value": "identity",
                     "label": "Identity"
-                },
-                {
-                    "value": "inverse_power",
-                    "label": "Inverse Power"
                 }
             ],
             "visibilityCondition": "model.family_name == 'inverse_gaussian'",
@@ -201,10 +190,6 @@
                 {
                     "value": "identity",
                     "label": "Identity"
-                },
-                {
-                    "value": "power",
-                    "label": "Power"
                 }
 
             ],
@@ -221,10 +206,6 @@
             "selectChoices": [{
                     "value": "log",
                     "label": "Log"
-                },
-                {
-                    "value": "power",
-                    "label": "Power"
                 }
 
             ],
@@ -295,17 +276,6 @@
             "mandatory": false,
             "visibilityCondition": "model.family_name == 'negative_binomial'",
             "gridParam": false
-        },
-        {
-            "name": "power",
-            "label": "Power",
-            "type": "DOUBLE",
-            "description": "The power used for the power link function",
-            "defaultValue": 1,
-            "allowDuplicates": false,
-            "mandatory": false,
-            "gridParam": false,
-            "visibilityCondition": "(model.family_name == 'negative_binomial' && model.negative_binomial_link == 'power') || (model.family_name == 'tweedie' && model.tweedie_link == 'power')"
         },
         {
             "name": "var_power",
