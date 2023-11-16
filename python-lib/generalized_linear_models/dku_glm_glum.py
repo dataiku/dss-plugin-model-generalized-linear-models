@@ -91,6 +91,14 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             return 'identity'
         elif user_link == 'cauchy':
             return link.Cauchy()
+        elif user_link == 'negative_binomial':
+            return link.NegativeBinomial()
+        elif user_link == 'power':
+            return link.Power()
+        elif user_link == 'inverse_power':
+            return link.InversePower()
+        elif user_link == 'inverse_squared':
+            return link.InverseSquared()
         else:
             raise ValueError("Unsupported link")
 
