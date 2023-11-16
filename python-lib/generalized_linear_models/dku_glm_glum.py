@@ -1,7 +1,7 @@
-from glum import GeneralizedLinearRegressor
+from glum import GeneralizedLinearRegressor, Link
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-
+import generalized_linear_models.link as link
 
 class BaseGLM(BaseEstimator, ClassifierMixin):
     """
@@ -89,6 +89,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             return 'logit'
         elif user_link == 'identity':
             return 'identity'
+        elif user_link == 'cauchy':
+            return link.Cauchy()
         else:
             raise ValueError("Unsupported link")
 
