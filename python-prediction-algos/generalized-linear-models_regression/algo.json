@@ -86,6 +86,10 @@
                     "label": "Logit"
                 },
                 {
+                    "value": "cauchy",
+                    "label": "Cauchy"
+                },
+                {
                     "value": "identity",
                     "label": "Identity"
                 }
