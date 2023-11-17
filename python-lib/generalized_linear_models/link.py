@@ -5,8 +5,8 @@ Defines the link functions to be used with GLM and GEE families.
 import numpy as np
 import scipy.stats
 import warnings
-
 from glum import Link
+
 FLOAT_EPS = np.finfo(float).eps
 
 
@@ -50,7 +50,7 @@ class Logit(Link):
         """
         return np.clip(p, FLOAT_EPS, 1. - FLOAT_EPS)
 
-    def __call__(self, p):
+    def link(self, p):
         """
         The logit transform
 
@@ -98,7 +98,7 @@ class Logit(Link):
 
 
 
-    def deriv(self, p):
+    def derivative(self, p):
         """
         Derivative of the logit transform
 
@@ -125,7 +125,7 @@ class Logit(Link):
 
 
 
-    def inverse_deriv(self, z):
+    def inverse_derivative(self, z):
         """
         Derivative of the inverse of the logit transform
 
@@ -145,7 +145,7 @@ class Logit(Link):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the logit function.
 
@@ -187,7 +187,7 @@ class Power(Link):
     def __init__(self, power=1.):
         self.power = power
 
-    def __call__(self, p):
+    def link(self, p):
         """
         Power transform link function
 
@@ -238,7 +238,7 @@ class Power(Link):
 
 
 
-    def deriv(self, p):
+    def derivative(self, p):
         """
         Derivative of the power transform
 
@@ -264,7 +264,7 @@ class Power(Link):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the power transform
 
@@ -290,7 +290,7 @@ class Power(Link):
 
 
 
-    def inverse_deriv(self, z):
+    def inverse_derivative(self, z):
         """
         Derivative of the inverse of the power transform
 
@@ -313,7 +313,7 @@ class Power(Link):
 
 
 
-    def inverse_deriv2(self, z):
+    def inverse_derivative2(self, z):
         """
         Second derivative of the inverse of the power transform
 
@@ -420,7 +420,7 @@ class Log(Link):
     def _clean(self, x):
         return np.clip(x, FLOAT_EPS, np.inf)
 
-    def __call__(self, p, **extra):
+    def link(self, p, **extra):
         """
         Log transform link function
 
@@ -466,7 +466,7 @@ class Log(Link):
 
 
 
-    def deriv(self, p):
+    def derivative(self, p):
         """
         Derivative of log transform link function
 
@@ -490,7 +490,7 @@ class Log(Link):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the log transform link function
 
@@ -514,7 +514,7 @@ class Log(Link):
 
 
 
-    def inverse_deriv(self, z):
+    def inverse_derivative(self, z):
         """
         Derivative of the inverse of the log transform link function
 
@@ -548,7 +548,7 @@ class LogC(Link):
     def _clean(self, x):
         return np.clip(x, FLOAT_EPS, 1. - FLOAT_EPS)
 
-    def __call__(self, p, **extra):
+    def link(self, p, **extra):
         """
         Log-complement transform link function
 
@@ -594,7 +594,7 @@ class LogC(Link):
 
 
 
-    def deriv(self, p):
+    def derivative(self, p):
         """
         Derivative of log-complement transform link function
 
@@ -618,7 +618,7 @@ class LogC(Link):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the log-complement transform link function
 
@@ -642,7 +642,7 @@ class LogC(Link):
 
 
 
-    def inverse_deriv(self, z):
+    def inverse_derivative(self, z):
         """
         Derivative of the inverse of the log-complement transform link
         function
@@ -663,7 +663,7 @@ class LogC(Link):
 
 
 
-    def inverse_deriv2(self, z):
+    def inverse_derivative2(self, z):
         """
         Second derivative of the inverse link function g^(-1)(z).
 
@@ -705,7 +705,7 @@ class CDFLink(Logit):
     def __init__(self, dbn=scipy.stats.norm):
         self.dbn = dbn
 
-    def __call__(self, p):
+    def link(self, p):
         """
         CDF link function
 
@@ -751,7 +751,7 @@ class CDFLink(Logit):
 
 
 
-    def deriv(self, p):
+    def derivative(self, p):
         """
         Derivative of CDF link
 
@@ -775,7 +775,7 @@ class CDFLink(Logit):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the link function g''(p)
 
@@ -783,12 +783,12 @@ class CDFLink(Logit):
         """
         p = self._clean(p)
         linpred = self.dbn.ppf(p)
-        return - self.inverse_deriv2(linpred) / self.dbn.pdf(linpred) ** 3
+        return - self.inverse_derivative2(linpred) / self.dbn.pdf(linpred) ** 3
 
 
 
 
-    def deriv2_numdiff(self, p):
+    def derivative2_numdiff(self, p):
         """
         Second derivative of the link function g''(p)
 
@@ -802,7 +802,7 @@ class CDFLink(Logit):
 
 
 
-    def inverse_deriv(self, z):
+    def inverse_derivative(self, z):
         """
         Derivative of the inverse link function
 
@@ -822,7 +822,7 @@ class CDFLink(Logit):
 
 
 
-    def inverse_deriv2(self, z):
+    def inverse_derivative2(self, z):
         """
         Second derivative of the inverse link function g^(-1)(z).
 
@@ -866,7 +866,7 @@ class Probit(CDFLink):
 
 
 
-    def inverse_deriv2(self, z):
+    def inverse_derivative2(self, z):
         """
         Second derivative of the inverse link function
 
@@ -878,7 +878,7 @@ class Probit(CDFLink):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the link function g''(p)
 
@@ -907,7 +907,7 @@ class Cauchy(CDFLink):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the Cauchy link function.
 
@@ -929,7 +929,7 @@ class Cauchy(CDFLink):
 
 
 
-    def inverse_deriv2(self, z):
+    def inverse_derivative2(self, z):
         return - 2 * z / (np.pi * (z ** 2 + 1) ** 2)
 
 
@@ -948,7 +948,7 @@ class CLogLog(Logit):
     CLogLog is untested.
     """
 
-    def __call__(self, p):
+    def link(self, p):
         """
         C-Log-Log transform link function
 
@@ -995,7 +995,7 @@ class CLogLog(Logit):
 
 
 
-    def deriv(self, p):
+    def derivative(self, p):
         """
         Derivative of C-Log-Log transform link function
 
@@ -1019,7 +1019,7 @@ class CLogLog(Logit):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the C-Log-Log ink function
 
@@ -1042,7 +1042,7 @@ class CLogLog(Logit):
 
 
 
-    def inverse_deriv(self, z):
+    def inverse_derivative(self, z):
         """
         Derivative of the inverse of the C-Log-Log transform link function
 
@@ -1070,7 +1070,7 @@ class LogLog(Logit):
     for the link and its derivative.
     """
 
-    def __call__(self, p):
+    def link(self, p):
         """
         Log-Log transform link function
 
@@ -1117,7 +1117,7 @@ class LogLog(Logit):
 
 
 
-    def deriv(self, p):
+    def derivative(self, p):
         """
         Derivative of Log-Log transform link function
 
@@ -1141,7 +1141,7 @@ class LogLog(Logit):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the Log-Log link function
 
@@ -1162,7 +1162,7 @@ class LogLog(Logit):
 
 
 
-    def inverse_deriv(self, z):
+    def inverse_derivative(self, z):
         """
         Derivative of the inverse of the Log-Log transform link function
 
@@ -1181,7 +1181,7 @@ class LogLog(Logit):
 
 
 
-    def inverse_deriv2(self, z):
+    def inverse_derivative2(self, z):
         """
         Second derivative of the inverse of the Log-Log transform link function
 
@@ -1195,7 +1195,7 @@ class LogLog(Logit):
         g^(-1)''(z) : ndarray
             The second derivative of the inverse of the LogLog link function
         """
-        return self.inverse_deriv(z) * (np.exp(-z) - 1)
+        return self.inverse_derivative(z) * (np.exp(-z) - 1)
 
 
 
@@ -1219,7 +1219,7 @@ class NegativeBinomial(Link):
     def _clean(self, x):
         return np.clip(x, FLOAT_EPS, np.inf)
 
-    def __call__(self, p):
+    def link(self, p):
         """
         Negative Binomial transform link function
 
@@ -1265,7 +1265,7 @@ class NegativeBinomial(Link):
 
 
 
-    def deriv(self, p):
+    def derivative(self, p):
         """
         Derivative of the negative binomial transform
 
@@ -1288,7 +1288,7 @@ class NegativeBinomial(Link):
 
 
 
-    def deriv2(self, p):
+    def derivative2(self, p):
         """
         Second derivative of the negative binomial link function.
 
@@ -1314,7 +1314,7 @@ class NegativeBinomial(Link):
 
 
 
-    def inverse_deriv(self, z):
+    def inverse_derivative(self, z):
         """
         Derivative of the inverse of the negative binomial transform
 
