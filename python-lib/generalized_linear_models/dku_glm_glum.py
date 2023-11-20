@@ -1,7 +1,7 @@
-from glum import GeneralizedLinearRegressor
+from glum import GeneralizedLinearRegressor, Link
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-
+import generalized_linear_models.link as link
 
 class BaseGLM(BaseEstimator, ClassifierMixin):
     """
@@ -10,7 +10,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     """
 
     def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
-                 poisson_link, negative_binomial_link, tweedie_link, alpha, penalty, l1_ratio,
+                 poisson_link, negative_binomial_link, tweedie_link, alpha, power, penalty, l1_ratio,
                  var_power, offset_mode, training_dataset=None, offset_columns=None, exposure_columns=None,
                  column_labels=None):
 
@@ -27,6 +27,12 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             if alpha < 0.01 or alpha > 2:
                 raise ValueError('alpha should be between 0.01 and 2, current value of ' + str(alpha) + ' unsupported')
         self.alpha = alpha
+        if (family_name == 'negative_binomial' and negative_binomial_link == 'power') or (
+                family_name == 'tweedie' and tweedie_link == 'power'):
+            if not isinstance(power, (int, float)):
+                raise ValueError('power should be defined with a numeric value, current value of ' + str(
+                    power) + ' unsupported, type: ' + str(type(power)))
+        self.power = power
         if isinstance(penalty, list):
             for p in penalty:
                 if p < 0:
@@ -89,6 +95,16 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             return 'logit'
         elif user_link == 'identity':
             return 'identity'
+        elif user_link == 'cauchy':
+            return link.Cauchy()
+        elif user_link == 'negative_binomial':
+            return link.NegativeBinomial()
+        elif user_link == 'power':
+            return link.Power()
+        elif user_link == 'inverse_power':
+            return link.InversePower()
+        elif user_link == 'inverse_squared':
+            return link.InverseSquared()
         else:
             raise ValueError("Unsupported link")
 

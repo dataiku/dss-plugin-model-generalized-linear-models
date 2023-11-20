@@ -34,7 +34,7 @@ def check_params(params):
             value=params.get('binomial_link'),
             checks=[{
                 "type": "in",
-                "op": ["cloglog", "log", "logit", "identity"]
+                "op": ["cloglog", "log", "logit", "cauchy", "identity"]
             }],
             required=False
         )
@@ -45,7 +45,7 @@ def check_params(params):
             value=params.get('gamma_link'),
             checks=[{
                 "type": "in",
-                "op": ["log", "identity"]
+                "op": ["log", "identity", "inverse_power"]
             }],
             required=False
         )
@@ -56,7 +56,7 @@ def check_params(params):
             value=params.get('gaussian_link'),
             checks=[{
                 "type": "in",
-                "op": ["log", "identity"]
+                "op": ["log", "identity", "inverse_power"]
             }],
             required=False
         )
@@ -67,7 +67,7 @@ def check_params(params):
             value=params.get('inverse_gaussian_link'),
             checks=[{
                 "type": "in",
-                "op": ["log", "identity"]
+                "op": ["log", "inverse_squared", "identity", "inverse_power"]
             }],
             required=False
         )
@@ -89,7 +89,7 @@ def check_params(params):
             value=params.get('negative_binomial_link'),
             checks=[{
                 "type": "in",
-                "op": ["log", "cloglog", "identity"]
+                "op": ["log", "cloglog", "identity", "power"]
             }],
             required=False
         )
@@ -100,7 +100,7 @@ def check_params(params):
             value=params.get('tweedie_link'),
             checks=[{
                 "type": "in",
-                "op": ["log"]
+                "op": ["log", "power"]
             }],
             required=False
         )
@@ -113,6 +113,15 @@ def check_params(params):
                 "type": "between",
                 "op": (0.01, 2)
             }],
+            required=False
+        )
+
+    if (params.get('family_name') == 'negative_binomial' and params.get('negative_binomial_link') == 'power') or (
+            params.get('family_name') == 'tweedie' and params.get('tweedie_link') == 'power'
+    ):
+        dku_config.add_param(
+            name="power",
+            value=params.get('power'),
             required=False
         )
 
