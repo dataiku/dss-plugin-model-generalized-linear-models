@@ -108,11 +108,10 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         else:
             raise ValueError("Unsupported link")
 
-    def get_family(self, link):
+    def get_family(self):
         """
         takes in user defined family variable
-        and statsmodel link function
-        returns the family
+        and returns the family
         """
         if self.family_name == 'binomial':
             return 'binomial'
@@ -143,7 +142,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         in to statsmodel family and makes it an attribute
         """
         self.link = self.get_link_function()
-        self.family = self.get_family(self.link)
+        self.family = self.get_family()
 
     def get_columns(self, X, important_columns):
         """
