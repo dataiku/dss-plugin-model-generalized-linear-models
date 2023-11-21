@@ -1,4 +1,4 @@
-from glum import GeneralizedLinearRegressor, Link
+from glum import GeneralizedLinearRegressor
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 import generalized_linear_models.link as link
