@@ -1,4 +1,12 @@
 from glum import GeneralizedLinearRegressor
+from glum import BinomialDistribution
+from glum import GammaDistribution
+from glum import NormalDistribution
+from glum import InverseGaussianDistribution
+from glum import TweedieDistribution
+from glum import PoissonDistribution
+from glum import NegativeBinomialDistribution
+
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 import generalized_linear_models.link as link
@@ -23,6 +31,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.negative_binomial_link = negative_binomial_link
         self.tweedie_link = tweedie_link
         self.family = None
+        self.family_glum_class = None
         if family_name == 'negative_binomial':
             if alpha < 0.01 or alpha > 2:
                 raise ValueError('alpha should be between 0.01 and 2, current value of ' + str(alpha) + ' unsupported')
@@ -69,6 +78,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.training_dataset = training_dataset
         self.removed_indices = None
         self.assign_family()
+        self.assign_family_glum_class()
 
     def get_link_function(self):
         """
@@ -135,6 +145,31 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             return 'tweedie (' + str(self.var_power) + ')'
         else:
             raise ValueError("Unsupported family")
+        
+    def get_family_glumn_class(self):
+        if self.family_name == 'binomial':
+            return BinomialDistribution()
+        elif self.family_name == "gamma":
+            return GammaDistribution()
+
+        elif self.family_name == "gaussian":
+            return NormalDistribution()
+
+        elif self.family_name == "inverse_gaussian":
+            return InverseGaussianDistribution()
+
+        elif self.family_name == "negative_binomial":
+            return NegativeBinomialDistribution()
+
+        elif self.family_name == "poisson":
+            return PoissonDistribution()
+
+        elif self.family_name == "tweedie":
+            return TweedieDistribution()
+        else:
+            raise ValueError("Unsupported family")
+    def assign_family_glum_class(self):
+        self.family_glum_class = self.get_family_glumn_class()
 
     def assign_family(self):
         """
@@ -162,7 +197,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                         f'The column names provided: [{important_column}], is not present in the list of columns from the dataset. Please check that the column is selected in feature handing.')
 
             column_indices = [self.column_labels.index(important_column) for important_column in important_columns]
-            column_values = X[:, column_indices]
+            column_values = X.iloc[:, column_indices]
 
         return column_values, column_indices
 
@@ -173,7 +208,14 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             offset_output = offsets
 
         if len(exposures) > 0:
-            if (exposures <= 0).any():
+            print(exposures)
+            print()
+            print(type(exposures))
+            print(exposures <= 0)
+            print()
+            print(exposures <= 0).any().any()
+
+            if (exposures <= 0).any().any():
                 raise ValueError('Exposure columns contains some negative values. Please make sure that the exposure column is not rescaled in feature handling.')
             exposures = np.log(exposures)
             exposures = exposures.sum(axis=1)
@@ -246,6 +288,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.column_labels = column_labels
 
     def process_fixed_columns(self, X):
+        print("delete function")
+        print()
         self.removed_indices = None
         if self.offset_indices is not None:
             self.removed_indices = self.offset_indices
@@ -256,9 +300,12 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                 self.removed_indices = self.exposure_indices
         if self.removed_indices is not None:
             self.removed_indices = list(set(self.removed_indices))
-            X = np.delete(X, self.removed_indices, axis=1)
-        return X
+            print("removed indices", self.removed_indices)
 
+            X = np.delete(X, self.removed_indices, axis=1)
+
+        return X
+    
     def get_offsets_and_exposures(self, X):
         offsets = []
         exposures = []
