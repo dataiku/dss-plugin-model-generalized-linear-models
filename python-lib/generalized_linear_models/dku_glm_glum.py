@@ -197,7 +197,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                         f'The column names provided: [{important_column}], is not present in the list of columns from the dataset. Please check that the column is selected in feature handing.')
 
             column_indices = [self.column_labels.index(important_column) for important_column in important_columns]
-            column_values = X.iloc[:, column_indices]
+            column_values = X[:, column_indices]
 
         return column_values, column_indices
 
@@ -208,14 +208,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             offset_output = offsets
 
         if len(exposures) > 0:
-            print(exposures)
-            print()
-            print(type(exposures))
-            print(exposures <= 0)
-            print()
-            print(exposures <= 0).any().any()
-
-            if (exposures <= 0).any().any():
+            if (exposures <= 0).any():
                 raise ValueError('Exposure columns contains some negative values. Please make sure that the exposure column is not rescaled in feature handling.')
             exposures = np.log(exposures)
             exposures = exposures.sum(axis=1)
