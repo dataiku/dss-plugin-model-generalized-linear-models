@@ -45,8 +45,8 @@ def test_link_function():
 
 def test_regression():
     data = sm.datasets.scotland.load()
-    X = data.exog
-    y = data.endog
+    X = data.exog.to_numpy()
+    y = data.endog.to_numpy()
     data.exog = sm.add_constant(data.exog)
     gamma_model = sm.GLM(data.endog, data.exog, family=sm.families.Gamma())
     gamma_results = gamma_model.fit()
@@ -74,8 +74,8 @@ def test_regression():
 
 def test_regression_regularized():
     data = sm.datasets.scotland.load()
-    X = data.exog
-    y = data.endog
+    X = data.exog.to_numpy()
+    y = data.endog.to_numpy()
     penalty = 0.001
     data.exog = sm.add_constant(data.exog)
     gaussian_model = sm.GLM(data.endog, data.exog, family=sm.families.Gaussian())
@@ -105,8 +105,8 @@ def test_regression_regularized():
 
 def test_regression_offset():
     data = sm.datasets.scotland.load()
-    X = data.exog
-    y = data.endog
+    X = data.exog.to_numpy()
+    y = data.endog.to_numpy()
     offset = data.exog[:, [0, -1]].sum(axis=1)
     exog = data.exog[:, 1:-1]
     exog = sm.add_constant(exog)
@@ -139,8 +139,8 @@ def test_regression_offset():
 
 def test_regression_exposure():
     data = sm.datasets.scotland.load()
-    X = data.exog
-    y = data.endog
+    X = data.exog.to_numpy()
+    y = data.endog.to_numpy()
     exposure = data.exog[:, 0]
     offset = data.exog[:, 1]
     exog = data.exog[:, 2:]
@@ -176,8 +176,8 @@ def test_regression_exposure():
 
 def test_regression_prediction():
     data = sm.datasets.scotland.load()
-    X = data.exog
-    y = data.endog
+    X = data.exog.to_numpy()
+    y = data.endog.to_numpy()
     exposure = data.exog[:, 0]
     exog = data.exog[:, 1:]
     exog = sm.add_constant(exog)

@@ -48,10 +48,13 @@ def test_link_function():
 
 def test_classification():
     data = sm.datasets.ccard.load()
-    X = data.exog[:, :3]
-    y = data.exog[:, 3]
-    endog = data.exog[:, 3]
-    exog = sm.add_constant(data.exog[:, :3])
+    X = data.exog.to_numpy()
+    X = X[:, :3]
+    y = data.exog.to_numpy()
+    y= y[:, 3]
+    endog = data.exog.to_numpy()
+    endog = endog[:, 3]
+    exog = sm.add_constant(data.exog.to_numpy()[:, :3])
     logistic_model = sm.GLM(endog, exog, family=sm.families.Binomial(sm.families.links.logit()))
     logistic_results = logistic_model.fit()
 
@@ -78,10 +81,13 @@ def test_classification():
 
 def test_classification_prediction():
     data = sm.datasets.ccard.load()
-    X = data.exog[:, :3]
-    y = data.exog[:, 3]
-    endog = data.exog[:, 3]
-    exog = sm.add_constant(data.exog[:, :3])
+    X = data.exog.to_numpy()
+    X = X[:, :3]
+    y = data.exog.to_numpy()
+    y = y[:, 3]
+    endog = data.exog.to_numpy()
+    endog = endog[:, 3]
+    exog = sm.add_constant(data.exog.to_numpy()[:, :3])
     logistic_model = sm.GLM(endog, exog, family=sm.families.Binomial(sm.families.links.logit()))
     logistic_results = logistic_model.fit()
 
