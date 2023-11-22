@@ -1,5 +1,7 @@
-from generalized_linear_models.dku_glm import BinaryClassificationGLM
+from generalized_linear_models.dku_glm_glum import BinaryClassificationGLM
 import statsmodels.api as sm
+import generalized_linear_models.link as link
+
 import pytest
 from testing_utils import testing_dict
 import numpy as np
@@ -9,15 +11,13 @@ from sklearn import datasets
 
 def test_link_function():
     expected = [
-        sm.families.links.log(),
-        sm.families.links.identity(),
-        sm.families.links.inverse_power(),
-        sm.families.links.inverse_squared(),
-        sm.families.links.log(),
-        sm.families.links.cloglog(),
-        sm.families.links.Power(1),
-        type(sm.families.Binomial()),
-        type(sm.families.links.log())
+        "log",
+        "identity",
+        link.InversePower(),
+        link.InverseSquared(),
+        "log",
+        "cloglog",
+        link.Power(1)
     ]
 
     actual = []
@@ -36,6 +36,7 @@ def test_link_function():
             negative_binomial_link=test_params['negative_binomial_link'],
             tweedie_link=test_params['tweedie_link'],
             alpha=1,
+            l1_ratio=1,
             power=1,
             var_power=1)
         binary_model.assign_family()
@@ -66,6 +67,7 @@ def test_classification():
         negative_binomial_link=None,
         tweedie_link=None,
         alpha=1,
+        l1_ratio=1,
         power=1,
         var_power=1)
 
@@ -95,6 +97,7 @@ def test_classification_prediction():
         negative_binomial_link=None,
         tweedie_link=None,
         alpha=1,
+        l1_ratio=1,
         power=1,
         var_power=1)
 
