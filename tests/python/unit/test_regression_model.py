@@ -4,6 +4,9 @@ import pytest
 from testing_utils import testing_dict, testing_dict_errors
 import numpy as np
 import pandas as pd
+import generalized_linear_models.link as link
+from glum import GammaDistribution
+from numpy.testing import assert_almost_equal
 
 
 def test_link_function():
@@ -47,16 +50,13 @@ def test_regression():
     data = sm.datasets.scotland.load()
     X = data.exog.to_numpy()
     y = data.endog.to_numpy()
-    data.exog = sm.add_constant(data.exog)
-    gamma_model = sm.GLM(data.endog, data.exog, family=sm.families.Gamma())
-    gamma_results = gamma_model.fit()
 
     regression_model = RegressionGLM(
         penalty=0.0,
         offset_mode='BASIC',
         family_name='gamma',
         binomial_link=None,
-        gamma_link='inverse_power',
+        gamma_link="inverse_power",
         gaussian_link=None,
         inverse_gaussian_link=None,
         poisson_link=None,
@@ -68,19 +68,30 @@ def test_regression():
         var_power=1)
 
     regression_model.fit(X, y)
+    bic = regression_model.fitted_model.bic(X,y)
+    aic = regression_model.fitted_model.aic(X,y)
+    predictions = regression_model.fitted_model.predict(X)
+    deviance = GammaDistribution().deviance(y, predictions)
+    actual_metrics = [bic, aic, deviance]
 
-    assert regression_model.fitted_model.summary().as_csv() == gamma_results.summary().as_csv()
+    expected_metrics = [192.67724083842805, 180.95135361603025, 0.08738851641699652]
+    for act, exp in zip(actual_metrics, expected_metrics):
+        assert_almost_equal(act, exp, decimal=8)
+    
+    actual_coefs = regression_model.coef_.tolist()
+    expected_coefs = [4.96176830e-05,  2.03442259e-03, -7.18142874e-05,  1.11852013e-04,
+       -1.46751504e-07, -5.18683112e-04, -2.42717498e-06]
 
+    for act, exp in zip(actual_coefs, expected_coefs):
+        assert_almost_equal(act, exp, decimal=8)
 
 def test_regression_regularized():
     data = sm.datasets.scotland.load()
     X = data.exog.to_numpy()
     y = data.endog.to_numpy()
-    penalty = 0.001
-    data.exog = sm.add_constant(data.exog)
-    gaussian_model = sm.GLM(data.endog, data.exog, family=sm.families.Gaussian())
-    gaussian_results = gaussian_model.fit_regularized(alpha=penalty)
-
+    penalty = 0.05
+    l1_ratio = 0.5
+    
     regression_model = RegressionGLM(
         penalty=penalty,
         offset_mode='BASIC',
@@ -93,25 +104,27 @@ def test_regression_regularized():
         negative_binomial_link=None,
         tweedie_link=None,
         alpha=1,
-        l1_ratio=1,
+        l1_ratio=l1_ratio,
         power=1,
         var_power=1)
 
     regression_model.fit(X, y)
+    actual_intercept = regression_model.intercept_
+    expected_intercept = 117.25972889136088
+    assert_almost_equal(actual_intercept, expected_intercept, decimal=10)
 
-    for param1, param2 in zip(regression_model.fitted_model.params, gaussian_results.params):
-        assert param1 == param2
+    actual_coeffs = regression_model.coef_.tolist()
+    expected_coeffs = [-8.21616874e-02, -4.04677477e+00,  2.77749123e-01, -4.19380027e-01,
+        3.97194059e-04,  1.58391613e+00,  4.31070244e-03]
+    
+    for act, exp in zip(actual_coeffs, expected_coeffs):
+        assert_almost_equal(act, exp, decimal=6)
 
 
 def test_regression_offset():
     data = sm.datasets.scotland.load()
     X = data.exog.to_numpy()
     y = data.endog.to_numpy()
-    offset = data.exog.to_numpy()[:, [0, -1]].sum(axis=1)
-    exog = data.exog.to_numpy()[:, 1:-1]
-    exog = sm.add_constant(exog)
-    gaussian_model = sm.GLM(data.endog, exog, family=sm.families.Gaussian(), offset=offset)
-    gaussian_results = gaussian_model.fit()
 
     regression_model = RegressionGLM(
         penalty=0.0,
@@ -134,20 +147,22 @@ def test_regression_offset():
 
     regression_model.fit(X, y)
 
-    assert regression_model.fitted_model.summary().as_csv() == gaussian_results.summary().as_csv()
+    actual_intercept = regression_model.intercept_
+    expected_intercept = -19181.13398080061
 
+    assert_almost_equal(actual_intercept, expected_intercept, decimal=8)
+
+    actual_coeffs = regression_model.coef_.tolist()
+    expected_coeffs = [-6.0979164787e+02, -7.6774362552e+01,  1.8442285217e+02,
+       -2.0043622454e-01,  8.2804923521e+02]
+    
+    for act, exp in zip(actual_coeffs, expected_coeffs):
+        assert_almost_equal(act, exp, decimal=8)
 
 def test_regression_exposure():
     data = sm.datasets.scotland.load()
     X = data.exog.to_numpy()
     y = data.endog.to_numpy()
-    exposure = data.exog.to_numpy()[:, 0]
-    offset = data.exog.to_numpy()[:, 1]
-    exog = data.exog.to_numpy()[:, 2:]
-    exog = sm.add_constant(exog)
-    poisson_model = sm.GLM(data.endog, exog, family=sm.families.Poisson(sm.families.links.log()),
-                           offset=offset, exposure=exposure)
-    poisson_results = poisson_model.fit()
 
     regression_model = RegressionGLM(
         penalty=0.0,
@@ -166,23 +181,26 @@ def test_regression_exposure():
         var_power=1,
         offset_columns=['UNEMPF'],
         exposure_columns=['COUTAX'])
-
     regression_model.column_labels = data.exog_name
 
     regression_model.fit(X, y)
 
-    assert regression_model.fitted_model.summary().as_csv() == poisson_results.summary().as_csv()
+    actual_intercept = regression_model.intercept_
+    expected_intercept = -6.010622687340117
 
+    assert_almost_equal(actual_intercept, expected_intercept, decimal=8)
+
+    actual_coeffs = regression_model.coef_.tolist()
+    expected_coeffs = [1.40475935e-01, -1.97538883e-01,  2.30857075e-04, -7.58148554e-01,
+       -7.11379211e-04]
+    
+    for act, exp in zip(actual_coeffs, expected_coeffs):
+        assert_almost_equal(act, exp, decimal=8)
 
 def test_regression_prediction():
     data = sm.datasets.scotland.load()
     X = data.exog.to_numpy()
     y = data.endog.to_numpy()
-    exposure = data.exog.to_numpy()[:, 0]
-    exog = data.exog.to_numpy()[:, 1:]
-    exog = sm.add_constant(exog)
-    poisson_model = sm.GLM(data.endog, exog, family=sm.families.Poisson(sm.families.links.log()), exposure=exposure)
-    poisson_results = poisson_model.fit()
 
     regression_model = RegressionGLM(
         penalty=0.0,
@@ -200,12 +218,18 @@ def test_regression_prediction():
         power=1,
         var_power=1,
         exposure_columns=['COUTAX'])
-
+    
     regression_model.column_labels = data.exog_name
 
     regression_model.fit(X, y)
-    predictions = regression_model.predict(X)
-    predictions_test = poisson_results.predict(exog, exposure=exposure)
+    actual_predictions = regression_model.predict(X)
+    expected_predictions = [57.76802588, 54.47997709, 51.6377914 , 53.31193146, 69.02232649,
+       57.23920141, 66.62034567, 66.67240667, 57.71413605, 62.42490877,
+       55.06389148, 60.63319335, 60.577439  , 62.88577001, 61.13078062,
+       78.16279826, 56.36494114, 73.9596681 , 66.32083011, 52.79675766,
+       63.15624222, 69.63126407, 50.52415796, 55.38377951, 66.98836753,
+       53.97285276, 54.53709653, 57.7956278 , 65.84038082, 60.16808029,
+       76.9708523 , 66.34417941]
 
-    for pred1, pred2 in zip(predictions, predictions_test):
-        assert pred1 == pred2
+    for act, exp in zip(actual_predictions, expected_predictions):
+        assert_almost_equal(act, exp, decimal=8)
