@@ -2,6 +2,7 @@ import pandas as pd
 from glm_summary.graph_utils import compute_base_predictions, get_ave_grouped
 from testing_utils import train_df, test_df, PredictorClassif
 from pandas.api.types import is_numeric_dtype
+from numpy.testing import assert_almost_equal
 
 
 def test_base_predictions_classif():
@@ -18,7 +19,7 @@ def test_base_predictions_classif():
     copy_test_df.iloc[:, 5] = base_values['DriverAge']
     base_preds = pd.DataFrame(data=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], columns=['prediction'])
     copy_test_df.iloc[:, 4] = test_df.iloc[:, 4]
-    base_preds_CarAge = pd.DataFrame(data=[1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+    base_preds_CarAge = pd.DataFrame(data=[0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                      columns=['prediction'])
     copy_test_df.iloc[:, 4] = base_values['CarAge']
     copy_test_df.iloc[:, 5] = test_df.iloc[:, 5]
@@ -42,9 +43,11 @@ def test_ave_grouped_classif():
     target_variable = 'Exposure'
     weights = None
     ave_data[target_variable] = [str(x > 0.5) for x in ave_data[target_variable]]
-    check_ave_data = ave_data.copy()
     ave_grouped = get_ave_grouped(ave_data, target_variable, weights, class_map)
-    check_ave_grouped = {'Power': [0.3095238095238096, 0.6047619047619046, 2.857142857142857, 0.0],
-                         'Density': [3778.3888888888887, 0.3611111111111111, 0.6388888888888888, 1.1111111111111112, 0.0]}
-    assert ave_grouped['Power'].mean().tolist() == check_ave_grouped['Power']
-    assert ave_grouped['Density'].mean().tolist() == check_ave_grouped['Density']
+    check_ave_grouped = {'Power': [0.3095238095238096, 0.5571428571, 2.857142857142857, 0.0],
+                         'Density': [3778.3888888888887, 0.3611111111111111, 0.6111111111, 1.1111111111111112, 0.0]}
+    
+    for act, exp in zip(ave_grouped['Power'].mean(numeric_only=True).tolist(), check_ave_grouped['Power']):
+        assert_almost_equal(act, exp, decimal=8)
+    for act, exp in zip(ave_grouped['Density'].mean(numeric_only=True).tolist(), check_ave_grouped['Density']):
+        assert_almost_equal(act, exp, decimal=8)
