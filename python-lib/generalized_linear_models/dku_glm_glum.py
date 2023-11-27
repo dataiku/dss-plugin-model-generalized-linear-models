@@ -189,7 +189,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         if len(important_columns) == 0:
             column_values = []
             column_indices = []
-
         else:
             for important_column in important_columns:
                 if important_column not in self.column_labels:
@@ -233,7 +232,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         #  fits and stores statsmodel glm
         #model = sm.GLM(y, X, family=self.family, offset=offset_output, var_weights=sample_weight)
-        model = GeneralizedLinearRegressor(alpha=self.alpha, l1_ratio=self.l1_ratio, fit_intercept=True,
+        model = GeneralizedLinearRegressor(alpha=self.penalty, l1_ratio=self.l1_ratio, fit_intercept=True,
                                             family=self.family, link=self.link)
         self.fitted_model = model.fit(X, y, sample_weight=sample_weight, offset=offset_output)
         # if self.penalty == 0.0:
@@ -281,8 +280,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.column_labels = column_labels
 
     def process_fixed_columns(self, X):
-        print("delete function")
-        print()
         self.removed_indices = None
         if self.offset_indices is not None:
             self.removed_indices = self.offset_indices
