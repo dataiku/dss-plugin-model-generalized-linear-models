@@ -95,43 +95,6 @@ def test_classification():
         assert_almost_equal(act, exp, decimal=8)
 
 
-    
-
-def test_classification():
-    data = sm.datasets.ccard.load()
-    X = data.exog.to_numpy()
-    X = X[:, :3]
-    y = data.exog.to_numpy()
-    y= y[:, 3]
-
-    binary_model = BinaryClassificationGLM(
-        penalty=0.0,
-        offset_mode='BASIC',
-        family_name='binomial',
-        binomial_link='logit',
-        gamma_link=None,
-        gaussian_link=None,
-        inverse_gaussian_link=None,
-        poisson_link=None,
-        negative_binomial_link=None,
-        tweedie_link=None,
-        alpha=1,
-        l1_ratio=1,
-        power=1,
-        var_power=1)
-
-    binary_model.fit(X, y)
-    # bic, aic, deviance
-    bic = binary_model.fitted_model.bic(X,y)
-    aic = binary_model.fitted_model.aic(X,y)
-    predictions = binary_model.fitted_model.predict(X)
-    deviance = PoissonDistribution().deviance(y, predictions)
-    actual_metrics = [bic, aic, deviance]
-    expected_metrics = [87.28150026085339, 78.17483578478917, 38.996094920198516]
-    for act, exp in zip(actual_metrics, expected_metrics):
-        assert_almost_equal(act, exp, decimal=12)
-
-
 def test_classification_predictions():
     data = sm.datasets.ccard.load()
     X = data.exog.to_numpy()
