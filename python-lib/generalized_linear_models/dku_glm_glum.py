@@ -173,7 +173,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     def assign_family(self):
         """
         converts string inputs of family & link
-        in to statsmodel family and makes it an attribute
+        into glum family and makes it an attribute
         """
         self.link = self.get_link_function()
         self.family = self.get_family()
@@ -225,31 +225,16 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         offsets, exposures = self.get_offsets_and_exposures(X)
 
         X = self.process_fixed_columns(X)
-        #X = sm.add_constant(X)
 
         offset_output = self.compute_aggregate_offset(offsets, exposures)
 
-        #  fits and stores statsmodel glm
-        #model = sm.GLM(y, X, family=self.family, offset=offset_output, var_weights=sample_weight)
+        #  fits and stores glum glm
         model = GeneralizedLinearRegressor(alpha=self.penalty, l1_ratio=self.l1_ratio, fit_intercept=True,
                                             family=self.family, link=self.link)
         self.fitted_model = model.fit(X, y, sample_weight=sample_weight, offset=offset_output)
-        # if self.penalty == 0.0:
-        #     # fit is 10-100x faster than fit_regularized
-        #     #self.fitted_model = model.fit()
-        #     self.fitted_model = model.fit(X, y, sample_weight=sample_weight, offset=offset_output)
-        # else:
-        #     regularized_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
-        #     self.fitted_model = GLMResults(regularized_model.model, regularized_model.params,
-        #                np.linalg.pinv(np.dot(np.matrix(regularized_model.params).T, np.matrix(regularized_model.params))),
-        #                regularized_model.model.scale)
-
+        
         self.compute_coefs(prediction_is_classification)
-        # if prediction_is_classification:
-        #     self.intercept_ = [float(self.fitted_model.params[0])]
-        # else:
-        #     self.intercept_ = float(self.fitted_model.params[0])
-
+        
     def compute_coefs(self, prediction_is_classification):
         """
         adds attributes for explainability
@@ -257,20 +242,20 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         # removes first value which is the intercept
         # other values correspond to fitted coefs (hence excludes offsets and exposures)
         self.coef_ = self.fitted_model.coef_#np.array(self.fitted_model.params[1:])
-        self.intercept_ = self.fitted_model.intercept_
+        if prediction_is_classification:
+            self.intercept_ = [float(self.fitted_model.intercept_)]
+        else:
+            self.intercept_ = float(self.fitted_model.intercept_)
         # the column labels include offsets and exposures
         # so we need to insert 0 coefs for these columns to ensure consistency
-        # if self.removed_indices is not None:
-        #     self.removed_indices = list(set(self.removed_indices))
-        #     # 0 are inserted one by one in ascending order
-        #     # because inserting a value at index = len + 1 fails
-        #     for index in sorted(self.removed_indices):
-        #         self.coef_ = np.insert(self.coef_, index, 0)
-        # # statsmodels 0 is 211 sets this to true 0
-        # if prediction_is_classification:
-        #     self.coef_ = [[0 if x == 211.03485067364605 else x for x in self.coef_]]
-        # else:
-        #     self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
+        if self.removed_indices is not None:
+            self.removed_indices = list(set(self.removed_indices))
+            # 0 are inserted one by one in ascending order
+            # because inserting a value at index = len + 1 fails
+            for index in sorted(self.removed_indices):
+                self.coef_ = np.insert(self.coef_, index, 0)
+        if prediction_is_classification:
+            self.coef_ = np.array([self.coef_])
 
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
@@ -289,7 +274,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                 self.removed_indices = self.exposure_indices
         if self.removed_indices is not None:
             self.removed_indices = list(set(self.removed_indices))
-            print("removed indices", self.removed_indices)
 
             X = np.delete(X, self.removed_indices, axis=1)
 
@@ -314,8 +298,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     def predict_target(self, X):
         offsets, exposures = self.get_offsets_and_exposures(X)
         X = self.process_fixed_columns(X)
-
-        #X = sm.add_constant(X, has_constant='add')
 
         offset_output = self.compute_aggregate_offset(offsets, exposures)
 
@@ -364,3 +346,9 @@ class RegressionGLM(BaseGLM):
         Returns the target as 1D array
         """
         return self.predict_target(X)
+    
+
+
+
+
+
