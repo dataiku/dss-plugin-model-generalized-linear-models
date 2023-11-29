@@ -49,9 +49,6 @@ def test_classification():
     X = X[:, :3]
     y = data.exog.to_numpy()
     y= y[:, 3]
-    endog = data.exog.to_numpy()
-    endog = endog[:, 3]
-    exog = sm.add_constant(data.exog.to_numpy()[:, :3])
 
     binary_model = BinaryClassificationGLM(
         penalty=0.0,
