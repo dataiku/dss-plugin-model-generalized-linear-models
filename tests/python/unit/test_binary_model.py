@@ -80,10 +80,10 @@ def test_classification():
     bic = binary_model.fitted_model.bic(X,y)
     aic = binary_model.fitted_model.aic(X,y)
     predictions = binary_model.fitted_model.predict(X)
-    deviance = PoissonDistribution().deviance(y, predictions)
+    deviance = BinomialDistribution().deviance(y, predictions)
     actual_metrics = [bic, aic, deviance]
 
-    expected_metrics = [87.28150026085339, 78.17483578478917, 38.996094920198516]
+    expected_metrics = [87.28150026085339, 78.17483578478917, 70.17483578478917]
 
     for act, exp in zip(actual_metrics, expected_metrics):
         assert_almost_equal(act, exp, decimal=12)
