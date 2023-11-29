@@ -1,9 +1,6 @@
 from generalized_linear_models.dku_glm_glum import RegressionGLM, link
 import statsmodels.api as sm
-import pytest
-from testing_utils import testing_dict, testing_dict_errors
-import numpy as np
-import pandas as pd
+from testing_utils import testing_dict
 import generalized_linear_models.link as link
 from glum import GammaDistribution
 from numpy.testing import assert_almost_equal

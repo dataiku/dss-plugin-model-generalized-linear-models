@@ -1,7 +1,6 @@
 import pandas as pd
 from glm_summary.graph_utils import compute_base_predictions, get_ave_grouped
 from testing_utils import train_df, test_df, Predictor
-from pandas.api.types import is_numeric_dtype
 from numpy.testing import assert_almost_equal
 
 

@@ -1,15 +1,9 @@
 from generalized_linear_models.dku_glm_glum import BinaryClassificationGLM
 import statsmodels.api as sm
 import generalized_linear_models.link as link
-from glum import PoissonDistribution
+from glum import BinomialDistribution
 from numpy.testing import assert_almost_equal
-
-import pytest
 from testing_utils import testing_dict
-import numpy as np
-import pandas as pd
-from sklearn import datasets
-
 
 def test_link_function():
     expected = [
