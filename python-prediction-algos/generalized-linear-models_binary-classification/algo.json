@@ -10,7 +10,17 @@
     "supportsSampleWeights": true,
     "acceptsSparseMatrix": false,
     "kind": "PYTHON",
-    "params": [{
+    "params": [
+        {
+            "type": "SEPARATOR",
+            "description": "<div style=\"margin: 0px; font-size: 1em; background: #d9e6ed; padding: 15px 15px 5px 15px; border-radius: 5px;color: #31708f\"><p style=\"font-size: medium\">Things to do </p><ul> <li> <small><span style=\"font-weight:normal\">Select 'No rescaling' in the <i> Features handling </i> for all numerical variables.</span> </small></li> <li> <small><span style=\"font-weight:normal\">Select 'Drop one dummy' in the <i> Features handling </i> for all categorical variables.</span></small></li></ul> </div>"  
+        },
+        {
+            "type": "SEPARATOR",
+            "name": "",
+            "description": "<h4> Model fitting parameters</h4>"
+        },
+        {
             "name": "penalty",
             "label": "Elastic Net Penalty",
             "description": "The penalty weight of the Elastic Net regularization",
@@ -29,6 +39,15 @@
             "gridParam": true
         },
         {
+            "type": "SEPARATOR",
+            "name": "",
+            "description": "<h4> Distribution and link function</h4>"
+        },
+        {
+            "type": "SEPARATOR",
+            "description": "<div style=\"margin: 0px; font-size: 1em; background: #d9e6ed;  padding-top: 5px; padding-right: 15px; padding-bottom: 5px; padding-left: 15px; border-radius: 5px;color: #31708f\"> <small><span style=\"font-weight:normal\">The binomial distribution is used for classification GLMs.</span> </small> </div>"  
+        },
+        {
             "name": "family_name",
             "label": "Distribution",
             "description": "The distribution family of the response",
@@ -41,7 +60,7 @@
         {
             "name": "binomial_link",
             "label": "Link Function",
-            "description": "Distribution is binomial for classification.",
+            "description": "",
             "defaultValue": "logit",
             "type": "SELECT",
             "selectChoices": [{
@@ -68,6 +87,11 @@
             ],
             "allowDuplicates": false,
             "gridParam": false
+        },
+        {
+            "type": "SEPARATOR",
+            "name": "",
+            "description": "<h4> Offset and exposure</h4>"
         },
         {
             "name": "offset_mode",

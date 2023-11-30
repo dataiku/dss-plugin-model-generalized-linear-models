@@ -11,7 +11,17 @@
     "acceptsSparseMatrix": false,
     "paramsPythonSetup": "algo_helper.py",
     "kind": "PYTHON",
-    "params": [{
+    "params": [
+        {
+            "type": "SEPARATOR",
+            "description": "<div style=\"margin: 0px; font-size: 1em; background: #d9e6ed; padding: 15px 15px 5px 15px; border-radius: 5px;color: #31708f\"><p style=\"font-size: medium\">Things to do </p><ul> <li> <small><span style=\"font-weight:normal\">Select 'No rescaling' in the <i> Features handling </i> for all numerical variables.</span> </small></li> <li> <small><span style=\"font-weight:normal\">Select 'Drop one dummy' in the <i> Features handling </i> for all categorical variables.</span></small></li></ul> </div>"  
+        },
+        {
+            "type": "SEPARATOR",
+            "name": "",
+            "description": "<h4> Model fitting parameters</h4>"
+        },
+        {
             "name": "penalty",
             "label": "Elastic Net Penalty",
             "description": "The penalty weight of the Elastic Net regularization",
@@ -28,6 +38,11 @@
             "type": "DOUBLES",
             "defaultValue": [0.5],
             "gridParam": true
+        },
+        {
+            "type": "SEPARATOR",
+            "name": "",
+            "description": "<h4> Distribution and link function</h4>"
         },
         {
             "name": "family_name",
@@ -242,6 +257,44 @@
             "gridParam": false
         },
         {
+            "name": "alpha",
+            "label": "Alpha",
+            "type": "INT",
+            "description": "The ancillary parameter for the negative binomial distribution",
+            "defaultValue": 1,
+            "allowDuplicates": false,
+            "mandatory": false,
+            "visibilityCondition": "model.family_name == 'negative_binomial'",
+            "gridParam": false
+        },
+        {
+            "name": "power",
+            "label": "Power",
+            "type": "DOUBLE",
+            "description": "The power used for the power link function",
+            "defaultValue": 1,
+            "allowDuplicates": false,
+            "mandatory": false,
+            "gridParam": false,
+            "visibilityCondition": "(model.family_name == 'negative_binomial' && model.negative_binomial_link == 'power') || (model.family_name == 'tweedie' && model.tweedie_link == 'power')"
+        },
+        {
+            "name": "var_power",
+            "label": "Variance Power",
+            "defaultValue": 1,
+            "type": "DOUBLE",
+            "description": "The power of the variance function of the tweedie distribution",
+            "allowDuplicates": false,
+            "mandatory": false,
+            "gridParam": false,
+            "visibilityCondition": "model.family_name == 'tweedie'"
+        },
+        {
+            "type": "SEPARATOR",
+            "name": "",
+            "description": "<h4> Offset and exposure</h4>"
+        },
+        {
             "name": "offset_mode",
             "label": "Offset Mode",
             "gridParam": false,
@@ -293,39 +346,6 @@
                 "double",
                 "float"
               ]
-        },
-        {
-            "name": "alpha",
-            "label": "Alpha",
-            "type": "INT",
-            "description": "The ancillary parameter for the negative binomial distribution",
-            "defaultValue": 1,
-            "allowDuplicates": false,
-            "mandatory": false,
-            "visibilityCondition": "model.family_name == 'negative_binomial'",
-            "gridParam": false
-        },
-        {
-            "name": "power",
-            "label": "Power",
-            "type": "DOUBLE",
-            "description": "The power used for the power link function",
-            "defaultValue": 1,
-            "allowDuplicates": false,
-            "mandatory": false,
-            "gridParam": false,
-            "visibilityCondition": "(model.family_name == 'negative_binomial' && model.negative_binomial_link == 'power') || (model.family_name == 'tweedie' && model.tweedie_link == 'power')"
-        },
-        {
-            "name": "var_power",
-            "label": "Variance Power",
-            "defaultValue": 1,
-            "type": "DOUBLE",
-            "description": "The power of the variance function of the tweedie distribution",
-            "allowDuplicates": false,
-            "mandatory": false,
-            "gridParam": false,
-            "visibilityCondition": "model.family_name == 'tweedie'"
         }
     ]
 }
