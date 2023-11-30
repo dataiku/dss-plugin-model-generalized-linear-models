@@ -79,7 +79,7 @@ def test_classification():
     for act, exp in zip(actual_metrics, expected_metrics):
         assert_almost_equal(act, exp, decimal=12)
 
-    actual_coefs = binary_model.coef_.tolist()
+    [actual_coefs] = binary_model.coef_.tolist()
     expected_coefs = [0.10960659, -0.45391489,  0.14102368]
 
     for act, exp in zip(actual_coefs, expected_coefs):

@@ -112,7 +112,7 @@ def test_regression_regularized():
 
     actual_coeffs = regression_model.coef_.tolist()
     expected_coeffs = [-8.21616874e-02, -4.04677477e+00,  2.77749123e-01, -4.19380027e-01,
-        3.97194059e-04,  1.58391613e+00,  4.31070244e-03]
+        3.97194059e-04, 1.58391613e+00, 4.31070244e-03]
     
     for act, exp in zip(actual_coeffs, expected_coeffs):
         assert_almost_equal(act, exp, decimal=6)
@@ -150,8 +150,8 @@ def test_regression_offset():
     assert_almost_equal(actual_intercept, expected_intercept, decimal=8)
 
     actual_coeffs = regression_model.coef_.tolist()
-    expected_coeffs = [-6.0979164787e+02, -7.6774362552e+01,  1.8442285217e+02,
-       -2.0043622454e-01,  8.2804923521e+02]
+    expected_coeffs = [0, -6.0979164787e+02, -7.6774362552e+01,  1.8442285217e+02,
+       -2.0043622454e-01, 8.2804923521e+02, 0]
     
     for act, exp in zip(actual_coeffs, expected_coeffs):
         assert_almost_equal(act, exp, decimal=8)
@@ -188,8 +188,8 @@ def test_regression_exposure():
     assert_almost_equal(actual_intercept, expected_intercept, decimal=8)
 
     actual_coeffs = regression_model.coef_.tolist()
-    expected_coeffs = [1.40475935e-01, -1.97538883e-01,  2.30857075e-04, -7.58148554e-01,
-       -7.11379211e-04]
+    expected_coeffs = [ 0.00000000e+00,  0.00000000e+00,  1.40475935e-01, -1.97538883e-01,
+  2.30857075e-04, -7.58148554e-01, -7.11379211e-04]
     
     for act, exp in zip(actual_coeffs, expected_coeffs):
         assert_almost_equal(act, exp, decimal=8)
