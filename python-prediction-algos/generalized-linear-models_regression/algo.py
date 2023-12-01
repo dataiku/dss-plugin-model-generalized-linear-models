@@ -4,7 +4,7 @@ if sys.version_info[0] < 3:
         "Training environment must use Python 3, please update in Design > Advanced > Runtime "
         "environment")
 from dataiku.doctor.plugins.custom_prediction_algorithm import BaseCustomPredictionAlgorithm
-from generalized_linear_models.dku_glm_glum import RegressionGLM
+from generalized_linear_models.dku_glm import RegressionGLM
 from commons import check_params
 
 

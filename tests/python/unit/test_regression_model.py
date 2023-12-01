@@ -1,4 +1,4 @@
-from generalized_linear_models.dku_glm_glum import RegressionGLM, link
+from generalized_linear_models.dku_glm import RegressionGLM, link
 import statsmodels.api as sm
 from testing_utils import testing_dict
 import generalized_linear_models.link as link

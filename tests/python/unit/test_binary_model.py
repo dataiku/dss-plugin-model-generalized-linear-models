@@ -1,4 +1,4 @@
-from generalized_linear_models.dku_glm_glum import BinaryClassificationGLM
+from generalized_linear_models.dku_glm import BinaryClassificationGLM
 import statsmodels.api as sm
 import generalized_linear_models.link as link
 from glum import BinomialDistribution

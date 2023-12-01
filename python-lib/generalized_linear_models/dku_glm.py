@@ -1,18 +1,24 @@
-import statsmodels.api as sm
-from statsmodels.genmod.generalized_linear_model import GLMResults
+from glum import GeneralizedLinearRegressor
+from glum import BinomialDistribution
+from glum import GammaDistribution
+from glum import NormalDistribution
+from glum import InverseGaussianDistribution
+from glum import TweedieDistribution
+from glum import PoissonDistribution
+from glum import NegativeBinomialDistribution
+
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-
+import generalized_linear_models.link as link
 
 class BaseGLM(BaseEstimator, ClassifierMixin):
     """
     Base class for GLM
     Binary and Regression GLM inherit from here
     """
-
-    def __init__(self, family_name, binomial_link, gamma_link, gaussian_link, inverse_gaussian_link,
-                 poisson_link, negative_binomial_link, tweedie_link, alpha, power, penalty,
-                 var_power, offset_mode, training_dataset=None, offset_columns=None, exposure_columns=None,
+    def __init__(self, family_name="gaussian", binomial_link="logit", gamma_link="inverse_power", gaussian_link="identity", inverse_gaussian_link="inverse_squared",
+                 poisson_link="log", negative_binomial_link="log", tweedie_link="log", alpha=1, power=1, penalty=0.0, l1_ratio=0.5,
+                 var_power=1, offset_mode="BASIC", training_dataset=None, offset_columns=None, exposure_columns=None,
                  column_labels=None):
 
         self.family_name = family_name
@@ -24,6 +30,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.negative_binomial_link = negative_binomial_link
         self.tweedie_link = tweedie_link
         self.family = None
+        self.family_glum_class = None
         if family_name == 'negative_binomial':
             if alpha < 0.01 or alpha > 2:
                 raise ValueError('alpha should be between 0.01 and 2, current value of ' + str(alpha) + ' unsupported')
@@ -46,6 +53,14 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             if not isinstance(var_power, (int, float)):
                 raise ValueError('var_power should be defined with a numeric value, current value of ' + str(
                     var_power) + ' unsupported')
+        if isinstance(l1_ratio, list):
+            for l in l1_ratio:
+                if l < 0 or l > 1:
+                    raise ValueError('l1_ratio should be between 0 and 1')
+        else:
+            if l1_ratio < 0 or l1_ratio > 1:
+                raise ValueError('l1_ratio should be between 0 and 1')
+        self.l1_ratio = l1_ratio
         self.var_power = var_power
         self.fit_intercept = True
         self.intercept_scaling = 1
@@ -62,10 +77,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.training_dataset = training_dataset
         self.removed_indices = None
         self.assign_family()
+        self.assign_family_glum_class()
 
     def get_link_function(self):
         """
-        gets the statsmodel link function based on the
+        gets the glum link function based on the
         user defined link on the model training screen
         """
         family_2_link_dict = {
@@ -81,62 +97,86 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         user_link = family_2_link_dict[self.family_name]
 
         if user_link == 'cloglog':
-            return sm.families.links.cloglog()
+            return 'cloglog'
         elif user_link == 'log':
-            return sm.families.links.log()
+            return 'log'
         elif user_link == 'logit':
-            return sm.families.links.logit()
-        elif user_link == 'negative_binomial':
-            return sm.families.links.NegativeBinomial(self.alpha)
-        elif user_link == 'power':
-            return sm.families.links.Power(self.power)
-        elif user_link == 'cauchy':
-            return sm.families.links.cauchy()
+            return 'logit'
         elif user_link == 'identity':
-            return sm.families.links.identity()
+            return 'identity'
+        elif user_link == 'cauchy':
+            return link.Cauchy()
+        elif user_link == 'negative_binomial':
+            return link.NegativeBinomial()
+        elif user_link == 'power':
+            return link.Power()
         elif user_link == 'inverse_power':
-            return sm.families.links.inverse_power()
+            return link.InversePower()
         elif user_link == 'inverse_squared':
-            return sm.families.links.inverse_squared()
+            return link.InverseSquared()
         else:
             raise ValueError("Unsupported link")
 
-    def get_family(self, link):
+    def get_family(self):
         """
         takes in user defined family variable
-        and statsmodel link function
-        returns the family
+        and returns the family
         """
         if self.family_name == 'binomial':
-            return sm.families.Binomial(link=link)
+            return 'binomial'
 
         elif self.family_name == "gamma":
-            return sm.families.Gamma(link=link)
+            return 'gamma'
 
         elif self.family_name == "gaussian":
-            return sm.families.Gaussian(link=link)
+            return 'gaussian'
 
         elif self.family_name == "inverse_gaussian":
-            return sm.families.InverseGaussian(link=link)
+            return 'inverse.gaussian'
 
         elif self.family_name == "negative_binomial":
-            return sm.families.NegativeBinomial(link=link, alpha=self.alpha)
+            return 'negative.binomial (' + str(self.alpha) + ')'
 
         elif self.family_name == "poisson":
-            return sm.families.Poisson(link=link)
+            return 'poisson'
 
         elif self.family_name == "tweedie":
-            return sm.families.Tweedie(link=link, var_power=self.var_power)
+            return 'tweedie (' + str(self.var_power) + ')'
         else:
             raise ValueError("Unsupported family")
+        
+    def get_family_glumn_class(self):
+        if self.family_name == 'binomial':
+            return BinomialDistribution()
+        elif self.family_name == "gamma":
+            return GammaDistribution()
+
+        elif self.family_name == "gaussian":
+            return NormalDistribution()
+
+        elif self.family_name == "inverse_gaussian":
+            return InverseGaussianDistribution()
+
+        elif self.family_name == "negative_binomial":
+            return NegativeBinomialDistribution()
+
+        elif self.family_name == "poisson":
+            return PoissonDistribution()
+
+        elif self.family_name == "tweedie":
+            return TweedieDistribution()
+        else:
+            raise ValueError("Unsupported family")
+    def assign_family_glum_class(self):
+        self.family_glum_class = self.get_family_glumn_class()
 
     def assign_family(self):
         """
         converts string inputs of family & link
-        in to statsmodel family and makes it an attribute
+        into glum family and makes it an attribute
         """
-        link = self.get_link_function()
-        self.family = self.get_family(link)
+        self.link = self.get_link_function()
+        self.family = self.get_family()
 
     def get_columns(self, X, important_columns):
         """
@@ -148,7 +188,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         if len(important_columns) == 0:
             column_values = []
             column_indices = []
-
         else:
             for important_column in important_columns:
                 if important_column not in self.column_labels:
@@ -186,35 +225,27 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         offsets, exposures = self.get_offsets_and_exposures(X)
 
         X = self.process_fixed_columns(X)
-        X = sm.add_constant(X)
 
         offset_output = self.compute_aggregate_offset(offsets, exposures)
 
-        #  fits and stores statsmodel glm
-        model = sm.GLM(y, X, family=self.family, offset=offset_output, var_weights=sample_weight)
-
-        if self.penalty == 0.0:
-            # fit is 10-100x faster than fit_regularized
-            self.fitted_model = model.fit()
-        else:
-            regularized_model = model.fit_regularized(method='elastic_net', alpha=self.penalty)
-            self.fitted_model = GLMResults(regularized_model.model, regularized_model.params,
-                       np.linalg.pinv(np.dot(np.matrix(regularized_model.params).T, np.matrix(regularized_model.params))),
-                       regularized_model.model.scale)
-
+        #  fits and stores glum glm
+        model = GeneralizedLinearRegressor(alpha=self.penalty, l1_ratio=self.l1_ratio, fit_intercept=True,
+                                            family=self.family, link=self.link)
+        self.fitted_model = model.fit(X, y, sample_weight=sample_weight, offset=offset_output)
+        
         self.compute_coefs(prediction_is_classification)
-        if prediction_is_classification:
-            self.intercept_ = [float(self.fitted_model.params[0])]
-        else:
-            self.intercept_ = float(self.fitted_model.params[0])
-
+        
     def compute_coefs(self, prediction_is_classification):
         """
         adds attributes for explainability
         """
         # removes first value which is the intercept
         # other values correspond to fitted coefs (hence excludes offsets and exposures)
-        self.coef_ = np.array(self.fitted_model.params[1:])
+        self.coef_ = self.fitted_model.coef_#np.array(self.fitted_model.params[1:])
+        if prediction_is_classification:
+            self.intercept_ = [float(self.fitted_model.intercept_)]
+        else:
+            self.intercept_ = float(self.fitted_model.intercept_)
         # the column labels include offsets and exposures
         # so we need to insert 0 coefs for these columns to ensure consistency
         if self.removed_indices is not None:
@@ -223,11 +254,8 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             # because inserting a value at index = len + 1 fails
             for index in sorted(self.removed_indices):
                 self.coef_ = np.insert(self.coef_, index, 0)
-        # statsmodels 0 is 211 sets this to true 0
         if prediction_is_classification:
-            self.coef_ = [[0 if x == 211.03485067364605 else x for x in self.coef_]]
-        else:
-            self.coef_ = [0 if x == 211.03485067364605 else x for x in self.coef_]
+            self.coef_ = np.array([self.coef_])
 
     def set_column_labels(self, column_labels):
         # in order to preserve the attribute `column_labels` when cloning
@@ -246,9 +274,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                 self.removed_indices = self.exposure_indices
         if self.removed_indices is not None:
             self.removed_indices = list(set(self.removed_indices))
-            X = np.delete(X, self.removed_indices, axis=1)
-        return X
 
+            X = np.delete(X, self.removed_indices, axis=1)
+
+        return X
+    
     def get_offsets_and_exposures(self, X):
         offsets = []
         exposures = []
@@ -268,8 +298,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     def predict_target(self, X):
         offsets, exposures = self.get_offsets_and_exposures(X)
         X = self.process_fixed_columns(X)
-
-        X = sm.add_constant(X, has_constant='add')
 
         offset_output = self.compute_aggregate_offset(offsets, exposures)
 
@@ -318,3 +346,9 @@ class RegressionGLM(BaseGLM):
         Returns the target as 1D array
         """
         return self.predict_target(X)
+    
+
+
+
+
+

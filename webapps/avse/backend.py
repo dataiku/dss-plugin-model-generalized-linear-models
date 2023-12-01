@@ -8,7 +8,7 @@ from plotly.subplots import make_subplots
 import numpy as np
 from glm_summary.graph_utils import get_ave_grouped
 from glm_summary.dku_utils import get_ave_data, get_original_model_handler
-from generalized_linear_models.dku_glm_glum import BaseGLM
+from generalized_linear_models.dku_glm import BaseGLM
 from shutil import copytree
 from dataiku.customwebapp import get_webapp_config
 
