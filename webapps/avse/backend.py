@@ -45,6 +45,7 @@ feature_choice = dcc.Dropdown(
 
 df = model_handler.get_train_df()[0]
 transformed_X, _, _, valid_y = predictor.preprocessing.preprocess(df, with_target=True,)
+transformed_X = predictor._clf.process_fixed_columns(transformed_X)
 predictions = predictor._clf.fitted_model.predict(transformed_X)
 
 app.layout = dbc.Row([
