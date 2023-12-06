@@ -63,6 +63,7 @@ def test_regression():
         l1_ratio=1,
         power=1,
         var_power=1)
+    regression_model.column_labels = data.exog_name
 
     regression_model.fit(X, y)
     bic = regression_model.fitted_model.bic(X,y)
@@ -104,6 +105,7 @@ def test_regression_regularized():
         l1_ratio=l1_ratio,
         power=1,
         var_power=1)
+    regression_model.column_labels = data.exog_name
 
     regression_model.fit(X, y)
     actual_intercept = regression_model.intercept_
