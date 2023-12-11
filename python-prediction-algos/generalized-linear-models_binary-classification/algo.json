@@ -26,7 +26,7 @@
             "description": "The penalty weight of the Elastic Net regularization",
             "mandatory": true,
             "type": "DOUBLES",
-            "defaultValue": [0.0],
+            "defaultValue": [0.01],
             "gridParam": true
         },
         {
