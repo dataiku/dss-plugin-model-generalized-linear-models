@@ -43,6 +43,11 @@ feature_choice = dcc.Dropdown(
     value=features[0], style={'display': 'inline-block', 'width': '60%'}
 )
 
+df = model_handler.get_train_df()[0]
+transformed_X, _, _, valid_y = predictor.preprocessing.preprocess(df, with_target=True,)
+transformed_X = predictor._clf.process_fixed_columns(transformed_X)
+predictions = predictor._clf.fitted_model.predict(transformed_X)
+
 app.layout = dbc.Row([
     dbc.Col([
         dbc.Container(
@@ -57,21 +62,21 @@ app.layout = dbc.Row([
                                 html.Td(["Bayesian Information Criterion (BIC) ",
                                          html.I(className="fa fa-question-circle mr-2",
                                                 title="Criterion for model selection, models with lower BIC are generally preferred")]),
-                                html.Th(f"{np.round(predictor._clf.fitted_model.bic, 2):,}",
+                                html.Th(f"{np.round(predictor._clf.fitted_model.bic(transformed_X, valid_y), 2):,}",
                                             className="table-metric")
                             ]),
                                 html.Tr([
                                     html.Td(["Akaike Information Criterion (AIC) ",
                                              html.I(className="fa fa-question-circle mr-2",
                                                     title="Criterion for model selection, models with lower AIC are generally preferred")]),
-                                    html.Th(f"{np.round(predictor._clf.fitted_model.aic, 2):,}",
+                                    html.Th(f"{np.round(predictor._clf.fitted_model.aic(transformed_X, valid_y), 2):,}",
                                             className="table-metric")
                                 ]),
                                 html.Tr([
                                     html.Td(["Deviance ",
                                              html.I(className="fa fa-question-circle mr-2",
                                                     title="Measure of the error, using the likelihood function")]),
-                                    html.Th(f"{np.round(predictor._clf.fitted_model.deviance, 2):,}",
+                                    html.Th(f"{np.round(predictor._clf.family_glum_class.deviance(valid_y, predictions), 2):,}",
                                             className="table-metric")
                                 ])
                             ],
@@ -151,7 +156,6 @@ app.layout = dbc.Row([
             ], fluid=True)
     ], md=12),
 ])
-
 
 @app.callback(
     Output('AvE', 'figure'),

@@ -140,6 +140,26 @@ def check_params(params):
 
     dku_config.penalty = [dku_config.get("penalty_" + str(i)) for i in range(len(params.get('penalty')))]
 
+    if not isinstance(params.get('l1_ratio'), list):
+        params['l1_ratio'] = [params.get('l1_ratio')]
+    for i, l1_ratio in enumerate(params.get('l1_ratio')):
+        dku_config.add_param(
+            name="l1_ratio" + str(i),
+            value=l1_ratio,
+            checks=[{
+                "type": "sup_eq",
+                "op": 0
+            },
+                {
+                    "type": "inf_eq",
+                    "op": 1
+                }
+            ],
+            required=True
+        )
+
+    dku_config.l1_ratio = [dku_config.get("l1_ratio" + str(i)) for i in range(len(params.get('l1_ratio')))]
+
     if params.get('family_name') == 'tweedie':
         dku_config.add_param(
             name="var_power",

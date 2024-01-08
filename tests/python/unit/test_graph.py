@@ -1,7 +1,7 @@
 import pandas as pd
 from glm_summary.graph_utils import compute_base_predictions, get_ave_grouped
 from testing_utils import train_df, test_df, Predictor
-from pandas.api.types import is_numeric_dtype
+from numpy.testing import assert_almost_equal
 
 
 def test_base_predictions():
@@ -41,8 +41,8 @@ def test_ave_grouped():
     ave_grouped = get_ave_grouped(ave_data, target_variable, weights, class_map)
     check_ave_grouped = {'Power': [0.5476666666666666, 0.46324859921954525, 2.857142857142857, 0.31292426809455565],
                          'Density': [3778.3888888888887, 0.5413888888888888, 0.4554869298672325, 1.1111111111111112, 0.3129242680945556]}
-    assert ave_grouped['Power'].mean().tolist() == check_ave_grouped['Power']
-    assert ave_grouped['Density'].mean().tolist() == check_ave_grouped['Density']
+    assert_almost_equal(ave_grouped['Power'].mean(numeric_only=True).tolist(), check_ave_grouped['Power'], decimal=12)
+    assert_almost_equal(ave_grouped['Density'].mean(numeric_only=True).tolist(), check_ave_grouped['Density'], decimal=12)
 
 
 def test_ave_grouped_weights():
@@ -59,5 +59,5 @@ def test_ave_grouped_weights():
     check_ave_grouped = {'Power': [0.5634978725897064, 0.4650000101091965, 113.14285714285714, 0.31292426809455565],
                          'Density': [3778.3888888888887, 0.5413888888888888, 0.4554869298672325, 44.0,
                                      0.3129242680945556]}
-    assert ave_grouped['Power'].mean().tolist() == check_ave_grouped['Power']
-    assert ave_grouped['Density'].mean().tolist() == check_ave_grouped['Density']
+    assert_almost_equal(ave_grouped['Power'].mean(numeric_only=True).tolist(), check_ave_grouped['Power'], decimal=12)
+    assert_almost_equal(ave_grouped['Density'].mean(numeric_only=True).tolist(), check_ave_grouped['Density'], decimal=12)

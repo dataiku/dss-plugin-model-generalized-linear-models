@@ -7,15 +7,15 @@ def get_offset_mode(config):
         "value": "OFFSETS",
         "label": "Offsets"
     }]
-    distributions = ['binomial', 'gamma', 'gaussian', 'inverse_gaussian', 'poisson', 'negative_binomial', 'tweedie']
-    conditions = [(config['family_name'] == distribution and config[distribution + '_link'] == 'log') for distribution in distributions]
-    if any(conditions):
+    link_is_log = (config[config["family_name"]+ '_link'] == 'log')
+
+    if link_is_log:
         choices.append({"value": "OFFSETS/EXPOSURES",
                         "label": "Offsets/Exposures"})
     return choices
 
 
-def do(payload, config, plugin_config, inputs):
+def do(payload, config):
     if payload.get('parameterName') == 'offset_mode':
         choices = get_offset_mode(config)
     return {"choices": choices}
