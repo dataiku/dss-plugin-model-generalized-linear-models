@@ -1,5 +1,9 @@
 # Changelog
 
+## [Version 1.1.0] - Upgrade Release - 2024-01
+
+* Switched the GLM library from statsmodels to glum
+
 ## [Version 1.0.2] - Bugfix Release - 2022-07
 
 * Fixed binary classification prediction output format to fit v11 stricter format
