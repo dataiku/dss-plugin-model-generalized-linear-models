@@ -1,0 +1,7 @@
+
+{
+    "libraries": [],
+    "label": "Document intelligence explorer",
+    "backendEnabled": true,
+    "autoStartBackend": false
+}

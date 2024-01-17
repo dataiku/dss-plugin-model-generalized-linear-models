@@ -1,0 +1,250 @@
+{
+  "meta": {
+    "label": "Answer",
+    "description": "'Answer' provides a conversational interface for both engaging with a language model and exploring documents.",
+    "icon": "icon-picture"
+  },
+  "paramsPythonSetup": "params_helper.py",
+  "baseType": "STANDARD",
+  "enableJavascriptModules": "true",
+  "hasBackend": "true",
+  "noJSSecurity": "true",
+  "standardWebAppLibraries": [
+    "jquery",
+    "dataiku",
+    "font_awesome"
+  ],
+  "params": [
+    {
+      "name": "sep0",
+      "label": "Conversations store configuration",
+      "type": "SEPARATOR"
+    },
+    {
+      "type": "DATASET",
+      "name": "logging_dataset",
+      "label": "Logging Dataset",
+      "description": "The dataset that contains the logs of user queries and LLM responses",
+      "mandatory": true,
+      "acceptsDataset": true,
+      "canSelectForeign": false,
+      "canCreateDataset": true,
+      "markCreatedAsBuilt": true
+    },
+    {
+      "type": "BOOLEAN",
+      "name": "permanent_delete",
+      "label": "Permanent Delete",
+      "defaultValue": true,
+      "mandatory": false,
+      "description": "If Permanent Delete is set to true, the deleted and cleared conversation records will be lost. Set this parameter to false, if you want to always keep archived conversations in the dataset"
+    },
+    {
+      "type": "ARRAY",
+      "name": "feedback_positive_choices",
+      "label": "Positive Feedback Choices",
+      "description": "The positive feedback choices to be displayed to the user",
+      "defaultValue": [],
+      "visibilityCondition": "model.logging_dataset"
+    },
+    {
+      "type": "ARRAY",
+      "name": "feedback_negative_choices",
+      "label": "Negative Feedback Choices",
+      "description": "The negative feedback choices to be displayed to the user",
+      "defaultValue": [],
+      "visibilityCondition": "model.logging_dataset"
+    },
+    {
+      "name": "sep1",
+      "label": "LLM Configuration",
+      "type": "SEPARATOR"
+    },
+    {
+      "type": "SELECT",
+      "name": "llm_id",
+      "label": "LLM",
+      "parameterSetId": "llm_id",
+      "mandatory": true,
+      "getChoicesFromPython": true
+    },
+    {
+      "type": "SELECT",
+      "name": "knowledge_bank_id",
+      "label": "Knowledge Bank",
+      "mandatory": false,
+      "getChoicesFromPython": true
+    },
+    {
+      "name": "sep2",
+      "label": "Knowledge Retrieval Parameters",
+      "type": "SEPARATOR",
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "knowledge_retrieval_k",
+      "type": "INT",
+      "label": "Number of Documents to retrieve",
+      "defaultValue": 3,
+      "mandatory": false,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "knowledge_retrieval_use_mmr",
+      "type": "BOOLEAN",
+      "label": "Improve diversity of documents",
+      "defaultValue": false,
+      "mandatory": false,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "knowledge_retrieval_mmr_k",
+      "type": "INT",
+      "label": "Diversity selection documents",
+      "mandatory": false,
+      "defaultValue": 20,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != '' && model.knowledge_retrieval_use_mmr"
+    },
+    {
+      "name": "knowledge_retrieval_mmr_diversity",
+      "type": "DOUBLE",
+      "label": "Diversity factor",
+      "mandatory": false,
+      "defaultValue": 0.25,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != '' && model.knowledge_retrieval_use_mmr"
+    },
+    {
+      "name": "sep3",
+      "label": "Filters and metadata Parameters",
+      "type": "SEPARATOR",
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "knowledge_sources_filters",
+      "type": "MULTISELECT",
+      "label": "Select the metadata to make available as filters, currently only string metas are supported",
+      "getChoicesFromPython": true,
+      "defaultValue": false,
+      "mandatory": false,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "knowledge_sources_displayed_metas",
+      "type": "MULTISELECT",
+      "label": "Select the metadata to display along with sources",
+      "getChoicesFromPython": true,
+      "defaultValue": false,
+      "mandatory": false,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "knowledge_source_url",
+      "type": "SELECT",
+      "label": "Select the metadata holding the url to access a source",
+      "getChoicesFromPython": true,
+      "defaultValue": false,
+      "mandatory": false,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "knowledge_source_title",
+      "type": "SELECT",
+      "label": "Select the metadata holding the title of a source",
+      "getChoicesFromPython": true,
+      "defaultValue": false,
+      "mandatory": false,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "knowledge_source_thumbnail",
+      "type": "SELECT",
+      "label": "Select the metadata holding the url of the thumbnail of a source",
+      "getChoicesFromPython": true,
+      "defaultValue": false,
+      "mandatory": false,
+      "visibilityCondition": "model.knowledge_bank_id != null && model.knowledge_bank_id != ''"
+    },
+    {
+      "name": "sep2",
+      "label": "Chat Bot Parameters",
+      "type": "SEPARATOR"
+    },
+    {
+      "type": "TEXTAREA",
+      "name": "primer_prompt",
+      "label": "Configure your LLM",
+      "defaultValue": "Please act as a business analyst and return concicse answers no more than 3 lines",
+      "mandatory": true
+    },
+    {
+      "type": "INT",
+      "name": "memory_token_limit",
+      "label": "The max number of tokens used for the chat history",
+      "defaultValue": 2000,
+      "mandatory": true
+    },
+    {
+      "name": "sep3",
+      "label": "End User Configuration",
+      "type": "SEPARATOR"
+    },
+    {
+      "type": "TEXTAREA",
+      "name": "web_app_title",
+      "label": "The title visible to the end user of the web app",
+      "defaultValue": "Ask directly questions to your document corpus",
+      "mandatory": true
+    },
+    {
+      "type": "TEXTAREA",
+      "name": "web_app_subheading",
+      "label": "The subheading visible to the end user of the web app",
+      "defaultValue": "Answers are sourced from the processed documents, delivered in natural language and accompanied by the most relevant references.",
+      "mandatory": true
+    },
+    {
+      "type": "TEXTAREA",
+      "name": "web_app_input_placeholder",
+      "label": "Placeholder text displayed within the question input field",
+      "defaultValue": "Ask your question",
+      "mandatory": false
+    },
+    {
+      "type": "TEXTAREA",
+      "name": "example_question_1",
+      "label": "Example question 1",
+      "defaultValue": "What are the primary causes of the recent increase in global temperatures?",
+      "mandatory": true
+    },
+    {
+      "type": "TEXTAREA",
+      "name": "example_question_2",
+      "label": "Example question 2",
+      "defaultValue": "How does quantum computing differ from classical computing in terms of processing information?",
+      "mandatory": true
+    },
+    {
+      "type": "TEXTAREA",
+      "name": "example_question_3",
+      "label": "Example question 3",
+      "defaultValue": "Whats the most popular language globally?",
+      "mandatory": true
+    },
+    {
+      "type": "SELECT",
+      "name": "language",
+      "selectChoices": [
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "ko",
+          "label": "Korean"
+        }
+      ],
+      "defaultValue": "en",
+      "mandatory": true
+    }
+  ]
+}
