@@ -1,36 +1,58 @@
-<script lang="ts">
-import { ServerApi } from '@/api/server_api'
-import { RouterView } from 'vue-router'
-export default {
-  async created() {
-    const LOCAL_BACKEND_URL = 'http://127.0.0.1:5000'
-    let dataikuLib
-    try {
-      // @ts-ignore
-      // eslint-disable-next-line no-undef
-      dataikuLib = dataiku
-    } catch (e) {
-      dataikuLib = undefined
-    }
-    let host = ''
-    const isLocal = !dataikuLib
-    if (!isLocal) {
-      await (async () => {
-        while (!dataikuLib?.getWebAppBackendUrl) {
-          await new Promise((resolve) => setTimeout(resolve, 1000))
-        }
-        host = dataikuLib.getWebAppBackendUrl('/')
-      })()
-    } else {
-      host = LOCAL_BACKEND_URL
-    }
-    ServerApi.init({ host })
-  },
-  components: {
-    RouterView
+<script setup lang="ts">
+import HelloWorld from './components/HelloWorld.vue'
+import TheWelcome from './components/TheWelcome.vue'
+import { onMounted } from "vue";
+import { API } from './Api';
+
+onMounted(async () => {
+  try {
+    const response = await API.getHello();
+    console.log(response.data);
+  } catch(e) {
+    console.log(e);
+  }
+})
+</script>
+
+<template>
+  <header>
+    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+
+    <div class="wrapper">
+      <HelloWorld msg="You did it!" />
+    </div>
+  </header>
+
+  <main>
+    <TheWelcome />
+  </main>
+</template>
+
+<style scoped>
+header {
+  line-height: 1.5;
+}
+
+.logo {
+  display: block;
+  margin: 0 auto 2rem;
+}
+
+@media (min-width: 1024px) {
+  header {
+    display: flex;
+    place-items: center;
+    padding-right: calc(var(--section-gap) / 2);
+  }
+
+  .logo {
+    margin: 0 2rem 0 0;
+  }
+
+  header .wrapper {
+    display: flex;
+    place-items: flex-start;
+    flex-wrap: wrap;
   }
 }
-</script>
-<template>
-  <RouterView />
-</template>
+</style>
