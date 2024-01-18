@@ -43,7 +43,7 @@ const config = defineConfig({
       exclude: "node_modules/**"
     }
   },
-  base: process.env.MODE === 'production' ? "/plugins/document-question-answering/resource/dist/" : "/"
+  base: process.env.MODE === 'production' ? "/plugins/generalized-linear-models/resource/dist/" : "/"
 });
 
 
