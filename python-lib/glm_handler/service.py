@@ -15,7 +15,7 @@ class GLM_Handler:
         #full_model_id = [version['snippet']['fullModelId'] for version in self.model.list_versions() if version['active']==True][0]
         #original_model_handler = dataiku.doctor.posttraining.model_information_handler.PredictionModelInformationHandler.from_full_model_id(full_model_id)
         #print(original_model_handler)
-        self.predictor = self.model.get_predictor()
+        #self.predictor = self.model.get_predictor()
         # if self.model.use_full_df():
         #     test_df = self.model.get_full_df()[0]
         # else:
