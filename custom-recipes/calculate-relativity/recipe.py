@@ -28,12 +28,11 @@ dku_config.add_param(
 # Example usage
 model_handler = ModelHandler(dku_config.dku_model)
 coefficients = model_handler.get_coefficients()
-
+link_function = model_handler.get_link_function()
 preprocessed_df = model_handler.preprocess_dataframe(model_handler.get_dataframe('train'))
 base_values = calculate_base_values(preprocessed_df)
 
-
-relativity_calculator = RelativityCalculator(coefficients, base_values)
+relativity_calculator = RelativityCalculator(coefficients, base_values, link_function)
 relativities = relativity_calculator.calculate_relativities()
 
 variable_names = list(coefficients.keys())

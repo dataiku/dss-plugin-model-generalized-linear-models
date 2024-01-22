@@ -3,6 +3,8 @@ from dataiku.doctor.posttraining.model_information_handler import PredictionMode
 import pandas as pd
 import numpy as np
 from dataiku import pandasutils as pdu
+import statsmodels
+import logging
 
 class RelativityCalculator:
     """
@@ -15,7 +17,7 @@ class RelativityCalculator:
         link_function (function): The link function to apply to coefficients.
     """
 
-    def __init__(self, coefficients, base_values, link_function=np.exp):
+    def __init__(self, coefficients, base_values, link_function):
         """
         Initializes the RelativityCalculator with model coefficients and base values.
 
@@ -28,14 +30,30 @@ class RelativityCalculator:
         self.variable_names = list(coefficients.keys())
         self.base_values = list(base_values.values())
         self.link_function = link_function
+        logging.info(f"the link function is {self.link_function}")
 
     def calculate_relativities(self):
-        """
-        Calculates and returns relativities for each model variable.
+            """
+            Calculates and returns relativities for each model variable.
 
-        Returns:
-            dict: A dictionary mapping variable names to their relativities.
-        """
-        baseline = self.link_function(np.dot(self.coefficients, self.base_values))
-        relativities = np.exp(self.coefficients) / baseline
-        return dict(zip(self.variable_names, relativities))
+            Returns:
+                dict: A dictionary mapping variable names to their relativities.
+            """
+            baseline = np.dot(self.coefficients, self.base_values)
+
+            if isinstance(self.link_function, statsmodels.genmod.families.links.log):
+                # For log link
+                baseline_transformed = np.exp(baseline)
+                relativities = np.exp(self.coefficients) / baseline_transformed
+            elif isinstance(self.link_function, statsmodels.genmod.families.links.identity):
+                # For identity link
+                relativities = self.coefficients / baseline
+            elif isinstance(self.link_function, statsmodels.genmod.families.links.inverse_power):
+                # For inverse link
+                baseline_transformed = 1 / baseline
+                relativities = (1 / self.coefficients) / baseline_transformed
+            else:
+                # Default case or error handling
+                raise NotImplementedError("Link function not supported")
+
+            return dict(zip(self.variable_names, relativities))

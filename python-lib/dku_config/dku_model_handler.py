@@ -40,6 +40,12 @@ class ModelHandler:
         variable_names = self.predictor._model.clf.column_labels
         return dict(zip(variable_names, coefficients))
 
+    def get_link_function(self):
+        """
+        Retrieves the link function of the original model as a statsmodel object
+        """
+        return self.predictor._model.clf.get_link_function()
+    
     def get_dataframe(self, dataset_type='test'):
         """
         Retrieves the specified dataset as a DataFrame.
