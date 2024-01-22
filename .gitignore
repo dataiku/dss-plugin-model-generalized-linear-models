@@ -3,7 +3,7 @@ tests/allure_report
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.wlock
 # C extensions
 *.so
 
