@@ -32,28 +32,35 @@ class RelativityCalculator:
         self.link_function = link_function
         logging.info(f"the link function is {self.link_function}")
 
+    def get_link_function_operation(self, link_function):
+        """
+        Maps string-based link functions to their corresponding mathematical operations.
+        """
+        if link_function == 'log':
+            return lambda x: np.exp(x)
+        elif link_function == 'identity':
+            return lambda x: x
+        elif link_function == 'logit':
+            return lambda x: np.exp(x) / (1 + np.exp(x))
+        # Add other string-based link functions here
+        else:
+            raise NotImplementedError("String-based link function not supported: " + link_function)
+
     def calculate_relativities(self):
-            """
-            Calculates and returns relativities for each model variable.
+        """
+        Calculates and returns relativities for each model variable.
+        """
+        baseline = np.dot(self.coefficients, self.base_values)
 
-            Returns:
-                dict: A dictionary mapping variable names to their relativities.
-            """
-            baseline = np.dot(self.coefficients, self.base_values)
+        if isinstance(self.link_function, str):
+            # If the link function is a string, use the mapped operation
+            link_function_operation = self.get_link_function_operation(self.link_function)
+            relativities = link_function_operation(self.coefficients) / link_function_operation(baseline)
+        elif hasattr(self.link_function, '__call__'):
+            # If the link function is a callable (glum method), use it directly
+            baseline_transformed = self.link_function(baseline)
+            relativities = self.link_function(self.coefficients) / baseline_transformed
+        else:
+            raise NotImplementedError("Link function type not supported")
 
-            if isinstance(self.link_function, statsmodels.genmod.families.links.log):
-                # For log link
-                baseline_transformed = np.exp(baseline)
-                relativities = np.exp(self.coefficients) / baseline_transformed
-            elif isinstance(self.link_function, statsmodels.genmod.families.links.identity):
-                # For identity link
-                relativities = self.coefficients / baseline
-            elif isinstance(self.link_function, statsmodels.genmod.families.links.inverse_power):
-                # For inverse link
-                baseline_transformed = 1 / baseline
-                relativities = (1 / self.coefficients) / baseline_transformed
-            else:
-                # Default case or error handling
-                raise NotImplementedError("Link function not supported")
-
-            return dict(zip(self.variable_names, relativities))
+        return dict(zip(self.variable_names, relativities))
