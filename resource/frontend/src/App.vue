@@ -1,5 +1,5 @@
 <template>
-    <BsLayoutDefault ref="layout">
+    <BsLayoutDefault ref="layoutRef">
         <BsTab
             name="Variable Selection"
             docTitle="Process Analyzer"
@@ -27,6 +27,21 @@
                 ></Header> -->
             </BsHeader>
             <BsDrawer>
+              <!-- <BsSelect
+                    v-model="selectedDefiningVariable"
+                    :options="definingVariables"
+                    clear-icon="clear"
+                    use-input
+                    clearable
+                    input-debounce="0"
+                /> -->
+                <!-- <VariableSelect
+                :modelValue="selectedDefiningVariable"
+                :options="definingVariables"
+                label="Select a variable"
+                helpMessage="Charts will be created for the selected variable"
+                style="min-width: 250px"
+                /> -->
               <div class="mb-3">
                 <label for="variableSelect" class="form-label">Choose a Variable</label>
                 <select class="form-select" id="variableSelect" v-model="selectedDefiningVariable">
@@ -69,6 +84,8 @@
 
 <script lang="ts">
 import BarChart from './components/BarChart.vue'
+import VariableSelect from './components/VariableSelect.vue'
+import DocumentationContent from './components/DocumentationContent.vue'
 import * as echarts from "echarts";
 import type { DataPoint } from './models';
 import { defineComponent } from "vue";
@@ -76,10 +93,13 @@ import { API } from './Api';
 import { BsLayoutDefault } from "quasar-ui-bs";
 import docLogo from "./assets/images/doc-logo-example.svg";
 import firstTabIcon from "./assets/images/first-tab-icon.svg";
+import VariableSelectVue from './components/VariableSelect.vue';
 
 export default defineComponent({
     components: {
-        BarChart
+        BarChart,
+        VariableSelect,
+        DocumentationContent
     },
     data() {
         return {
@@ -89,15 +109,8 @@ export default defineComponent({
             layoutRef: undefined as undefined | typeof BsLayoutDefault,
             docLogo,
             firstTabIcon,
+            definingVariables: [] as String[],
         };
-    },
-    computed: {
-      definingVariables() {
-        if (this.allData) {
-          return [...new Set(this.allData.map(item => item.definingVariable))];
-        }
-        return [];
-      }
     },
     watch: {
       selectedDefiningVariable(newValue: string) {
@@ -114,14 +127,17 @@ export default defineComponent({
     mounted() {
       API.getData().then((data: any) => {
         this.allData = data.data;
+        this.definingVariables = [...new Set(this.allData.map(item => item.definingVariable))];
       });
     }
 })
-
-
 </script>
 
 <style scoped>
+.toggle-left-button {
+    display: none;
+}
+
 header {
   line-height: 1.5;
 }
@@ -147,5 +163,30 @@ header {
     place-items: flex-start;
     flex-wrap: wrap;
   }
+}
+
+.close-side-drawer-btn {
+    color: var(--interactions-bs-color-interaction-primary, #2b66ff);
+    position: absolute;
+    top: 7px;
+    right: 10px;
+    z-index: 1000;
+}
+.open-side-drawer-btn {
+    color: var(--interactions-bs-color-interaction-primary, #2b66ff);
+    position: relative;
+    top: -12px;
+    left: 10px;
+}
+
+.drawer-title {
+  margin-top: 0;
+  color: var(--interactions-bs-color-interaction-primary, #2B66FF);
+  /* bs-font-medium-4-semi-bold */
+  font-family: SourceSansPro;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 32px; /* 160% */
 }
 </style>
