@@ -10,16 +10,23 @@
           <span v-else>{{ helpMessage }}</span>
         </BsHelp>
       </div>
-      <BsSelect v-bind="$attrs">
-        <template v-for="(_, slot) in $slots" v-slot:[slot]="scope">
-          <slot :name="slot" v-bind="scope || {}" />
-        </template>
-      </BsSelect>
+      <!-- <BsSelect bs-label="my select" :options="options" v-model="selectedVal">
+      </BsSelect> -->
+      <!-- <BsSelect
+        :modelValue="selectedTarget"
+        :options="options"
+        ></BsSelect> -->
+        <QSelect
+        :modelValue="selectedTarget"
+        :options="options"
+        ></Qselect>
     </div>
   </template>
   <script lang="ts">
   import { defineProps, useSlots } from "vue";
   import BsHelp from "./BsHelp.vue";
+import { BsSelect } from "quasar-ui-bs";
+import { QSelect } from "quasar";
   
   export default {
     props: {
@@ -30,14 +37,25 @@
       helpMessage: {
               type: String,
               required: true,
-          }
+          },
+        selectedTarget: {
+            type: String,
+            required: true,
+        },
+        options: {
+            type: Array<String>,
+            required: true,
+        }
     },
     components: {
-      BsHelp
-    },
+    BsHelp,
+    BsSelect,
+    QSelect
+},
     data() {
       return {
-        slots: useSlots()
+        slots: useSlots(),
+        selectedVal: ""
       }
     },
     methods: {
