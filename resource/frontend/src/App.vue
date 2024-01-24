@@ -22,30 +22,21 @@
                 </BsButton>
             </BsHeader>
             <BsDrawer>
-              <!-- <BsSelect
-                    v-model="selectedDefiningVariable"
-                    :options="definingVariables"
-                    clear-icon="clear"
-                    use-input
-                    clearable
-                    input-debounce="0"
-                /> -->
-                <VariableSelect
+                <!-- <VariableSelect
                 :selectedTarget="selectedDefiningVariable"
                 :options="definingVariables"
                 label="Select a variable"
                 helpMessage="Charts will be created for the selected variable"
                 style="min-width: 250px"
-                />
-              <div class="mb-3">
-                <label for="variableSelect" class="form-label">Choose a Variable</label>
-                <select class="form-select" id="variableSelect" v-model="selectedDefiningVariable">
-                  <option disabled value="">Please select a variable</option>
-                  <option v-for="variable in definingVariables" :key="variable" :value="variable">
-                    {{ variable }}
-                  </option>
-                </select>
-              </div>
+                @update:modelValue="updateDefiningVariable"
+                /> -->
+                <VariableSelect
+                  :modelValue="selectedDefiningVariable"
+                  :options="definingVariables"
+                  @update:modelValue="updateDefiningVariable"
+                  label="Select a variable"
+                  helpMessage="Charts will be generated with respect to this variable"
+                  style="min-width: 250px"></VariableSelect>
                 <BsButton
                     flat
                     round
@@ -102,7 +93,7 @@ export default defineComponent({
             chartData: [] as DataPoint[],
             selectedDefiningVariable: "",
             allData: [] as DataPoint[],
-            layoutRef: undefined as undefined | typeof BsLayoutDefault,
+            layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             docLogo,
             firstTabIcon,
             definingVariables: [] as String[],
@@ -119,6 +110,9 @@ export default defineComponent({
                 this.layoutRef.drawerOpen = !this.layoutRef.drawerOpen;
             }
         },
+        async updateDefiningVariable(value: string) {
+          this.selectedDefiningVariable = value;
+        }
     },
     mounted() {
       API.getData().then((data: any) => {
@@ -131,7 +125,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.toggle-left-button {
+
+:deep(.toggle-left-button) {
     display: none;
 }
 
@@ -172,7 +167,7 @@ header {
 .open-side-drawer-btn {
     color: var(--interactions-bs-color-interaction-primary, #2b66ff);
     position: relative;
-    top: -12px;
+    top: 4px;
     left: 10px;
 }
 
