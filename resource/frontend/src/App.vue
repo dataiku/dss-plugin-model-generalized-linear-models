@@ -22,14 +22,6 @@
                 </BsButton>
             </BsHeader>
             <BsDrawer>
-                <!-- <VariableSelect
-                :selectedTarget="selectedDefiningVariable"
-                :options="definingVariables"
-                label="Select a variable"
-                helpMessage="Charts will be created for the selected variable"
-                style="min-width: 250px"
-                @update:modelValue="updateDefiningVariable"
-                /> -->
                 <VariableSelect
                   :modelValue="selectedDefiningVariable"
                   :options="definingVariables"
@@ -52,7 +44,13 @@
                 <DocumentationContent></DocumentationContent>
             </BsDocumentation>
             <BsContent>
-                <div class="tab-content">
+              <EmptyState
+                    class="tab-content"
+                    title="One-Way Variable"
+                    subtitle="Select variable in the left column to create chart"
+                    v-if="chartData.length>0"
+                />
+                <div class="tab-content" v-else>
                     <BarChart
                         v-if="selectedDefiningVariable"
                         :xaxisLabels="chartData.map(item => item.Category)"
@@ -71,7 +69,8 @@
 <script lang="ts">
 import BarChart from './components/BarChart.vue'
 import VariableSelect from './components/VariableSelect.vue'
-import DocumentationContent from "./components/DocumentationContent.vue"
+import DocumentationContent from './components/DocumentationContent.vue'
+import EmptyState from './components/EmptyState.vue';
 import * as echarts from "echarts";
 import type { DataPoint } from './models';
 import { defineComponent } from "vue";
@@ -86,7 +85,8 @@ export default defineComponent({
         VariableSelect,
         DocumentationContent,
         BsButton,
-        BsLayoutDefault
+        BsLayoutDefault,
+        EmptyState
     },
     data() {
         return {
@@ -132,6 +132,12 @@ export default defineComponent({
 
 header {
   line-height: 1.5;
+}
+
+.tab-content {
+  padding-left: 0px;
+  padding-right: 100px;
+  padding-top: 20px;
 }
 
 .logo {

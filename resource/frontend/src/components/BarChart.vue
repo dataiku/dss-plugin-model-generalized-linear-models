@@ -6,7 +6,7 @@
       :init-options="{
           renderer: 'canvas',
       }"
-      style="height: 400px; width: 100%; min-width: 400px"
+      style="height: 400px; width: 100%; min-width: 600px"
     />
   </template>
   
@@ -45,7 +45,6 @@
   },
   data() {
     return {
-      //chartData: this.createChartData(this.xaxisLabels, this.barData, this.observedAverageLine, this.fittedAverageLine),
       chartOption: undefined as undefined | any,
     }
   },
@@ -71,9 +70,9 @@
                     },
                 ],
                 grid: {
-                    top: 45,
+                    top: 40,
                     left: 15,
-                    right: 15,
+                    right: 100,
                     containLabel: true,
                 },
                 series: [
@@ -112,6 +111,15 @@
                         data: this.fittedAverageLine,
                     },
                 ],
+                legend: {
+                  // Try 'horizontal'
+                  orient: 'vertical',
+                  right: '0%',
+                  top: 'center'
+                },
+                title: {
+                  text: this.chartTitle
+                }
             };
         console.log(this.chartOption);
     },
