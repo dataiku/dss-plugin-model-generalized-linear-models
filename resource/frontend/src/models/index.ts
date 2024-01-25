@@ -5,3 +5,7 @@ export type DataPoint = {
     observedAverage: number;
     fittedAverage: number;
 }
+
+export type ModelPoint = { 
+    id: string;
+}

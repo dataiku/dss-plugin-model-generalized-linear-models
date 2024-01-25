@@ -22,7 +22,15 @@
                 </BsButton>
             </BsHeader>
             <BsDrawer>
+              <VariableSelect
+                  :modelValue="selectedModel"
+                  :options="models"
+                  @update:modelValue="updateModel"
+                  label="Select a model"
+                  helpMessage="Charts will be generated with respect to this model"
+                  style="min-width: 250px"></VariableSelect>
                 <VariableSelect
+                  v-if="selectedModel"
                   :modelValue="selectedDefiningVariable"
                   :options="definingVariables"
                   @update:modelValue="updateDefiningVariable"
@@ -48,8 +56,7 @@
                     class="tab-content"
                     title="One-Way Variable"
                     subtitle="Select variable in the left column to create chart"
-                    v-if="chartData.length>0"
-                />
+                    v-if="chartData.length==0"/>
                 <div class="tab-content" v-else>
                     <BarChart
                         v-if="selectedDefiningVariable"
@@ -72,7 +79,7 @@ import VariableSelect from './components/VariableSelect.vue'
 import DocumentationContent from './components/DocumentationContent.vue'
 import EmptyState from './components/EmptyState.vue';
 import * as echarts from "echarts";
-import type { DataPoint } from './models';
+import type { DataPoint, ModelPoint } from './models';
 import { defineComponent } from "vue";
 import { API } from './Api';
 import { BsButton, BsLayoutDefault } from "quasar-ui-bs";
@@ -93,6 +100,8 @@ export default defineComponent({
             chartData: [] as DataPoint[],
             selectedDefiningVariable: "",
             allData: [] as DataPoint[],
+            models: [] as ModelPoint[],
+            selectedModel: "",
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             docLogo,
             firstTabIcon,
@@ -112,12 +121,24 @@ export default defineComponent({
         },
         async updateDefiningVariable(value: string) {
           this.selectedDefiningVariable = value;
+        },
+        async updateModel(value: string) {
+          this.selectedModel = value;
+          const dataResponse = await API.getData({ id: value });
+          console.log(dataResponse);
+          console.log(dataResponse.data);
+          console.log(dataResponse?.data);
+          this.allData = dataResponse?.data;
+          this.definingVariables = [...new Set(this.allData.map(item => item.definingVariable))];
         }
     },
     mounted() {
-      API.getData().then((data: any) => {
-        this.allData = data.data;
-        this.definingVariables = [...new Set(this.allData.map(item => item.definingVariable))];
+      // API.getData().then((data: any) => {
+      //   this.allData = data.data;
+      //   this.definingVariables = [...new Set(this.allData.map(item => item.definingVariable))];
+      // });
+      API.getModels().then((data: any) => {
+        this.models = data.data;
       });
       this.layoutRef = this.$refs.layout as InstanceType<typeof BsLayoutDefault>;
     }

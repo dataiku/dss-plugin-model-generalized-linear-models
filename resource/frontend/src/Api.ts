@@ -1,15 +1,18 @@
 import axios from "./api/index";
 
-interface HelloResponse {
-    key: string;
-}
-
-interface DataRecord {
+interface DataPoint {
+    definingVariable: string;
     Category: string;
     Value: number;
+    observedAverage: number;
+    fittedAverage: number;
+}
+
+interface ModelPoint {
+    id: string;
 }
 
 export let API = {
-    getHello: () => axios.get<HelloResponse>("/api/hello"),
-    getData: () => axios.get<DataRecord[]>("/api/data"),
+    getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
+    getModels: () => axios.get<ModelPoint[]>("/api/models"),
 }

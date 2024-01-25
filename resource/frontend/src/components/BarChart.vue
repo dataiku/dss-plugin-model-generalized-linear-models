@@ -118,7 +118,8 @@
                   top: 'center'
                 },
                 title: {
-                  text: this.chartTitle
+                  text: this.chartTitle,
+                  left: 'center'
                 }
             };
         console.log(this.chartOption);
