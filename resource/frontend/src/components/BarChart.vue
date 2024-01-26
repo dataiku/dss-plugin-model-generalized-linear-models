@@ -98,6 +98,7 @@
                         yAxisIndex: 0, // Assign to the left Y-axis
                         itemStyle: {
                             color: "#A77BCA",
+
                             opacity: 0.7,
                         },
                         z: 3, // Higher z-index for main bars
@@ -114,7 +115,6 @@
                         z: 3, // Higher z-index for main bars
                         data: this.fittedAverageLine,
                     },
-                    ,
                     {
                         name: "Base Level Prediction",
                         type: "line",
