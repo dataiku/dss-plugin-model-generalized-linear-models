@@ -59,13 +59,20 @@
                     v-if="chartData.length==0"/>
                 <div class="tab-content" v-else>
                     <BarChart
-                        v-if="selectedDefiningVariable"
-                        :xaxisLabels="chartData.map(item => item.Category)"
-                        :barData="chartData.map(item => item.Value)"
-                        :observedAverageLine="chartData.map(item => item.observedAverage)"
-                        :fittedAverageLine="chartData.map(item => item.fittedAverage)"
-                        :chartTitle="selectedDefiningVariable"
+                      v-if="selectedDefiningVariable"
+                      :xaxisLabels="chartData.map(item => item.Category)"
+                      :barData="chartData.map(item => item.Value)"
+                      :observedAverageLine="chartData.map(item => item.observedAverage)"
+                      :fittedAverageLine="chartData.map(item => item.fittedAverage)"
+                      :baseLevelPredictionLine="chartData.map(item => item.baseLevelPrediction)"
+                      :chartTitle="selectedDefiningVariable"
                       />
+                    <BsTable
+                      title="Relativities"
+                      :rows="relativities"
+                      :columns="relativitiesColumns"
+                      row-key="name"
+                    />
                 </div>
             </BsContent>
         </BsTab>
@@ -82,9 +89,33 @@ import * as echarts from "echarts";
 import type { DataPoint, ModelPoint } from './models';
 import { defineComponent } from "vue";
 import { API } from './Api';
-import { BsButton, BsLayoutDefault } from "quasar-ui-bs";
+import { BsButton, BsLayoutDefault, BsTable } from "quasar-ui-bs";
 import docLogo from "./assets/images/doc-logo-example.svg";
 import firstTabIcon from "./assets/images/first-tab-icon.svg";
+
+const columns = [
+        { name: 'class', align: 'center', label: 'Class', field: 'class', sortable: true, dataType:'string' },
+        { name: 'relativity', align: 'center', label: 'Relativity', field: 'relativity', sortable: true, dataType:'double' },
+      ]
+
+const rows = [
+    {
+        class: 'January',
+        relativity: 1.0,
+    },
+    {
+        class: 'February',
+        relativity: 1.087,
+    },
+    {
+        class: 'March',
+        relativity: 0.98,
+    },
+    {
+        class: 'April',
+        relativity: 1.12,
+    }
+  ]
 
 export default defineComponent({
     components: {
@@ -93,7 +124,8 @@ export default defineComponent({
         DocumentationContent,
         BsButton,
         BsLayoutDefault,
-        EmptyState
+        EmptyState,
+        BsTable
     },
     data() {
         return {
@@ -106,6 +138,8 @@ export default defineComponent({
             docLogo,
             firstTabIcon,
             definingVariables: [] as String[],
+            relativities: rows,
+            relativitiesColumns: columns,
         };
     },
     watch: {
@@ -159,6 +193,10 @@ header {
   padding-left: 0px;
   padding-right: 100px;
   padding-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: var(--bs-spacing-13, 52px);
+  min-height: 350px;
 }
 
 .logo {

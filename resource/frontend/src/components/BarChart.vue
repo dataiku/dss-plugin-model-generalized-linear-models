@@ -6,7 +6,7 @@
       :init-options="{
           renderer: 'canvas',
       }"
-      style="height: 400px; width: 100%; min-width: 600px"
+      style="height: 400px; width: 100%; min-width: 500px"
     />
   </template>
   
@@ -34,6 +34,10 @@
       required: true
     },
     fittedAverageLine: {
+      type: Array,
+      required: true
+    },
+    baseLevelPredictionLine: {
       type: Array,
       required: true
     },
@@ -65,23 +69,23 @@
                     {
                         type: "value",
                         position: "right",
-                        name: "exposure",
+                        name: "weights",
                         splitLine: {show: false} ,
                     },
                 ],
                 grid: {
                     top: 40,
-                    left: 15,
-                    right: 100,
+                    left: 0,
+                    right: 170,
                     containLabel: true,
                 },
                 series: [
                     {
-                        name: "Exposure",
+                        name: "Weights",
                         type: "bar",
                         yAxisIndex: 1, // Assign to the right Y-axis
                         itemStyle: {
-                            color: "#C4C4C4",
+                            color: "#D9D8D6",
                             // color: "gray",
                             opacity: 0.7, // Semi-transparent or different color
                         },
@@ -89,26 +93,38 @@
                         data: this.barData
                     },
                     {
-                        name: "observed",
+                        name: "Observed Average",
                         type: "line",
                         yAxisIndex: 0, // Assign to the left Y-axis
                         itemStyle: {
-                            color: "#0B590B",
+                            color: "#A77BCA",
                             opacity: 0.7,
                         },
                         z: 3, // Higher z-index for main bars
                         data: this.observedAverageLine,
                     },
                     {
-                        name: "fitted",
+                        name: "Fitted Average",
                         type: "line",
                         yAxisIndex: 0, // Assign to the left Y-axis
                         itemStyle: {
-                            color: "#0BAA0B",
+                            color: "#008675",
                             opacity: 0.7,
                         },
                         z: 3, // Higher z-index for main bars
                         data: this.fittedAverageLine,
+                    },
+                    ,
+                    {
+                        name: "Base Level Prediction",
+                        type: "line",
+                        yAxisIndex: 0, // Assign to the left Y-axis
+                        itemStyle: {
+                            color: "#26d07c",
+                            opacity: 0.7,
+                        },
+                        z: 3, // Higher z-index for main bars
+                        data: this.baseLevelPredictionLine,
                     },
                 ],
                 legend: {
@@ -122,7 +138,6 @@
                   left: 'center'
                 }
             };
-        console.log(this.chartOption);
     },
   },
   mounted() {

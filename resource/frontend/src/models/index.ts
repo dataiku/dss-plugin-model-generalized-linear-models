@@ -4,6 +4,7 @@ export type DataPoint = {
     Value: number;
     observedAverage: number;
     fittedAverage: number;
+    baseLevelPrediction: number;
 }
 
 export type ModelPoint = { 

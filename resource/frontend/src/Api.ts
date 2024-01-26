@@ -6,6 +6,7 @@ interface DataPoint {
     Value: number;
     observedAverage: number;
     fittedAverage: number;
+    baseLevelPrediction: number;
 }
 
 interface ModelPoint {
