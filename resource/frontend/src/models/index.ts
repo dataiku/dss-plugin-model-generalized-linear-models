@@ -7,6 +7,12 @@ export type DataPoint = {
     baseLevelPrediction: number;
 }
 
+export type RelativityPoint {
+    variable: string;
+    category: string;
+    relativity: number;
+}
+
 export type ModelPoint = { 
     id: string;
 }

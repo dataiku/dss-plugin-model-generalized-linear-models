@@ -68,9 +68,10 @@
                       :chartTitle="selectedDefiningVariable"
                       />
                     <BsTable
-                      title="Relativities"
+                      :title="selectedDefiningVariable"
                       :rows="relativities"
                       :columns="relativitiesColumns"
+                      :globalSearch="false"
                       row-key="name"
                     />
                 </div>
@@ -86,7 +87,7 @@ import VariableSelect from './components/VariableSelect.vue'
 import DocumentationContent from './components/DocumentationContent.vue'
 import EmptyState from './components/EmptyState.vue';
 import * as echarts from "echarts";
-import type { DataPoint, ModelPoint } from './models';
+import type { DataPoint, ModelPoint, RelativityPoint } from './models';
 import { defineComponent } from "vue";
 import { API } from './Api';
 import { BsButton, BsLayoutDefault, BsTable } from "quasar-ui-bs";
@@ -132,6 +133,8 @@ export default defineComponent({
             chartData: [] as DataPoint[],
             selectedDefiningVariable: "",
             allData: [] as DataPoint[],
+            relativitiesData: [] as RelativityPoint[],
+            relativitiesTable: [] as RelativityPoint[],
             models: [] as ModelPoint[],
             selectedModel: "",
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
@@ -145,6 +148,12 @@ export default defineComponent({
     watch: {
       selectedDefiningVariable(newValue: string) {
         this.chartData = this.allData.filter(item => item.definingVariable === newValue);
+        this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue);
+        this.relativitiesColumns = columns;
+        this.relativities = this.relativitiesTable.map( (point) => {
+          const relativity = {'class': point.category, 'relativity': point.relativity};
+          return relativity
+        })
       }
     },
     methods: {
@@ -159,11 +168,10 @@ export default defineComponent({
         async updateModel(value: string) {
           this.selectedModel = value;
           const dataResponse = await API.getData({ id: value });
-          console.log(dataResponse);
-          console.log(dataResponse.data);
-          console.log(dataResponse?.data);
           this.allData = dataResponse?.data;
           this.definingVariables = [...new Set(this.allData.map(item => item.definingVariable))];
+          const relativityResponse = await API.getRelativities({ id: value });
+          this.relativitiesData = relativityResponse?.data;
         }
     },
     mounted() {

@@ -32,3 +32,17 @@ def get_data():
             'baseLevelPrediction': [0.5, 0.5, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7]
         })
     return jsonify(df.to_dict('records'))
+
+@fetch_api.route("/relativities", methods=["POST"])
+def get_relativities():
+    request_json = request.get_json()
+    model = request_json["id"]
+    if model == 'model_1':
+        df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
+                        'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
+                        'relativity': [1.0, 1.087, 0.98, 0.79, 1.0, 0.99, 1.1, 1.05]})
+    else:
+        df = pd.DataFrame({'variable': ['Variable3','Variable3','Variable3','Variable3', 'Variable4','Variable4','Variable4','Variable4'],
+                        'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
+                        'relativity': [1.0, 1.087, 0.98, 0.79, 1.0, 0.99, 1.1, 1.05]})
+    return jsonify(df.to_dict('records'))
