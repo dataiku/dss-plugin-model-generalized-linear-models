@@ -28,7 +28,27 @@ class ModelHandler:
         self.predictor = self.model.get_predictor()
         self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
-        
+    
+    def get_features(self):
+        self.features = self.model_info_handler.get_per_feature()
+        modeling_params = self.model_info_handler.get_modeling_params()
+        self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
+        self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
+        important_columns = self.offset_columns + self.exposure_columns
+        non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
+        self.used_features = [feature for feature in non_excluded_features if self.features[feature]['role']=='INPUT']
+        self.candidate_features = [feature for feature in non_excluded_features if self.features[feature]['role']=='REJECT']
+
+    def get_base_values(self):
+        base_values = {}
+        collector_data = self.model_info_handler.get_collector_data()['per_feature']
+        for feature in self.used_features:
+            if self.features[feature]['type'] == 'CATEGORY':
+                base_values[feature] = collector_data[feature]['dropped_modality']
+            else:
+                # Should weight the average with exposure/weight
+                base_values[feature] = collector_data[feature]['average']
+
     def get_coefficients(self):
         """
         Retrieves the coefficients of the model predictor.
