@@ -4,8 +4,6 @@ import pandas as pd
 import logging
 
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role, get_recipe_config
-from relativity_calculations.relativity_calculator import RelativityCalculator
-from relativity_calculations.base_calculations import calculate_base_values
 from dku_config.dku_model_handler import ModelHandler
 from dataiku.customrecipe import get_recipe_config
 from dku_config import DkuConfig
