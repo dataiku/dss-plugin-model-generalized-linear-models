@@ -27,25 +27,10 @@ dku_config.add_param(
 )
 # Example usage
 model_handler = ModelHandler(dku_config.dku_model)
-coefficients = model_handler.get_coefficients()
-link_function = model_handler.get_link_function()
-preprocessed_df = model_handler.preprocess_dataframe(model_handler.get_dataframe('train'))
-base_values = calculate_base_values(preprocessed_df)
-
-relativity_calculator = RelativityCalculator(coefficients, base_values, link_function)
-relativities = relativity_calculator.calculate_relativities()
-
-variable_names = list(coefficients.keys())
-
-# Merge dictionaries
-combined_data = {var: {'Coefficient': coefficients[var], 
-                       'Base Value': base_values[var], 
-                       'Relativity': relativities[var]} for var in variable_names}
 
 # Create DataFrame
-df = pd.DataFrame.from_dict(combined_data, orient='index')
-
+relativities = model_handler.relativities_df
 
 # Write recipe outputs
 dku_output_dataset = dataiku.Dataset(dku_config.relativities_output_dataset_name)
-dku_output_dataset.write_with_schema(df.reset_index())
+dku_output_dataset.write_with_schema(relativities)
