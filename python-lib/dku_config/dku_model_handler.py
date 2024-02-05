@@ -28,7 +28,59 @@ class ModelHandler:
         self.predictor = self.model.get_predictor()
         self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+        self.compute_features()
+        self.compute_base_values()
+        self.compute_relativities()
+    
+    def compute_features(self):
+        self.features = self.model_info_handler.get_per_feature()
+        modeling_params = self.model_info_handler.get_modeling_params()
+        self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
+        self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
+        important_columns = self.offset_columns + self.exposure_columns
+        non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
+        self.used_features = [feature for feature in non_excluded_features if self.features[feature]['role']=='INPUT']
+        self.candidate_features = [feature for feature in non_excluded_features if self.features[feature]['role']=='REJECT']
+
+    def compute_base_values(self):
+        self.base_values = {}
+        self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
+        for feature in self.used_features:
+            if self.features[feature]['type'] == 'CATEGORY':
+                self.base_values[feature] = self.collector_data[feature]['dropped_modality']
+            else:
+                # Should weight the average with exposure/weight
+                self.base_values[feature] = self.collector_data[feature]['stats']['average']
+
+    def compute_relativities(self):
+        sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
+        self.relativities = {}
+        for feature in self.base_values.keys():
+            sample_train_row[feature] = self.base_values[feature]
+        baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
+        for feature in self.base_values.keys():
+            train_row_copy = sample_train_row.copy()
+            self.relativities[feature] =  {self.base_values[feature]: 1.0}
+            if self.features[feature]['type'] == 'CATEGORY':
+                for modality in self.collector_data[feature]['category_possible_values']:
+                    train_row_copy[feature] = modality
+                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+                    self.relativities[feature][modality] = prediction/baseline_prediction
+            else:
+                train_row_copy = sample_train_row.copy()
+                min_value = self.collector_data[feature]['stats']['min']
+                max_value = self.collector_data[feature]['stats']['max']
+                for value in np.linspace(min_value, max_value, 10):
+                    train_row_copy[feature] = value
+                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+                    self.relativities[feature][value] = prediction/baseline_prediction
         
+        self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
+
+        for feature, values in self.relativities.items():
+            for value, relativity in values.items():
+                self.relativities_df = self.relativities_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
+
     def get_coefficients(self):
         """
         Retrieves the coefficients of the model predictor.
