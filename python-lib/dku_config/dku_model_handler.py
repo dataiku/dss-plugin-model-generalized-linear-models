@@ -65,7 +65,7 @@ class ModelHandler:
                 self.base_values[feature] = feature_data.get('dropped_modality')
                 if self.base_values[feature] is None:
                     # Handle the case where 'dropped_modality' is not available
-                    raise ValueError(f"Warning: 'dropped_modality' not found for feature {feature}. Please ensure drop one dummy is enabled")
+                    raise ValueError(f"Warning: 'dropped_modality' not found for feature {feature}. Please ensure drop one dummy is enabled and clipping uses max nb categories")
             elif self.features[feature]['type'] == 'NUMERIC':
                 self.base_values[feature] = feature_data['stats']['average']
             else:
