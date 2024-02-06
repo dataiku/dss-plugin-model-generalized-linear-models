@@ -27,7 +27,7 @@ dku_config.add_param(
 model_handler = ModelHandler(dku_config.dku_model)
 
 # Create DataFrame
-relativities = model_handler.relativities_df
+relativities = model_handler.get_relativities_df()
 
 # Write recipe outputs
 dku_output_dataset = dataiku.Dataset(dku_config.relativities_output_dataset_name)
