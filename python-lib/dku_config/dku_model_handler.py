@@ -61,8 +61,12 @@ class ModelHandler:
         for feature in self.used_features:
             feature_data = collector_data[feature]
             if self.features[feature]['type'] == 'CATEGORY':
-                self.base_values[feature] = feature_data['dropped_modality']
-            elif self.features[feature]['type'] == 'NUMERICAL':
+                # Use .get to avoid KeyError if 'dropped_modality' key is missing
+                self.base_values[feature] = feature_data.get('dropped_modality')
+                if self.base_values[feature] is None:
+                    # Handle the case where 'dropped_modality' is not available
+                    raise ValueError(f"Warning: 'dropped_modality' not found for feature {feature}. Please ensure drop one dummy is enabled")
+            elif self.features[feature]['type'] == 'NUMERIC':
                 self.base_values[feature] = feature_data['stats']['average']
             else:
                 raise ValueError(f"Unsupported feature type:{self.features[feature]['type']}")
@@ -71,7 +75,14 @@ class ModelHandler:
         """Computes relativities for each feature based on their base values."""
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
         self.relativities = {}
-        baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
+        try:
+            baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
+            # Rest of the method...
+        except ValueError as e:
+            # Log the error and more details for debugging
+            print(f"Error during baseline prediction: {e}")
+            print(f"Input shape: {sample_train_row.shape}, Expected shape: [Your expected shape here]")
+            raise
         
         for feature in self.base_values:
             relativity = self._calculate_feature_relativity(feature, sample_train_row, baseline_prediction)
