@@ -3,11 +3,9 @@ from dataiku.doctor.posttraining.model_information_handler import PredictionMode
 import pandas as pd
 import numpy as np
 from dataiku import pandasutils as pdu
+import logging 
+logger = logging.getLogger(__name__)
 
-import dataiku
-from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
-import pandas as pd
-import numpy as np
 
 class ModelHandler:
     """
@@ -75,13 +73,16 @@ class ModelHandler:
         """Computes relativities for each feature based on their base values."""
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
         self.relativities = {}
+        for feature in self.base_values.keys():
+            sample_train_row[feature] = self.base_values[feature]
+
         try:
             baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
             # Rest of the method...
         except ValueError as e:
             # Log the error and more details for debugging
-            print(f"Error during baseline prediction: {e}")
-            print(f"Input shape: {sample_train_row.shape}, Expected shape: [Your expected shape here]")
+            logger.info(f"Error during baseline prediction: {e}")
+            logger.info(f"Input shape: {sample_train_row.shape}, Expected shape: {len(self.model_info_handler.get_collector_data().get('feature_order'))}")
             raise
         
         for feature in self.base_values:
@@ -89,6 +90,7 @@ class ModelHandler:
             self.relativities[feature] = relativity
         
         self._prepare_relativities_df()
+        
 
     def _calculate_feature_relativity(self, feature, sample_row, baseline_prediction):
         """Calculates relativity for a single feature."""
@@ -110,10 +112,19 @@ class ModelHandler:
 
     def _prepare_relativities_df(self):
         """Prepares a DataFrame from computed relativities for analysis."""
+        coefficients_dict = self.get_coefficients()
+        modified_coefficients_dict = {key.split(':', 1)[-1] if ':' in key else key: value for key, value in coefficients_dict.items()}
+
         self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
-                self.relativities_df = self.relativities_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
+                coefficient = coefficients_dict.get(f"{feature}:{value}", None)
+                self.relativities_df = self.relativities_df.append({
+                    'feature': feature,
+                    'value': value, 
+                    'relativity': relativity,
+                    'coefficent':coefficient
+                    }, ignore_index=True)
 
     def get_coefficients(self):
         """
