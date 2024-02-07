@@ -119,7 +119,8 @@ class ModelHandler:
         
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
-                coefficient = coefficients_dict.get(f"{feature}:{value}", None)
+                filter_value = f"{feature}:{value}",
+                coefficient = modified_coefficients_dict.get(filter_value, None)
                 logger.info(f"Appending Coefficent {coefficient}")
                 
                 self.relativities_df = self.relativities_df.append({
