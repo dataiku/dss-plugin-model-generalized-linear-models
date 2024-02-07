@@ -53,53 +53,21 @@ class ModelHandler:
         self.candidate_features = [feature for feature in non_excluded_features if self.features[feature]['role'] == 'REJECT']
 
     def _compute_base_values(self):
-        """Calculates base values for each used feature, considering their type and computes weighted average for categorical variables if applicable."""
+        """Calculates base values for each used feature, considering their type."""
         self.base_values = {}
         collector_data = self.model_info_handler.get_collector_data()['per_feature']
-        exposure_column = self.exposure_columns[0] if self.exposure_columns else None
-        train_df = self.model_info_handler.get_train_df() if exposure_column and exposure_column in self.model_info_handler.get_train_df().columns else None
-
         for feature in self.used_features:
             feature_data = collector_data[feature]
-            feature_type = self.features[feature]['type']
-
-            if feature_type == 'CATEGORY':
-                if exposure_column and train_df is not None:
-                    # Compute weighted average for categorical variables using dummy encoding
-                    # Ensure categorical variable is encoded into dummies
-                    dummies = pd.get_dummies(train_df[feature])
-                    weighted_sums = (dummies.T * train_df[exposure_column]).sum(axis=1)
-                    total_exposure = train_df[exposure_column].sum()
-
-                    if total_exposure > 0:
-                        weighted_averages = weighted_sums / total_exposure
-                        # Choose a method to aggregate these weighted averages into a single value
-                        # Here, we simply pick the maximum as an example
-                        self.base_values[feature] = weighted_averages.max()
-                    else:
-                        self.base_values[feature] = 0  # Handle case where total exposure is 0
-                else:
-                    # Use .get to avoid KeyError if 'dropped_modality' key is missing
-                    self.base_values[feature] = feature_data.get('dropped_modality')
-                    if self.base_values[feature] is None:
-                        # Handle the case where 'dropped_modality' is not available
-                        raise ValueError(f"Warning: 'dropped_modality' not found for feature {feature}. Please ensure drop one dummy is enabled and clipping uses max nb categories")
-            elif feature_type == 'NUMERIC':
-                if exposure_column and train_df is not None:
-                    # Calculate weighted average for continuous features
-                    weighted_sum = (train_df[feature] * train_df[exposure_column]).sum()
-                    total_exposure = train_df[exposure_column].sum()
-                    if total_exposure > 0:
-                        weighted_average = weighted_sum / total_exposure
-                    else:
-                        weighted_average = 0  # Handle case where total exposure is 0 to avoid division by zero
-                    self.base_values[feature] = weighted_average
-                else:
-                    # Fallback to unweighted average if exposure column is not found
-                    self.base_values[feature] = feature_data['stats']['average']
+            if self.features[feature]['type'] == 'CATEGORY':
+                # Use .get to avoid KeyError if 'dropped_modality' key is missing
+                self.base_values[feature] = feature_data.get('dropped_modality')
+                if self.base_values[feature] is None:
+                    # Handle the case where 'dropped_modality' is not available
+                    raise ValueError(f"Warning: 'dropped_modality' not found for feature {feature}. Please ensure drop one dummy is enabled and clipping uses max nb categories")
+            elif self.features[feature]['type'] == 'NUMERIC':
+                self.base_values[feature] = feature_data['stats']['average']
             else:
-                raise ValueError(f"Unsupported feature type: {feature_type}")
-
+                raise ValueError(f"Unsupported feature type:{self.features[feature]['type']}")
 
     def _compute_relativities(self):
         """Computes relativities for each feature based on their base values."""
