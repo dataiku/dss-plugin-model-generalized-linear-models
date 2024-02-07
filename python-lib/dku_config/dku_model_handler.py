@@ -114,11 +114,14 @@ class ModelHandler:
         """Prepares a DataFrame from computed relativities for analysis."""
         coefficients_dict = self.get_coefficients()
         modified_coefficients_dict = {key.split(':', 1)[-1] if ':' in key else key: value for key, value in coefficients_dict.items()}
-
-        self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
+        logger.info(f"modified_coefficients_dict are {modified_coefficients_dict}")
+        self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity', 'coefficent'])
+        
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
                 coefficient = coefficients_dict.get(f"{feature}:{value}", None)
+                logger.info(f"Appending Coefficent {coefficient")
+                
                 self.relativities_df = self.relativities_df.append({
                     'feature': feature,
                     'value': value, 
