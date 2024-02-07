@@ -93,10 +93,11 @@ import { API } from './Api';
 import { BsButton, BsLayoutDefault, BsTable } from "quasar-ui-bs";
 import docLogo from "./assets/images/doc-logo-example.svg";
 import firstTabIcon from "./assets/images/first-tab-icon.svg";
+import type { QTableColumn } from 'quasar';
 
-const columns = [
-        { name: 'class', align: 'center', label: 'Class', field: 'class', sortable: true, dataType:'string' },
-        { name: 'relativity', align: 'center', label: 'Relativity', field: 'relativity', sortable: true, dataType:'double' },
+const columns: QTableColumn[] = [
+        { name: 'class', align: 'center', label: 'Class', field: 'class',sortable: true},
+        { name: 'relativity', align: 'center', label: 'Relativity', field: 'relativity', sortable: true},
       ]
 
 const rows = [
