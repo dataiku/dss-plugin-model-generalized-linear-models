@@ -3,83 +3,133 @@ from dataiku.doctor.posttraining.model_information_handler import PredictionMode
 import pandas as pd
 import numpy as np
 from dataiku import pandasutils as pdu
+import logging 
+logger = logging.getLogger(__name__)
+
 
 class ModelHandler:
     """
-    A class to handle interactions with a Dataiku model.
-
-    Attributes:
-        model_id (str): The ID of the model.
-        model (dataiku.Model): The Dataiku model object.
-        predictor (Predictor): The predictor object of the model.
-        full_model_id (str): The full model ID of the active model version.
-        model_info_handler (PredictionModelInformationHandler): Handler for model information.
+    A class to manage interactions with a Dataiku model, including feature computation,
+    base value calculation, and relativity computation based on model data.
     """
 
     def __init__(self, model_id):
         """
-        Initializes the ModelHandler with a specific model ID.
+        Initializes the ModelHandler with a specific model ID, setting up the model,
+        predictor, and handlers for accessing model information and performing initial computations.
 
         Args:
-            model_id (str): The ID of the model to handle.
+            model_id (str): The ID of the model to manage.
         """
         self.model_id = model_id
         self.model = dataiku.Model(model_id)
         self.predictor = self.model.get_predictor()
-        self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
+        self.full_model_id = self._extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
-        self.compute_features()
-        self.compute_base_values()
-        self.compute_relativities()
-    
-    def compute_features(self):
+
+        # Perform initial computations
+        self._compute_features()
+        self._compute_base_values()
+        self._compute_relativities()
+
+    def _compute_features(self):
+        """Computes and categorizes features based on their roles and types."""
         self.features = self.model_info_handler.get_per_feature()
         modeling_params = self.model_info_handler.get_modeling_params()
         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
+
+        if len(self.offset_columns) > 1:
+            raise ValueError("Only one offset column is allowed. Multiple offset columns provided.")
+
+        if len(self.exposure_columns) > 1:
+            raise ValueError("Only one exposure column is allowed. Multiple exposure columns provided.")
+
+
         important_columns = self.offset_columns + self.exposure_columns
-        non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
-        self.used_features = [feature for feature in non_excluded_features if self.features[feature]['role']=='INPUT']
-        self.candidate_features = [feature for feature in non_excluded_features if self.features[feature]['role']=='REJECT']
+        non_excluded_features = [feature for feature in self.features if feature not in important_columns]
+        
+        self.used_features = [feature for feature in non_excluded_features if self.features[feature]['role'] == 'INPUT']
+        self.candidate_features = [feature for feature in non_excluded_features if self.features[feature]['role'] == 'REJECT']
 
-    def compute_base_values(self):
+    def _compute_base_values(self):
+        """Calculates base values for each used feature, considering their type."""
         self.base_values = {}
-        self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
+        collector_data = self.model_info_handler.get_collector_data()['per_feature']
         for feature in self.used_features:
+            feature_data = collector_data[feature]
             if self.features[feature]['type'] == 'CATEGORY':
-                self.base_values[feature] = self.collector_data[feature]['dropped_modality']
+                # Use .get to avoid KeyError if 'dropped_modality' key is missing
+                self.base_values[feature] = feature_data.get('dropped_modality')
+                if self.base_values[feature] is None:
+                    # Handle the case where 'dropped_modality' is not available
+                    raise ValueError(f"Warning: 'dropped_modality' not found for feature {feature}. Please ensure drop one dummy is enabled and clipping uses max nb categories")
+            elif self.features[feature]['type'] == 'NUMERIC':
+                self.base_values[feature] = feature_data['stats']['average']
             else:
-                # Should weight the average with exposure/weight
-                self.base_values[feature] = self.collector_data[feature]['stats']['average']
+                raise ValueError(f"Unsupported feature type:{self.features[feature]['type']}")
 
-    def compute_relativities(self):
+    def _compute_relativities(self):
+        """Computes relativities for each feature based on their base values."""
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
         self.relativities = {}
         for feature in self.base_values.keys():
             sample_train_row[feature] = self.base_values[feature]
-        baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
-        for feature in self.base_values.keys():
-            train_row_copy = sample_train_row.copy()
-            self.relativities[feature] =  {self.base_values[feature]: 1.0}
-            if self.features[feature]['type'] == 'CATEGORY':
-                for modality in self.collector_data[feature]['category_possible_values']:
-                    train_row_copy[feature] = modality
-                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                    self.relativities[feature][modality] = prediction/baseline_prediction
-            else:
-                train_row_copy = sample_train_row.copy()
-                min_value = self.collector_data[feature]['stats']['min']
-                max_value = self.collector_data[feature]['stats']['max']
-                for value in np.linspace(min_value, max_value, 10):
-                    train_row_copy[feature] = value
-                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                    self.relativities[feature][value] = prediction/baseline_prediction
-        
-        self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
 
+        try:
+            baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
+            # Rest of the method...
+        except ValueError as e:
+            # Log the error and more details for debugging
+            logger.info(f"Error during baseline prediction: {e}")
+            logger.info(f"Input shape: {sample_train_row.shape}, Expected shape: {len(self.model_info_handler.get_collector_data().get('feature_order'))}")
+            raise
+        
+        for feature in self.base_values:
+            relativity = self._calculate_feature_relativity(feature, sample_train_row, baseline_prediction)
+            self.relativities[feature] = relativity
+        
+        self._prepare_relativities_df()
+        
+
+    def _calculate_feature_relativity(self, feature, sample_row, baseline_prediction):
+        """Calculates relativity for a single feature."""
+        relativity = {self.base_values[feature]: 1.0}
+        collector_data = self.model_info_handler.get_collector_data()['per_feature'][feature]
+
+        if self.features[feature]['type'] == 'CATEGORY':
+            for modality in collector_data['category_possible_values']:
+                sample_row[feature] = modality
+                prediction = self.predictor.predict(sample_row).iloc[0][0]
+                relativity[modality] = prediction / baseline_prediction
+        else:
+            min_value, max_value = collector_data['stats']['min'], collector_data['stats']['max']
+            for value in np.linspace(min_value, max_value, 10):
+                sample_row[feature] = value
+                prediction = self.predictor.predict(sample_row).iloc[0][0]
+                relativity[value] = prediction / baseline_prediction
+        return relativity
+
+    def _prepare_relativities_df(self):
+        """Prepares a DataFrame from computed relativities for analysis."""
+        coefficients_dict = self.get_coefficients()
+        modified_coefficients_dict = {key.split(':', 1)[-1] if ':' in key else key: value for key, value in coefficients_dict.items()}
+        logger.info(f"modified_coefficients_dict are {modified_coefficients_dict}")
+        self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity', 'coefficent'])
+        
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
-                self.relativities_df = self.relativities_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
+                filter_value = f"{feature}:{value}"
+                logger.info(f"Using filter value {filter_value}")
+                coefficient = modified_coefficients_dict.get(filter_value, None)
+                logger.info(f"Appending Coefficent {coefficient}")
+                
+                self.relativities_df = self.relativities_df.append({
+                    'feature': feature,
+                    'value': value, 
+                    'relativity': relativity,
+                    'coefficent':coefficient
+                    }, ignore_index=True)
 
     def get_coefficients(self):
         """
@@ -134,7 +184,7 @@ class ModelHandler:
         preprocessed_values = self.predictor.preprocess(df)[0]
         return pd.DataFrame(preprocessed_values, columns=column_names)
     
-    def extract_active_fullModelId(self, json_data):
+    def _extract_active_fullModelId(self, json_data):
         """
         Extracts the fullModelId of the active model version from the given JSON data.
 
@@ -148,3 +198,17 @@ class ModelHandler:
             if item.get('active'):
                 return item['snippet'].get('fullModelId')
         return None
+    
+    def get_relativities_df(self):
+        """
+        Returns the DataFrame containing relativities for each feature and their values.
+
+        Returns:
+            pd.DataFrame: A DataFrame with columns ['feature', 'value', 'relativity']
+                        showing the relativity of each feature value against the baseline.
+        """
+        # Check if the relativities DataFrame has already been prepared
+        if not hasattr(self, 'relativities_df'):
+            self._prepare_relativities_df()
+
+        return self.relativities_df
