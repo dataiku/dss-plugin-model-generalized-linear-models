@@ -67,7 +67,9 @@ class ModelHandler:
                 if exposure_column and train_df is not None:
                     # Compute weighted average for categorical variables using dummy encoding
                     # Ensure categorical variable is encoded into dummies
-                    dummies = pd.get_dummies(train_df[feature])
+                    dropped_feature = feature_data.get('dropped_modality')
+
+                    dummies = pd.get_dummies(train_df[feature]).drop(columns=[dropped_feature], errors='ignore')
                     weighted_sums = (dummies.T * train_df[exposure_column]).sum(axis=1)
                     total_exposure = train_df[exposure_column].sum()
 
