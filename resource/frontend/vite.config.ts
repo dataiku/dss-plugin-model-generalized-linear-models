@@ -25,7 +25,7 @@ const config = defineConfig({
       "/api": {
         target: "http://127.0.0.1:5000",
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+        //rewrite: (path) => path.replace(/^\/api/, ""),
       }
     }
   },

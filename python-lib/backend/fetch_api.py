@@ -2,7 +2,10 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 from glm_handler.service import glm_handler
 
-fetch_api = Blueprint("fetch_api", __name__, url_prefix="/")
+fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
+
+predicted_base = glm_handler.model_handler.get_predicted_and_base('ClaimNb', None)
+relativities = glm_handler.model_handler.relativities_df
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
@@ -13,6 +16,9 @@ def get_models():
 def get_data():
     request_json = request.get_json()
     model = request_json["id"]
+    df = predicted_base
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
     if model == 'model_1':
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -37,6 +43,9 @@ def get_data():
 def get_relativities():
     request_json = request.get_json()
     model = request_json["id"]
+    df = relativities
+    df.columns = ['variable', 'category', 'relativity']
+    return jsonify(df.to_dict('records'))
     if model == 'model_1':
         df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
