@@ -5,20 +5,13 @@ import pandas as pd
 from glm_summary.graph_utils import compute_base_predictions
 
 
-def get_model_handler(model, version_id=None):
-    params = model.get_predictor(version_id).params
-    return PredictionModelInformationHandler(params.split_desc, params.core_params, params.model_folder,
-                                             params.model_folder)
-
-
 def get_original_model_handler(webapp_config):
     fmi = webapp_config.get("trainedModelFullModelId")
     if fmi is None:
         model = dataiku.Model(webapp_config["modelId"])
         version_id = webapp_config.get("versionId")
-        original_model_handler = get_model_handler(model, version_id)
-    else:
-        original_model_handler = PredictionModelInformationHandler.from_full_model_id(fmi)
+        fmi = "S-{project_key}-{model_id}-{version_id}".format(project_key=model.project_key, model_id=model.get_id(), version_id=version_id)
+    original_model_handler = PredictionModelInformationHandler.from_full_model_id(fmi)
     return original_model_handler
 
 def get_ave_data(webapp_config):
