@@ -200,6 +200,9 @@ export default defineComponent({
           const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
           return relativity
         })
+      },
+      allData(newValue: DataPoint[]) {
+        this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
       }
     },
     methods: {
