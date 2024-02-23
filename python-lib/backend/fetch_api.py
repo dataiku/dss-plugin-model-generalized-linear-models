@@ -19,7 +19,7 @@ def get_models():
 def get_variables():
     request_json = request.get_json()
     model = request_json["id"]
-    glm_handler.model_handler.switch(model)
+    glm_handler.model_handler.switch_model(model)
     variables = glm_handler.model_handler.get_features()
     return jsonify(variables)
     if model == 'model_1':
