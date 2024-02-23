@@ -11,6 +11,7 @@ relativities = glm_handler.model_handler.relativities_df
 def get_models():
     versions = glm_handler.model_handler.get_model_versions()
     models = [{'id': k, 'name': v} for k,v in versions.items()]
+    return jsonify(models)
     models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
     return jsonify(models)
 
