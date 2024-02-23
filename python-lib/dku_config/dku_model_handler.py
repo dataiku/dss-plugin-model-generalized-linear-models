@@ -27,9 +27,9 @@ class ModelHandler:
         self.model = dataiku.Model(model_id)
         self.predictor = self.model.get_predictor()
         self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
+        self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.target_variable = self.model_info_handler.get_target_variable()
         self.weights = self.model_info_handler.get_sample_weight_variable()
-        self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.compute_features()
         self.compute_base_values()
         self.compute_relativities()
@@ -38,6 +38,8 @@ class ModelHandler:
         if full_model_id != self.full_model_id:
             self.full_model_id = full_model_id
             self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+            self.target_variable = self.model_info_handler.get_target_variable()
+            self.weights = self.model_info_handler.get_sample_weight_variable()
             self.compute_features()
             self.compute_base_values()
             self.compute_relativities()
