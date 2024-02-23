@@ -35,7 +35,7 @@ def get_variables():
 def get_data():
     request_json = request.get_json()
     model = request_json["id"]
-    df = predicted_base
+    df = predicted_base.copy()
     df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
     return jsonify(df.to_dict('records'))
     if model == 'model_1':
@@ -65,7 +65,7 @@ def get_updated_data():
     feature = request_json["feature"]
     nb_bins = request_json["nbBin"]
     predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
-    df = predicted_base
+    df = predicted_base.copy()
     print(df)
     df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
     return jsonify(df.to_dict('records'))
