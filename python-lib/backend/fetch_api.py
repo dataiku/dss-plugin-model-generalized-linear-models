@@ -18,6 +18,9 @@ def get_models():
 def get_variables():
     request_json = request.get_json()
     model = request_json["id"]
+    # glm_handler.model_handler.switch(model)
+    # variables glm_handler.model_handler.get_features()
+    # return jsonify(variables)
     if model == 'model_1':
         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
@@ -57,13 +60,14 @@ def get_data():
 @fetch_api.route("/update_bins", methods=["POST"])
 def get_updated_data():
     request_json = request.get_json()
-    #feature = request_json["feature"]
-    #nb_bins = request_json["nb_bins"]
-    #predicted_base = glm_handler.model_handler.get_predicted_and_base_feature('ClaimNb', None, feature, nb_bins)
+    print(request_json)
+    feature = request_json["feature"]
+    nb_bins = request_json["nbBin"]
+    #predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
     # df = predicted_base
     # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
     # return jsonify(df.to_dict('records'))
-    if model == 'model_1':
+    if True:
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
             'Category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],

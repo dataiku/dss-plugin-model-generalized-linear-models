@@ -52,6 +52,7 @@
                       :options="variablePoints"
                       @update:modelValue="updateVariable"
                       bsLabel="Select a Variable">
+                      <template v-slot:selected>{{ selectedVariable.variable }}</template>
                           <template #option="props">
                               <q-item v-if="props.opt.isInModel || includeSuspectVariables" v-bind="props.itemProps" clickable>
                                   <q-item-section side>
@@ -67,6 +68,7 @@
                 <BsSlider
                       v-if="selectedVariable.variableType=='numeric'"
                       v-model="nbBins"
+                      @update:modelValue="updateNbBins"
                       :min="10"
                       :max="30"
                       style="{ 'max-width': '100%' }"></BsSlider>
@@ -232,6 +234,11 @@ export default defineComponent({
           const relativityResponse = await API.getRelativities(model);
           this.relativitiesData = relativityResponse?.data;
           console.log(this.variablePoints);
+        },
+        async updateNbBins(value: number) {
+          this.nbBins = value;
+          const dataResponse = await API.updateData({feature: this.selectedVariable.variable, nbBin: value});
+          this.allData = dataResponse?.data;
         },
         // filterFn(val: string, update: any) {
         //     update(() => {
