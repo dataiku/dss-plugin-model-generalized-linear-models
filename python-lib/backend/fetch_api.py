@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 from glm_handler.service import glm_handler
 
-fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
+fetch_api = Blueprint("fetch_api", __name__, url_prefix="/")
 
 predicted_base = glm_handler.model_handler.get_predicted_and_base()
 relativities = glm_handler.model_handler.relativities_df
