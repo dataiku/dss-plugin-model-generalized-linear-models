@@ -133,7 +133,7 @@ class ModelHandler:
 
         # compile predictions
         base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
-        base_predictions.columns = ['base_' + feature for feature in used_features]
+        base_predictions.columns = ['base_' + feature]
 
         test_set = pd.concat([test_set, base_predictions], axis=1)
 
