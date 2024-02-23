@@ -1,16 +1,16 @@
 from flask import Blueprint, jsonify, request
 import pandas as pd
-# from glm_handler.service import glm_handler
+from glm_handler.service import glm_handler
 
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 
-# predicted_base = glm_handler.model_handler.get_predicted_and_base()
-# relativities = glm_handler.model_handler.relativities_df
+predicted_base = glm_handler.model_handler.get_predicted_and_base()
+relativities = glm_handler.model_handler.relativities_df
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
-    # versions = glm_handler.model_handler.get_model_versions()
-    # models = [{'id': k, 'name': v} for k,v in versions.items()]
+    versions = glm_handler.model_handler.get_model_versions()
+    models = [{'id': k, 'name': v} for k,v in versions.items()]
     models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
     return jsonify(models)
 
@@ -18,9 +18,9 @@ def get_models():
 def get_variables():
     request_json = request.get_json()
     model = request_json["id"]
-    # glm_handler.model_handler.switch(model)
-    # variables glm_handler.model_handler.get_features()
-    # return jsonify(variables)
+    glm_handler.model_handler.switch(model)
+    variables glm_handler.model_handler.get_features()
+    return jsonify(variables)
     if model == 'model_1':
         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
@@ -34,9 +34,9 @@ def get_variables():
 def get_data():
     request_json = request.get_json()
     model = request_json["id"]
-    # df = predicted_base
-    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    # return jsonify(df.to_dict('records'))
+    df = predicted_base
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
     if model == 'model_1':
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -63,10 +63,10 @@ def get_updated_data():
     print(request_json)
     feature = request_json["feature"]
     nb_bins = request_json["nbBin"]
-    #predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
-    # df = predicted_base
-    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    # return jsonify(df.to_dict('records'))
+    predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
+    df = predicted_base
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
     if True:
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -94,9 +94,9 @@ def get_updated_data():
 def get_relativities():
     request_json = request.get_json()
     model = request_json["id"]
-    # df = relativities
-    # df.columns = ['variable', 'category', 'relativity']
-    # return jsonify(df.to_dict('records'))
+    df = relativities
+    df.columns = ['variable', 'category', 'relativity']
+    return jsonify(df.to_dict('records'))
     if model == 'model_1':
         df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
