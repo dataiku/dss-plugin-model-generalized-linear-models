@@ -28,9 +28,16 @@ class ModelHandler:
         self.predictor = self.model.get_predictor()
         self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+        self.target_variable = self.model_info_handler.get_target_variable()
+        self.weights = self.model_info_handler.get_sample_weight_variable()
         self.compute_features()
         self.compute_base_values()
         self.compute_relativities()
+    
+    def get_model_versions(self):
+        versions = self.model.list_versions()
+        fmi_name = {version['snippet']['fullModelId']: version['snippet']['userMeta']['name'] for version in versions}
+        return fmi_name
     
     def compute_features(self):
         self.features = self.model_info_handler.get_per_feature()
@@ -47,6 +54,7 @@ class ModelHandler:
         self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
         for feature in self.used_features:
             if self.features[feature]['type'] == 'CATEGORY':
+                print(feature)
                 self.base_values[feature] = self.collector_data[feature]['dropped_modality']
             else:
                 # Should weight the average with exposure/weight
@@ -81,20 +89,77 @@ class ModelHandler:
             for value, relativity in values.items():
                 self.relativities_df = self.relativities_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
 
-    def get_predicted_and_base(self, target, weight, nb_bins_numerical=20, class_map=None):
+    def get_predicted_and_base_feature(self, feature, nb_bins_numerical=20, class_map=None):
         test_set = self.model_info_handler.get_test_df()[0]
-        train_set = self.model_info_handler.get_train_df()[0]
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted
         used_features = list(self.base_values.keys())
-        print(used_features)
 
-        if weight is None:
+        if self.weight is None:
             test_set['weight'] = 1
         else:
-            test_set['weight'] = test_set[weight]
+            test_set['weight'] = test_set[self.weight]
         
-        test_set['weighted_target'] = test_set[target] * test_set['weight']
+        test_set['weighted_target'] = test_set[self.target] * test_set['weight']
+        test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
+
+        test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
+        
+        # Compute base predictions
+        base_data = dict()
+        copy_test_df = test_set.copy()
+        for other_feature in [col for col in used_features if col != feature]:
+            copy_test_df[other_feature] = self.base_values[other_feature]
+        predictions = self.predictor.predict(copy_test_df)
+        if class_map is not None:  # classification
+            base_data[feature] = pd.Series([class_map[prediction] for prediction in predictions['prediction']])
+        else:
+            base_data[feature] = predictions
+
+        # compile predictions
+        base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
+        base_predictions.columns = ['base_' + feature for feature in used_features]
+
+        test_set = pd.concat([test_set, base_predictions], axis=1)
+
+        test_set['base_' + feature] = test_set['base_' + feature] * test_set['weight']
+        
+        predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
+                        {'weighted_target': 'sum',
+                        'weighted_predicted': 'sum',
+                        'weight': 'sum',
+                        'weighted_base': 'sum'}).reset_index()}
+        
+        predicted_base[feature]['weighted_target'] = predicted_base[feature]['weighted_target'] / predicted_base[feature][
+            'weight']
+        predicted_base[feature]['weighted_predicted'] = predicted_base[feature]['weighted_predicted'] / \
+                                                    predicted_base[feature]['weight']
+        predicted_base[feature]['weighted_base'] = predicted_base[feature]['weighted_base'] / predicted_base[feature]['weight']
+
+        predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
+
+        df = predicted_base_df[feature]
+        df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
+        df['feature'] = feature
+        predicted_base_df = predicted_base_df.append(df)
+        
+        self.predicted_base_df = self.predicted_base_df[self.predicted_base_df['feature']!=feature]
+        self.predicted_base_df = self.predicted_base_df.append(predicted_base_df)
+        
+        return self.predicted_base_df
+    
+    def get_predicted_and_base(self, nb_bins_numerical=20, class_map=None):
+        test_set = self.model_info_handler.get_test_df()[0]
+        predicted = self.predictor.predict(test_set)
+        test_set['predicted'] = predicted
+        used_features = list(self.base_values.keys())
+
+        if self.weight is None:
+            test_set['weight'] = 1
+        else:
+            test_set['weight'] = test_set[self.weight]
+        
+        test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
 
         # Bin columns considered as numeric
@@ -144,6 +209,8 @@ class ModelHandler:
             df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
             df['feature'] = feature
             predicted_base_df = predicted_base_df.append(df)
+        
+        self.predicted_base_df = predicted_base_df
         
         return predicted_base_df
 
@@ -200,7 +267,7 @@ class ModelHandler:
         column_names = self.predictor.get_features()
         preprocessed_values = self.predictor.preprocess(df)[0]
         return pd.DataFrame(preprocessed_values, columns=column_names)
-    
+
     def extract_active_fullModelId(self, json_data):
         """
         Extracts the fullModelId of the active model version from the given JSON data.

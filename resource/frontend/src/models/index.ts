@@ -15,4 +15,11 @@ export type RelativityPoint = {
 
 export type ModelPoint = { 
     id: string;
+    name: string;
+}
+
+export type VariablePoint = {
+    variable: string;
+    isInModel: boolean;
+    variableType: string;
 }

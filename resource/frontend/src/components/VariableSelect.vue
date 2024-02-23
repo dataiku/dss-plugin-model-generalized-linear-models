@@ -12,7 +12,7 @@
     </div>
     <BsSelect v-bind="$attrs">
       <template v-for="(_, slot) in $slots" v-slot:[slot]="scope">
-        <slot :name="slot" v-bind="scope || {}" />
+        <slot :name="slot" v-bind="scope || {}"/>
       </template>
     </BsSelect>
   </div>
@@ -20,6 +20,7 @@
 <script lang="ts">
 import { defineProps, useSlots } from "vue";
 import BsHelp from "./BsHelp.vue";
+import { BsSelect } from "quasar-ui-bs";
 
 export default {
   props: {
@@ -33,7 +34,8 @@ export default {
         }
   },
   components: {
-    BsHelp
+    BsHelp,
+    BsSelect
   },
   data() {
     return {

@@ -23,28 +23,60 @@
             </BsHeader>
             <BsDrawer>
               <VariableSelect
-                  :modelValue="selectedModel"
-                  :options="models"
-                  @update:modelValue="updateModel"
+                  :modelValue="selectedModelString"
+                  :options="modelsString"
+                  @update:modelValue="updateModelString"
                   label="Select a model"
                   helpMessage="Charts will be generated with respect to this model"
                   style="min-width: 250px"></VariableSelect>
-                <VariableSelect
+
+                  <!-- <BsSelect
+                      v-model="selectedModel"
+                      :options="models"
+                      @update:modelValue="updateModel"
+                      bsLabel="Select a Model">
+                          <template #option="props">
+                              <q-item v-bind="props.itemProps" clickable>
+                                  <q-item-section class="bs-font-medium-2-normal">
+                                          {{ props.opt.name }}
+                                  </q-item-section>
+                              </q-item>
+                          </template>
+                      </BsSelect> -->
+
+                  <BsCheckbox v-model="includeSuspectVariables" label="Include Suspect Variables">
+                  </BsCheckbox>
+                  <BsSelect
                   v-if="selectedModel"
-                  :modelValue="selectedDefiningVariable"
-                  :options="definingVariables"
-                  @update:modelValue="updateDefiningVariable"
-                  label="Select a variable"
-                  helpMessage="Charts will be generated with respect to this variable"
-                  style="min-width: 250px"></VariableSelect>
+                      v-model="selectedVariable"
+                      :options="variablePoints"
+                      @update:modelValue="updateVariable"
+                      bsLabel="Select a Variable">
+                          <template #option="props">
+                              <q-item v-if="props.opt.isInModel || includeSuspectVariables" v-bind="props.itemProps" clickable>
+                                  <q-item-section side>
+                                    <div v-if="props.opt.isInModel">selected</div>
+                                    <div v-else>unselected</div>
+                                  </q-item-section>
+                                  <q-item-section class="bs-font-medium-2-normal">
+                                          {{ props.opt.variable }}
+                                  </q-item-section>
+                              </q-item>
+                          </template>
+                      </BsSelect>
+                <BsSlider
+                      v-if="selectedVariable.variableType=='numeric'"
+                      v-model="nbBins"
+                      :min="10"
+                      :max="30"
+                      style="{ 'max-width': '100%' }"></BsSlider>
                 <BsButton
                     flat
                     round
                     class="close-side-drawer-btn"
                     size="15px"
                     @click="closeSideDrawer"
-                    icon="mdi-arrow-left"
-                >
+                    icon="mdi-arrow-left">
                     <BsTooltip>Close sidebar</BsTooltip>
                 </BsButton>
             </BsDrawer>
@@ -59,16 +91,16 @@
                     v-if="chartData.length==0"/>
                 <div class="tab-content" v-else>
                     <BarChart
-                      v-if="selectedDefiningVariable"
+                      v-if="selectedVariable"
                       :xaxisLabels="chartData.map(item => item.Category)"
                       :barData="chartData.map(item => item.Value)"
                       :observedAverageLine="chartData.map(item => item.observedAverage)"
                       :fittedAverageLine="chartData.map(item => item.fittedAverage)"
                       :baseLevelPredictionLine="chartData.map(item => item.baseLevelPrediction)"
-                      :chartTitle="selectedDefiningVariable"
+                      :chartTitle="selectedVariable.variable"
                       />
                     <BsTable
-                      :title="selectedDefiningVariable"
+                      :title="selectedVariable.variable"
                       :rows="relativities"
                       :columns="relativitiesColumns"
                       :globalSearch="false"
@@ -87,10 +119,10 @@ import VariableSelect from './components/VariableSelect.vue'
 import DocumentationContent from './components/DocumentationContent.vue'
 import EmptyState from './components/EmptyState.vue';
 import * as echarts from "echarts";
-import type { DataPoint, ModelPoint, RelativityPoint } from './models';
+import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint } from './models';
 import { defineComponent } from "vue";
 import { API } from './Api';
-import { BsButton, BsLayoutDefault, BsTable } from "quasar-ui-bs";
+import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
 import docLogo from "./assets/images/doc-logo-example.svg";
 import firstTabIcon from "./assets/images/first-tab-icon.svg";
 import type { QTableColumn } from 'quasar';
@@ -127,32 +159,43 @@ export default defineComponent({
         BsButton,
         BsLayoutDefault,
         EmptyState,
-        BsTable
+        BsTable,
+        BsCheckbox,
+        BsSlider,
     },
     data() {
         return {
             chartData: [] as DataPoint[],
-            selectedDefiningVariable: "",
             allData: [] as DataPoint[],
             relativitiesData: [] as RelativityPoint[],
             relativitiesTable: [] as RelativityPoint[],
             models: [] as ModelPoint[],
-            selectedModel: "",
+            selectedModel: {} as ModelPoint,
+            modelsString: [] as string[],
+            selectedModelString: "",
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             docLogo,
             firstTabIcon,
-            definingVariables: [] as String[],
+            variablePoints: [] as VariablePoint[],
+            allVariables: [] as String[],
+            variables: [] as VariablePoint[],
+            selectedVariable: {} as VariablePoint,
             relativities: rows,
             relativitiesColumns: columns,
+            inModelOnly: true,
+            nbBins: 20,
+            includeSuspectVariables: true,
         };
     },
     watch: {
-      selectedDefiningVariable(newValue: string) {
-        this.chartData = this.allData.filter(item => item.definingVariable === newValue);
-        this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue);
+      selectedVariable(newValue: VariablePoint) {
+        console.log(newValue);
+        console.log(this.allData);
+        this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
+        this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
         this.relativitiesColumns = columns;
         this.relativities = this.relativitiesTable.map( (point) => {
-          const relativity = {'class': point.category, 'relativity': point.relativity};
+          const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
           return relativity
         })
       }
@@ -163,25 +206,51 @@ export default defineComponent({
                 this.layoutRef.drawerOpen = !this.layoutRef.drawerOpen;
             }
         },
-        async updateDefiningVariable(value: string) {
-          this.selectedDefiningVariable = value;
+        async updateVariable(value: VariablePoint) {
+          console.log(value);
+          this.selectedVariable = value;
+          console.log(this.selectedVariable);
         },
-        async updateModel(value: string) {
+        async updateModel(value: ModelPoint) {
           this.selectedModel = value;
-          const dataResponse = await API.getData({ id: value });
+          const variableResponse = await API.getVariables(value);
+          this.variablePoints = variableResponse?.data;
+          this.allVariables = this.variablePoints.map(item => item.variable);
+          const dataResponse = await API.getData(value);
           this.allData = dataResponse?.data;
-          this.definingVariables = [...new Set(this.allData.map(item => item.definingVariable))];
-          const relativityResponse = await API.getRelativities({ id: value });
+          const relativityResponse = await API.getRelativities(value);
           this.relativitiesData = relativityResponse?.data;
-        }
+        },
+        async updateModelString(value: string) {
+          this.selectedModelString = value;
+          const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
+          const variableResponse = await API.getVariables(model);
+          this.variablePoints = variableResponse?.data;
+          this.allVariables = this.variablePoints.map(item => item.variable);
+          const dataResponse = await API.getData(model);
+          this.allData = dataResponse?.data;
+          const relativityResponse = await API.getRelativities(model);
+          this.relativitiesData = relativityResponse?.data;
+          console.log(this.variablePoints);
+        },
+        // filterFn(val: string, update: any) {
+        //     update(() => {
+        //         const needle = val.toLowerCase();
+        //         // this.variables = this.allVariables.filter(
+        //         //     (v) => v.toLowerCase().indexOf(needle?.toLowerCase()) > -1
+        //         // );
+        //         this.variables = this.variablePoints.filter(
+        //             (v: VariablePoint) => {console.log(v);
+                      
+        //               return ((v.variable).toLowerCase().indexOf(needle?.toLowerCase()) > -1 && (v.isInModel || this.includeSuspectVariables))}
+        //         );
+        //     });
+        // },
     },
     mounted() {
-      // API.getData().then((data: any) => {
-      //   this.allData = data.data;
-      //   this.definingVariables = [...new Set(this.allData.map(item => item.definingVariable))];
-      // });
       API.getModels().then((data: any) => {
         this.models = data.data;
+        this.modelsString = this.models.map(item => item.name);
       });
       this.layoutRef = this.$refs.layout as InstanceType<typeof BsLayoutDefault>;
     }

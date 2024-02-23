@@ -76,7 +76,7 @@
                 grid: {
                     top: 40,
                     left: 0,
-                    right: 170,
+                    right: 0,
                     containLabel: true,
                 },
                 series: [
@@ -129,13 +129,29 @@
                 ],
                 legend: {
                   // Try 'horizontal'
-                  orient: 'vertical',
-                  right: '0%',
-                  top: 'center'
+                  // orient: 'vertical',
+                  // right: '0%',
+                  // top: 'center'
+                  orient: 'horizontal',
+                  bottom: 0
                 },
                 title: {
                   text: this.chartTitle,
                   left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis', // Show tooltip for each data point
+                    axisPointer: {
+                        type: 'cross' // Show crosshair pointer
+                    },
+                    formatter: function(params: any) {
+                        // Custom tooltip formatter
+                        var tooltip = params[0].axisValueLabel + '<br/>'; // X-axis label
+                        params.forEach(function(item: any) {
+                            tooltip += item.seriesName + ': ' + item.data + '<br/>'; // Series name and value
+                        });
+                        return tooltip;
+                    }
                 }
             };
     },
