@@ -61,8 +61,8 @@ class ModelHandler:
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
         important_columns = self.offset_columns + self.exposure_columns
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
-        self.used_features = [feature for feature in non_excluded_features if self.features[feature]['role']=='INPUT']
-        self.candidate_features = [feature for feature in non_excluded_features if self.features[feature]['role']=='REJECT']
+        self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='INPUT']
+        self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='REJECT']
 
     def compute_base_values(self):
         self.base_values = {}
