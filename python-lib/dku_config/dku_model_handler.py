@@ -152,8 +152,8 @@ class ModelHandler:
         predicted_base[feature]['weighted_base'] = predicted_base[feature]['weighted_base'] / predicted_base[feature]['weight']
 
         predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
-
-        df = predicted_base_df[feature]
+        
+        df = predicted_base[feature]
         df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
         df['feature'] = feature
         predicted_base_df = predicted_base_df.append(df)
