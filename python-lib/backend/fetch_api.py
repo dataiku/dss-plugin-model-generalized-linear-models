@@ -66,6 +66,7 @@ def get_updated_data():
     nb_bins = request_json["nbBin"]
     predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
     df = predicted_base
+    print(df)
     df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
     return jsonify(df.to_dict('records'))
     if True:
