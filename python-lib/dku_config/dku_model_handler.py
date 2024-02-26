@@ -156,10 +156,6 @@ class ModelHandler:
         predicted_base_df = predicted_base[feature]
         predicted_base_df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
         predicted_base_df['feature'] = feature
-        print("self predicted base")
-        print(feature)
-        print(nb_bins_numerical)
-        print(predicted_base_df)
         self.predicted_base_df = self.predicted_base_df[self.predicted_base_df['feature']!=feature]
         self.predicted_base_df = self.predicted_base_df.append(predicted_base_df)
         
