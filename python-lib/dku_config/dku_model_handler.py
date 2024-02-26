@@ -59,7 +59,7 @@ class ModelHandler:
         modeling_params = self.model_info_handler.get_modeling_params()
         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
-        important_columns = self.offset_columns + self.exposure_columns + [self.target] + [self.weights]
+        important_columns = self.offset_columns + self.exposure_columns + [self.target] + [self.weight]
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
         self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='INPUT']
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='REJECT']
