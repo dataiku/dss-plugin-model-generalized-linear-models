@@ -174,12 +174,6 @@ class ModelHandler:
         
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
-
-        # Bin columns considered as numeric
-        for feature in self.non_excluded_features:
-            if self.features[feature]['type'] == 'NUMERIC':
-                if len(test_set[feature].unique()) > nb_bins_numerical:
-                    test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
         
         # Compute base predictions
         base_data = dict()
@@ -198,6 +192,12 @@ class ModelHandler:
         base_predictions.columns = ['base_' + feature for feature in self.non_excluded_features]
 
         test_set = pd.concat([test_set, base_predictions], axis=1)
+
+                # Bin columns considered as numeric
+        for feature in self.non_excluded_features:
+            if self.features[feature]['type'] == 'NUMERIC':
+                if len(test_set[feature].unique()) > nb_bins_numerical:
+                    test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
 
         for feature in self.non_excluded_features:
             test_set['base_' + feature] = test_set['base_' + feature] * test_set['weight']
