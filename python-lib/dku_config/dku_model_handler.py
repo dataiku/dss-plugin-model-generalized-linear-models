@@ -196,7 +196,7 @@ class ModelHandler:
         # Bin columns considered as numeric
         for feature in self.non_excluded_features:
             if self.features[feature]['type'] == 'NUMERIC':
-                if len(test_set[feature].unique()) > nb_bins_numerical + 1000: # test
+                if len(test_set[feature].unique()) > nb_bins_numerical:
                     test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
 
         for feature in self.non_excluded_features:
