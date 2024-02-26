@@ -21,6 +21,7 @@ def get_variables():
     model = request_json["id"]
     glm_handler.model_handler.switch_model(model)
     variables = glm_handler.model_handler.get_features()
+    print(variables)
     return jsonify(variables)
     if model == 'model_1':
         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
