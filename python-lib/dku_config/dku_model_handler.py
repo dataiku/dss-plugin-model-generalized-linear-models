@@ -117,7 +117,7 @@ class ModelHandler:
         
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
-
+        print(pd.cut(test_set[feature], bins=nb_bins_numerical))
         test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
         
         # Compute base predictions
@@ -134,7 +134,7 @@ class ModelHandler:
         # compile predictions
         base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
         base_predictions.columns = ['base_' + feature]
-
+        
         test_set = pd.concat([test_set, base_predictions], axis=1)
 
         test_set['base_' + feature] = test_set['base_' + feature] * test_set['weight']
