@@ -94,7 +94,8 @@
                 <div class="tab-content" v-else>
                     <BarChart
                       v-if="selectedVariable"
-                      :xaxisLabels="chartData.map(item => item.Category)"
+                      :xaxisLabels="chartData.map(item => ((selectedVariable.variableType == 'categorical') ? item.Category : Number(item.Category)))"
+                      :xaxisType="selectedVariable.variableType"
                       :barData="chartData.map(item => item.Value)"
                       :observedAverageLine="chartData.map(item => item.observedAverage)"
                       :fittedAverageLine="chartData.map(item => item.fittedAverage)"
@@ -191,8 +192,6 @@ export default defineComponent({
     },
     watch: {
       selectedVariable(newValue: VariablePoint) {
-        console.log(newValue);
-        console.log(this.allData);
         this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
         this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
         this.relativitiesColumns = columns;

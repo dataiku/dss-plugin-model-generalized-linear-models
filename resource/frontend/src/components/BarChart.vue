@@ -25,6 +25,10 @@
       type: Array,
       required: true
     },
+    xaxisType: {
+      type: String,
+      required: true
+    },
     barData: {
       type: Array,
       required: true
@@ -56,7 +60,7 @@
     createChartData() {
       this.chartOption = {
           xAxis: [{
-              type: "category",
+              type: this.xaxisType==="categorical" ? "category" : null,
               data: this.xaxisLabels,
           }],
           yAxis: [
