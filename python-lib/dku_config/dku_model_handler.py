@@ -166,7 +166,7 @@ class ModelHandler:
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted
         used_features = list(self.base_values.keys())
-
+        
         if self.weight is None:
             test_set['weight'] = 1
         else:
@@ -176,14 +176,14 @@ class ModelHandler:
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
 
         # Bin columns considered as numeric
-        for feature in used_features:
+        for feature in self.non_excluded_features:
             if self.features[feature]['type'] == 'NUMERIC':
                 if len(test_set[feature].unique()) > nb_bins_numerical:
                     test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
         
         # Compute base predictions
         base_data = dict()
-        for feature in used_features:
+        for feature in self.non_excluded_features:
             copy_test_df = test_set.copy()
             for other_feature in [col for col in used_features if col != feature]:
                 copy_test_df[other_feature] = self.base_values[other_feature]
@@ -195,11 +195,11 @@ class ModelHandler:
 
         # compile predictions
         base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
-        base_predictions.columns = ['base_' + feature for feature in used_features]
+        base_predictions.columns = ['base_' + feature for feature in self.non_excluded_features]
 
         test_set = pd.concat([test_set, base_predictions], axis=1)
 
-        for feature in used_features:
+        for feature in self.non_excluded_features:
             test_set['base_' + feature] = test_set['base_' + feature] * test_set['weight']
 
         predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
@@ -207,9 +207,9 @@ class ModelHandler:
                         'weighted_predicted': 'sum',
                         'weight': 'sum',
                         'weighted_base': 'sum'}).reset_index()
-                                for feature in used_features}
+                                for feature in self.non_excluded_features}
         
-        for feature in used_features:
+        for feature in self.non_excluded_features:
             predicted_base[feature]['weighted_target'] = predicted_base[feature]['weighted_target'] / predicted_base[feature][
                 'weight']
             predicted_base[feature]['weighted_predicted'] = predicted_base[feature]['weighted_predicted'] / \
