@@ -29,21 +29,6 @@
                   label="Select a model"
                   helpMessage="Charts will be generated with respect to this model"
                   style="min-width: 250px"></VariableSelect>
-
-                  <!-- <BsSelect
-                      v-model="selectedModel"
-                      :options="models"
-                      @update:modelValue="updateModel"
-                      bsLabel="Select a Model">
-                          <template #option="props">
-                              <q-item v-bind="props.itemProps" clickable>
-                                  <q-item-section class="bs-font-medium-2-normal">
-                                          {{ props.opt.name }}
-                                  </q-item-section>
-                              </q-item>
-                          </template>
-                      </BsSelect> -->
-
                   <BsCheckbox v-model="includeSuspectVariables" label="Include Suspect Variables">
                   </BsCheckbox>
                   <BsSelect
@@ -65,13 +50,15 @@
                               </q-item>
                           </template>
                       </BsSelect>
-                <BsSlider
-                      v-if="selectedVariable.variableType=='numeric'"
+                  <!-- <BsCheckbox v-if="selectedVariable.variableType=='numeric'" v-model="binVariable" @update:modelValue="updateUseBins" label="Use Automatic Binning">
+                  </BsCheckbox> -->
+                <!-- <BsSlider
+                      v-if="selectedVariable.variableType=='numeric' && binVariable"
                       v-model="nbBins"
                       @update:modelValue="updateNbBins"
-                      :min="10"
-                      :max="30"
-                      style="{ 'max-width': '100%' }"></BsSlider>
+                      :min="1"
+                      :max="100"
+                      style="{ 'max-width': '100%' }"></BsSlider> -->
                 <BsButton
                     flat
                     round
@@ -82,9 +69,9 @@
                     <BsTooltip>Close sidebar</BsTooltip>
                 </BsButton>
             </BsDrawer>
-            <BsDocumentation>
+            <!-- <BsDocumentation>
                 <DocumentationContent></DocumentationContent>
-            </BsDocumentation>
+            </BsDocumentation> -->
             <BsContent>
               <EmptyState
                     class="tab-content"
@@ -186,8 +173,9 @@ export default defineComponent({
             relativities: rows,
             relativitiesColumns: columns,
             inModelOnly: true,
-            nbBins: 20,
+            // nbBins: 20,
             includeSuspectVariables: true,
+            // binVariable: false,
         };
     },
     watch: {
@@ -211,9 +199,7 @@ export default defineComponent({
             }
         },
         async updateVariable(value: VariablePoint) {
-          console.log(value);
           this.selectedVariable = value;
-          console.log(this.selectedVariable);
         },
         async updateModel(value: ModelPoint) {
           this.selectedModel = value;
@@ -227,6 +213,7 @@ export default defineComponent({
         },
         async updateModelString(value: string) {
           this.selectedModelString = value;
+          this.selectedVariable = {} as VariablePoint;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
           const variableResponse = await API.getVariables(model);
           this.variablePoints = variableResponse?.data;
@@ -235,25 +222,25 @@ export default defineComponent({
           this.allData = dataResponse?.data;
           const relativityResponse = await API.getRelativities(model);
           this.relativitiesData = relativityResponse?.data;
-          console.log(this.variablePoints);
         },
-        async updateNbBins(value: number) {
-          this.nbBins = value;
-          const dataResponse = await API.updateData({feature: this.selectedVariable.variable, nbBin: value});
-          this.allData = dataResponse?.data;
-        },
-        // filterFn(val: string, update: any) {
-        //     update(() => {
-        //         const needle = val.toLowerCase();
-        //         // this.variables = this.allVariables.filter(
-        //         //     (v) => v.toLowerCase().indexOf(needle?.toLowerCase()) > -1
-        //         // );
-        //         this.variables = this.variablePoints.filter(
-        //             (v: VariablePoint) => {console.log(v);
-                      
-        //               return ((v.variable).toLowerCase().indexOf(needle?.toLowerCase()) > -1 && (v.isInModel || this.includeSuspectVariables))}
-        //         );
-        //     });
+        // async updateNbBins(value: number) {
+        //     this.nbBins = value;
+        //     const dataResponse = await API.updateData({feature: this.selectedVariable.variable, nbBin: value});
+        //     this.allData = dataResponse?.data;
+        // },
+        //   async updateUseBins(value: boolean) {
+        //     console.log(value);
+        //     this.binVariable = value;
+        //     console.log(this.nbBins);
+        //     if (value) {
+        //       const dataResponse = await API.updateData({feature: this.selectedVariable.variable, nbBin: this.nbBins});
+        //       this.allData = dataResponse?.data;
+        //       console.log(this.allData);
+        //     } else {
+        //       const dataResponse = await API.updateData({feature: this.selectedVariable.variable, nbBin: 10000});  // very high value  
+        //       this.allData = dataResponse?.data;
+        //       console.log(this.allData);
+        //     }
         // },
     },
     mounted() {
@@ -278,7 +265,7 @@ header {
 
 .tab-content {
   padding-left: 0px;
-  padding-right: 100px;
+  padding-right: 0px;
   padding-top: 20px;
   display: flex;
   align-items: center;

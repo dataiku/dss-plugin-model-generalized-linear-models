@@ -104,7 +104,7 @@ class ModelHandler:
             for value, relativity in values.items():
                 self.relativities_df = self.relativities_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
 
-    def get_predicted_and_base_feature(self, feature, nb_bins_numerical=20, class_map=None):
+    def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
         test_set = self.model_info_handler.get_test_df()[0].copy()
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted
@@ -161,7 +161,7 @@ class ModelHandler:
         
         return self.predicted_base_df
     
-    def get_predicted_and_base(self, nb_bins_numerical=20, class_map=None):
+    def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
         test_set = self.model_info_handler.get_test_df()[0].copy()
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted
