@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 import pandas as pd
-from 
+from dku_config.dku_model_trainer import DataikuMLTask
 # from glm_handler.service import glm_handler
 
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
