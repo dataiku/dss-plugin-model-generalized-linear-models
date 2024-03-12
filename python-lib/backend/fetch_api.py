@@ -1,11 +1,35 @@
 from flask import Blueprint, jsonify, request
 import pandas as pd
+from 
 # from glm_handler.service import glm_handler
 
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 
 # predicted_base = glm_handler.model_handler.get_predicted_and_base()
 # relativities = glm_handler.model_handler.relativities_df
+
+@fetch_api.route("/train_model", methods=["POST"])
+def train_model():
+    request_json = request.get_json()
+    input_dataset = request_json.get('input_dataset')
+    distribution_function = request_json.get('distribution_function')
+    link_function = request_json.get('link_function')
+    variables = request_json.get('variables')
+
+    if not all([input_dataset, distribution_function, link_function, variables]):
+        return jsonify({'error': 'Missing parameters'}), 400
+
+    try:
+        DkuMLTask = DataikuMLTask(input_dataset, distribution_function, link_function, variables)
+        DkuMLTask.create_visual_ml_task()
+        DkuMLTask.enable_glm_algorithm()
+        settings = DkuMLTask.test_settings()
+        settings_new = DkuMLTask.configure_variables()
+        DkuMLTask.train_model()
+        return jsonify({'message': 'Model training initiated successfully.'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
