@@ -132,3 +132,18 @@ def get_relativities():
                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
                         'relativity': [1.0, 1.08723155, 0.9844522, 0.79251098, 1.0, 0.9951252, 1.10971, 1.0542428]})
     return jsonify(df.to_dict('records'))
+
+
+@fetch_api.route("/get_projects_datasets", methods=["GET"])
+def get_projects_datasets():
+    datasets = ['Dataset1', 'Dataset2', 'Dataset3']
+    return jsonify(datasets)
+
+
+@fetch_api.route("/get_dataset_columns", methods=["POST"])
+def get_dataset_columns():
+    request_json = request.get_json()
+    dataset = request_json["dataset_name"]
+
+    colum_names = ['column1', 'column2', 'column3', 'column4','column5']
+    return jsonify(colum_names)

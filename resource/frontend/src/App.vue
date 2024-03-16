@@ -1,8 +1,11 @@
 <template>
     <BsLayoutDefault ref="layout">
+      <ModelTrainingTab
+            :layoutRef="layoutRef">
+        </ModelTrainingTab>
         <BsTab
             name="Variable Selection"
-            docTitle="Process Analyzer"
+            docTitle="GLM Analyzer"
             :docIcon="docLogo"
         >
             <BsTabIcon>
@@ -28,10 +31,11 @@
                   @update:modelValue="updateModelString"
                   label="Select a model"
                   helpMessage="Charts will be generated with respect to this model"
-                  style="min-width: 250px"></VariableSelect>
-                  <BsCheckbox v-model="includeSuspectVariables" label="Include Suspect Variables">
-                  </BsCheckbox>
-                  <BsSelect
+                  style="min-width: 250px">
+              </VariableSelect>
+              <BsCheckbox v-model="includeSuspectVariables" label="Include Suspect Variables">
+              </BsCheckbox>
+                <BsSelect
                   v-if="selectedModel"
                       v-model="selectedVariable"
                       :options="variablePoints"
@@ -44,21 +48,12 @@
                                     <div v-if="props.opt.isInModel">selected</div>
                                     <div v-else>unselected</div>
                                   </q-item-section>
-                                  <q-item-section class="bs-font-medium-2-normal">
-                                          {{ props.opt.variable }}
-                                  </q-item-section>
+                                <q-item-section class="bs-font-medium-2-normal">
+                                    {{ props.opt.variable }}
+                                </q-item-section>
                               </q-item>
-                          </template>
-                      </BsSelect>
-                  <!-- <BsCheckbox v-if="selectedVariable.variableType=='numeric'" v-model="binVariable" @update:modelValue="updateUseBins" label="Use Automatic Binning">
-                  </BsCheckbox> -->
-                <!-- <BsSlider
-                      v-if="selectedVariable.variableType=='numeric' && binVariable"
-                      v-model="nbBins"
-                      @update:modelValue="updateNbBins"
-                      :min="1"
-                      :max="100"
-                      style="{ 'max-width': '100%' }"></BsSlider> -->
+                        </template>
+                  </BsSelect>
                 <BsButton
                     flat
                     round
@@ -69,9 +64,6 @@
                     <BsTooltip>Close sidebar</BsTooltip>
                 </BsButton>
             </BsDrawer>
-            <!-- <BsDocumentation>
-                <DocumentationContent></DocumentationContent>
-            </BsDocumentation> -->
             <BsContent>
               <EmptyState
                     class="tab-content"
@@ -99,11 +91,11 @@
                 </div>
             </BsContent>
         </BsTab>
-        
     </BsLayoutDefault>
 </template>
 
 <script lang="ts">
+import ModelTrainingTab from './components/ModelTrainingTab.vue';
 import BarChart from './components/BarChart.vue'
 import VariableSelect from './components/VariableSelect.vue'
 import DocumentationContent from './components/DocumentationContent.vue'
@@ -143,6 +135,7 @@ const rows = [
 
 export default defineComponent({
     components: {
+        ModelTrainingTab,
         BarChart,
         VariableSelect,
         DocumentationContent,
@@ -223,32 +216,12 @@ export default defineComponent({
           const relativityResponse = await API.getRelativities(model);
           this.relativitiesData = relativityResponse?.data;
         },
-        // async updateNbBins(value: number) {
-        //     this.nbBins = value;
-        //     const dataResponse = await API.updateData({feature: this.selectedVariable.variable, nbBin: value});
-        //     this.allData = dataResponse?.data;
-        // },
-        //   async updateUseBins(value: boolean) {
-        //     console.log(value);
-        //     this.binVariable = value;
-        //     console.log(this.nbBins);
-        //     if (value) {
-        //       const dataResponse = await API.updateData({feature: this.selectedVariable.variable, nbBin: this.nbBins});
-        //       this.allData = dataResponse?.data;
-        //       console.log(this.allData);
-        //     } else {
-        //       const dataResponse = await API.updateData({feature: this.selectedVariable.variable, nbBin: 10000});  // very high value  
-        //       this.allData = dataResponse?.data;
-        //       console.log(this.allData);
-        //     }
-        // },
     },
     mounted() {
       API.getModels().then((data: any) => {
         this.models = data.data;
         this.modelsString = this.models.map(item => item.name);
       });
-      this.layoutRef = this.$refs.layout as InstanceType<typeof BsLayoutDefault>;
     }
 })
 </script>
