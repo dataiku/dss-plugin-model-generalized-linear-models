@@ -142,8 +142,8 @@ def get_projects_datasets():
 
 @fetch_api.route("/get_dataset_columns", methods=["POST"])
 def get_dataset_columns():
-    request_json = request.get_json()
-    dataset = request_json["dataset_name"]
+    # request_json = request.get_json()
+    # dataset = request_json["dataset_name"]
 
     colum_names = ['column1', 'column2', 'column3', 'column4','column5']
     return jsonify(colum_names)

@@ -45,8 +45,50 @@
                 class="tab-content"
                 title="Model Training Parameters"
                 subtitle="Select dataset in the left column to get started"
-                v-if="chartData.length==0"/>
+                v-if="selectedDatasetString.length==0"/>
             <div class="tab-content" v-else>
+            </div>
+            <div class="tab-content" v-else>
+                <!-- Conditionally render the Variables title only if datasetColumns has items -->
+                <h2 v-if="datasetColumns.length > 0">GLM Model Parameter</h2>
+                <select name="Distribution Function">
+                    <option disabled value="" selected>Select Distribution Function</option>
+                    <option value="dummy_encode">Gaussian</option>
+                    <option value="drop_one_dummy">Poisson</option>
+                    <option value="normal_numerical">Tweedie</option>
+                </select>
+                <select name="Link Function">
+                    <option disabled value="" selected>Select Link Function</option>
+                    <option value="dummy_encode">Log</option>
+                    <option value="drop_one_dummy">Power</option>
+                </select>
+
+                <h2 v-if="datasetColumns.length > 0">Variables</h2>
+                <div v-for="(column, index) in datasetColumns" :key="index" class="column-management">
+                    <span class="column-name">{{ column }}</span>
+                    
+                    <!-- Toggle for Include/Exclude -->
+                    <input type="checkbox" v-model="column.isIncluded" :id="'include-' + index">
+                    <label :for="'include-' + index">{{ column.isIncluded ? 'Included' : 'Excluded' }}</label>
+                        
+                    <!-- Toggle for Set as Exposure/Remove as Exposure -->
+                    <input type="checkbox" v-model="column.isExposure" :id="'exposure-' + index">
+                    <label :for="'exposure-' + index">{{ column.isExposure ? 'Exposure Set' : 'Exposure Not Set' }}</label>
+                    
+                    <!-- Type selection -->
+                    <select v-model="column.type">
+                        <option disabled value="">Select Type</option>
+                        <option value="categorical">Categorical</option>
+                        <option value="numerical">Numerical</option>
+                    </select>
+                    <!-- Preprocessing selection -->
+                    <select v-model="column.preprocessing">
+                        <option disabled value="">Select Preprocessing</option>
+                        <option value="dummy_encode">Dummy Encode</option>
+                        <option value="drop_one_dummy">Drop One Dummy</option>
+                        <option value="normal_numerical">Normal Numerical</option>
+                    </select>
+                </div>
             </div>
         </BsContent>
     </BsTab>
@@ -113,12 +155,20 @@ export default defineComponent({
             console.error('Error fetching datasets:', error);
         }
         },
-        async getDatasetColumns() {
+        async getDatasetColumns(value) {
             try {
-            const response = await API.getDatasetColumns(value);
-            this.columnNames = response.data; // Assuming this is a data property for storing dataset names
+            const columns = await API.getDatasetColumns(value);
+            console.log("Datasets:", columns);
+            this.datasetColumns = columns.map(columnName => ({
+                name: columnName,
+                isIncluded: false,
+                isExposure: false,
+                type: '', // 'categorical' or 'numerical'
+                preprocessing: '' // 'dummy_encode', 'drop_one_dummy', 'normal_numerical'
+            }));// Assuming this is a data property for storing dataset names
             } catch (error) {
                 console.error('Error fetching datasets:', error);
+                this.datasetColumns = [];
             }
         }
         
@@ -131,3 +181,14 @@ export default defineComponent({
     emits: ['update:modelValue']
 })
 </script>
+<style scoped>
+.column-management {
+    display: flex;
+    align-items: center; /* Align items vertically */
+    gap: 10px; /* Spacing between each item */
+}
+.column-name {
+    font-weight: bold; /* Make the variable name stand out */
+    margin-right: 10px; /* Ensure there's spacing after the name */
+}
+</style>
