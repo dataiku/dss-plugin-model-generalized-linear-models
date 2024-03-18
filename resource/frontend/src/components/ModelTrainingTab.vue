@@ -1,22 +1,12 @@
     <template>
-        <BsTab
-            name="Model Training"
-            docTitle="GLM Analyzer"
-            :docIcon="docLogo"
-        >
+        <BsTab name="Model Training" docTitle="GLM Analyzer" :docIcon="docLogo">
             <BsTabIcon>
                 <img :src="firstTabIcon" alt="Target Definition Icon" />
             </BsTabIcon>
             <BsHeader>
                 <BsButton
-                    v-if="!layoutRef?.drawerOpen"
-                    flat
-                    round
-                    class="open-side-drawer-btn"
-                    size="15px"
-                    @click="closeSideDrawer"
-                    icon="mdi-arrow-right"
-                >
+                    v-if="!layoutRef?.drawerOpen" flat round class="open-side-drawer-btn" size="15px"
+                    @click="closeSideDrawer" icon="mdi-arrow-right">
                     <BsTooltip>Open sidebar</BsTooltip>
                 </BsButton>
             </BsHeader>
@@ -50,54 +40,106 @@
                 </div>
                 <div class="tab-content" v-else>
                     <!-- Conditionally render the Variables title only if datasetColumns has items -->
-                    <h2 v-if="datasetColumns.length > 0">GLM Model Parameter</h2>
-                    <select name="Distribution Function">
-                        <option disabled value="" selected>Select Distribution Function</option>
-                        <option value="dummy_encode">Gaussian</option>
-                        <option value="drop_one_dummy">Poisson</option>
-                        <option value="normal_numerical">Tweedie</option>
-                    </select>
-                    <select name="Link Function">
-                        <option disabled value="" selected>Select Link Function</option>
-                        <option value="dummy_encode">Log</option>
-                        <option value="drop_one_dummy">Power</option>
-                    </select>
+                    <q-card-section>
+                        <h5 v-if="datasetColumns.length > 0">Algorithm Parameters </h5>
+                    </q-card-section>
+                    <q-card class="q-pa-lg  ">
+                        <div class="form-group">
+                            <q-row class="q-mb-md">
+                                <q-col cols="12" sm="4" class="q-pr-md">
+                                    <q-btn-dropdown color="primary" :label="selectedDistributionFunction || 'Select Distribution Function'" no-caps no-wrap>
+                                        <q-list>
+                                        <q-item clickable v-close-popup @click="updateDistributionFunction('Gaussian')">
+                                            <q-item-section>Gaussian</q-item-section>
+                                        </q-item>
+                                        <q-item clickable v-close-popup @click="updateDistributionFunction('Poisson')">
+                                            <q-item-section>Poisson</q-item-section>
+                                        </q-item>
+                                        <q-item clickable v-close-popup @click="updateDistributionFunction('Tweedie')">
+                                            <q-item-section>Tweedie</q-item-section>
+                                        </q-item>
+                                        </q-list>
+                                    </q-btn-dropdown>
+                                </q-col>
+                            </q-row>
+                            <q-row class="q-mb-md">
+                                <q-col cols="12" sm="4" class="q-pr-md">
+                                    <q-btn-dropdown color="primary" :label="selectedLinkFunction || 'Select Link Function'" no-caps no-wrap>
+                                        <q-list>
+                                        <q-item clickable v-close-popup @click="updateLinkFunction('Gaussian')">
+                                            <q-item-section>Log</q-item-section>
+                                        </q-item>
+                                        <q-item clickable v-close-popup @click="updateLinkFunction('Poisson')">
+                                            <q-item-section>Power</q-item-section>
+                                        </q-item>
+                                        </q-list>
+                                    </q-btn-dropdown>
+                                </q-col>
+                            </q-row>
+                        </div>
+                    </q-card>
+                    <q-card-section>
+                        <h5 v-if="datasetColumns.length > 0">Feature Handling</h5>
+                    </q-card-section>
+                    <q-card class="q-pa-md">
+                        
+                        <div v-for="(column, index) in datasetColumns" :key="index" class="column-management">
+                                <span class="column-name">{{ column.name }}</span>
+                                <q-btn-toggle
+                                    v-model="column.isIncluded"
+                                    push
+                                    glossy
+                                    toggle-color="primary"
+                                    :options="[
+                                    {label: 'Include', value: 'Included'},
+                                    {label: 'Excluded', value: 'Excluded'},
+                                    ]"
+                                />
+                                <q-btn-toggle
+                                    v-model="column.isExposure"
+                                    push
+                                    glossy
+                                    toggle-color="primary"
+                                    :options="[
+                                    {label: 'Exposure', value: 'Exposure'},
+                                    {label: 'Normal', value: 'Not Exposure'},
+                                    ]"
+                                />
+                                <q-btn-toggle
+                                    v-model="column.type"
+                                    push
+                                    glossy
+                                    toggle-color="primary"
+                                    :options="[
+                                    {label: 'Categorical', value: 'Categorical'},
+                                    {label: 'Numerical', value: 'Numerical'},
+                                    ]"
+                                />
+                                <!-- Preprocessing selection -->
+                                <q-btn-dropdown color="primary" :label="column.preprocessing || 'Select Preprocessing'">
+                                    <q-list>
+                                        <q-item clickable v-close-popup @click="updatePreprocessing(column, 'dummy_encode')">
+                                        <q-item-section>
+                                            <q-item-label>Dummy Encode</q-item-label>
+                                        </q-item-section>
+                                        </q-item>
 
-                    <h2 v-if="datasetColumns.length > 0">Variables</h2>
-                    <div v-for="(column, index) in datasetColumns" :key="index" class="column-management">
-                        <span class="column-name">{{ column.name }}</span>
-                        
-                        <!-- Toggle for Include/Exclude -->
-                        <input type="checkbox" v-model="column.isIncluded" :id="'include-' + index">
-                        <label :for="'include-' + index">{{ column.isIncluded ? 'Included' : 'Excluded' }}</label>
-                        
-                        <!-- Toggle for Set as Exposure/Remove as Exposure -->
-                        <input type="checkbox" v-model="column.isExposure" :id="'exposure-' + index">
-                        <label :for="'exposure-' + index">{{ column.isExposure ? 'Exposure Set' : 'Exposure Not Set' }}</label>
-                        
-                        <!-- Type selection -->
-                        <select v-model="column.type">
-                            <option disabled value="">Select Type</option>
-                            <option value="categorical">Categorical</option>
-                            <option value="numerical">Numerical</option>
-                        </select>
-                        <!-- Preprocessing selection -->
-                        <select v-model="column.preprocessing">
-                            <option disabled value="">Select Preprocessing</option>
-                            <option value="dummy_encode">Dummy Encode</option>
-                            <option value="drop_one_dummy">Drop One Dummy</option>
-                            <option value="normal_numerical">Normal Numerical</option>
-                        </select>
-                    </div>
-                    <BsButton
-                        flat    
-                        round
-                        class="submit-variables-btn"
-                        size="15px"
-                        @click="submitVariables"
-                        icon="mdi-send">    
-                        <BsTooltip>Submit Variables</BsTooltip>
-                    </BsButton>
+                                        <q-item clickable v-close-popup @click="updatePreprocessing(column, 'drop_one_dummy')">
+                                        <q-item-section>
+                                            <q-item-label>Drop One Dummy</q-item-label>
+                                        </q-item-section>
+                                        </q-item>
+
+                                        <q-item clickable v-close-popup @click="updatePreprocessing(column, 'normal_numerical')">
+                                        <q-item-section>
+                                            <q-item-label>Normal Numerical</q-item-label>
+                                        </q-item-section>
+                                        </q-item>
+                                    </q-list>
+                                </q-btn-dropdown>
+                        </div>
+                    </q-card>
+                    <q-btn color="primary" class="q-mt-md" label="Train Model" @click="submitVariables"></q-btn>
                 </div>
             </BsContent>
             
@@ -132,11 +174,30 @@
                 selectedDatasetString: "",
                 datasetsString: [],
                 chartData: [], 
-                datasetColumns: [],
                 layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
                 firstTabIcon,
-                docLogo
-                // Example: Initialize your local state here
+                docLogo,
+                distributionFunction: '',
+                linkFunction: '',
+                distributionOptions: [
+                    { label: 'Gaussian', value: 'dummy_encode' },
+                    { label: 'Poisson', value: 'drop_one_dummy' },
+                    { label: 'Tweedie', value: 'normal_numerical' },
+                ],
+                linkOptions: [
+                    { label: 'Log', value: 'dummy_encode' },
+                    { label: 'Power', value: 'drop_one_dummy' },
+                ],
+                typeOptions: [
+                    { label: 'Categorical', value: 'categorical' },
+                    { label: 'Numerical', value: 'numerical' },
+                ],
+                preprocessingOptions: [
+                    { label: 'Dummy Encode', value: 'dummy_encode' },
+                    { label: 'Drop One Dummy', value: 'drop_one_dummy' },
+                    { label: 'Normal Numerical', value: 'normal_numerical' },
+                ],
+                datasetColumns: [], // Populate this based on your actual data
             };
         },
         methods: {
@@ -144,6 +205,22 @@
                 if (this.layoutRef) {
                     this.layoutRef.drawerOpen = !this.layoutRef.drawerOpen;
                 }
+            },
+            updatePreprocessing(column, preprocessingValue) {
+            column.preprocessing = preprocessingValue;
+            },
+            updateDistributionFunction(distributionFunction) {
+                this.distributionFunction = distributionFunction;
+                localStorage.setItem('DistributionFunction', distributionFunction);
+            },
+            updateLinkFunction(linkFunction) {
+                this.linkFunction = linkFunction;
+                localStorage.setItem('linkFunction', linkFunction);
+            },
+
+            // Generalized method to update any property of a column
+            updateColumnProperty(column, property, value) {
+                column[property] = value;
             },
             async updateDatasetString(value: string) {
                 this.selectedDatasetString = value;
@@ -226,19 +303,62 @@
         mounted() {
             this.fetchDatasets(); 
             this.layoutRef = this.$refs.layout as InstanceType<typeof BsLayoutDefault>;
+            const savedDistributionFunction = localStorage.getItem('DistributionFunction');
+            const savedLinkFunction = localStorage.getItem('linkFunction');
 
         },
         emits: ['update:modelValue']
     })
     </script>
-    <style scoped>
-    .column-management {
+<style scoped>
+ .column-management {
         display: flex;
         align-items: center; /* Align items vertically */
         gap: 10px; /* Spacing between each item */
     }
-    .column-name {
+.column-name {
         font-weight: bold; /* Make the variable name stand out */
         margin-right: 10px; /* Ensure there's spacing after the name */
     }
-    </style>
+.bs-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px; /* Adds space between sections */
+    background-color: #f9f9f9; /* Light background color for distinction */
+    width: 100%;
+}
+.form-group {
+    display: flex;
+    flex-direction: column; /* Stack the label and select vertically */
+    margin-bottom: 15px; /* Spacing between each form group */
+}
+
+.form-group label {
+    margin-bottom: 5px; /* Space between label and select */
+}
+
+/* If you want the label and dropdown to be on the same line, switch .form-group to row */
+.form-group.row {
+    flex-direction: row;
+    align-items: center; /* Align items vertically */
+}
+
+.form-group.row label {
+    margin-right: 10px; /* Space between label and select, when inline */
+    margin-bottom: 0; /* Remove bottom margin when inline */
+}
+
+.form-group.row select {
+    flex-grow: 1; /* Let the select take up available space */
+}
+.outline-box {
+    border: 2px solid #000; /* Solid black border, adjust as needed */
+    padding: 20px; /* Optional: Adds some spacing inside the box */
+    margin: 20px 0; /* Optional: Adds some spacing outside the box */
+    background-color: #f5f5f5; 
+}
+
+</style>
+
+
