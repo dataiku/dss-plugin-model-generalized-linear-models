@@ -42,4 +42,5 @@ export let API = {
     getVariables: (data: ModelPoint) => axios.post< []>("/api/variables", data),
     getProjectDatasets: () => axios.get<string[]>("/api/get_projects_datasets", {}),
     getDatasetColumns: (datasetName) => axios.post("/api/get_dataset_columns", { name: datasetName }).then(response => response.data),
+    trainModel: (payload) => axios.post<string[]>("/api/train_model",payload),
 }

@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
 # from glm_handler.service import glm_handler
-
+import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 
 # predicted_base = glm_handler.model_handler.get_predicted_and_base()
@@ -10,25 +10,42 @@ fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
-    request_json = request.get_json()
-    input_dataset = request_json.get('input_dataset')
-    distribution_function = request_json.get('distribution_function')
-    link_function = request_json.get('link_function')
-    variables = request_json.get('variables')
+    # request_json = request.get_json()
+    # input_dataset = request_json.get('input_dataset')
+    # distribution_function = request_json.get('distribution_function')
+    # link_function = request_json.get('link_function')
+    # variables = request_json.get('variables')
 
-    if not all([input_dataset, distribution_function, link_function, variables]):
-        return jsonify({'error': 'Missing parameters'}), 400
+    # if not all([input_dataset, distribution_function, link_function, variables]):
+    #     return jsonify({'error': 'Missing parameters'}), 400
 
+    # try:
+    #     DkuMLTask = DataikuMLTask(input_dataset, distribution_function, link_function, variables)
+    #     DkuMLTask.create_visual_ml_task()
+    #     DkuMLTask.enable_glm_algorithm()
+    #     settings = DkuMLTask.test_settings()
+    #     settings_new = DkuMLTask.configure_variables()
+    #     DkuMLTask.train_model()
+    #     return jsonify({'message': 'Model training initiated successfully.'}), 200
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
     try:
-        DkuMLTask = DataikuMLTask(input_dataset, distribution_function, link_function, variables)
-        DkuMLTask.create_visual_ml_task()
-        DkuMLTask.enable_glm_algorithm()
-        settings = DkuMLTask.test_settings()
-        settings_new = DkuMLTask.configure_variables()
-        DkuMLTask.train_model()
-        return jsonify({'message': 'Model training initiated successfully.'}), 200
+        request_json = request.get_json()
+        if request_json is None:
+            raise ValueError("No JSON payload found in the request")
+
+        # Debug: Print the JSON content
+        print(request_json)
+
+        # Your logic here
+        model_name = ['glm_model1.4']
+        return jsonify(model_name)
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Print the error to stderr and traceback for debugging
+        print(f"An error occurred: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': f"An unexpected error occurred: {str(e)}"}), 500
 
 
 @fetch_api.route("/models", methods=["GET"])
@@ -147,3 +164,4 @@ def get_dataset_columns():
 
     colum_names = ['column1', 'column2', 'column3', 'column4','column5']
     return jsonify(colum_names)
+
