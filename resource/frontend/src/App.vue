@@ -1,8 +1,7 @@
 <template>
     <BsLayoutDefault ref="layout">
-      <ModelTrainingTab
-            :layoutRef="layoutRef">
-        </ModelTrainingTab>
+      <ModelTrainingTab>
+      </ModelTrainingTab>
         <BsTab
             name="Variable Selection"
             docTitle="GLM Analyzer"

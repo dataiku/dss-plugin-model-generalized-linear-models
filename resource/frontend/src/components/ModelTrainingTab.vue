@@ -44,8 +44,6 @@
                         </q-card-section>
                         <q-card class="q-pa-sm">
                             <div class="form-group">
-                                <q-row class="q-mb-md">
-                                    <q-col cols="8" sm="4" class="q- pr-md">
                                         <VariableSelect
                                             label="Select a Distribution Function"
                                             :modelValue="selectedDistributionFunctionString"
@@ -54,10 +52,6 @@
                                             helpMessage="Distribution function for GLM "
                                             style="min-width: 150px">
                                         </VariableSelect>
-                                    </q-col>
-                                </q-row>    
-                                <q-row class="q-mb-md">
-                                    <q-col cols="8" sm="4" class="q-pr-md">
                                         <VariableSelect
                                             label="Select a Link Function"
                                             :modelValue="selectedLinkFunctionString"
@@ -66,15 +60,12 @@
                                             helpMessage="Link function for GLM "
                                             style="min-width: 150px">
                                         </VariableSelect>
-                                    </q-col>
-                                </q-row>
                             </div>
                         </q-card>
                         <q-card-section>
                             <h5 v-if="datasetColumns.length > 0">Feature Handling</h5>
                         </q-card-section>
                         <q-card class="q-pa-md">
-                            
                             <div v-for="(column, index) in datasetColumns" :key="index" class="column-management">
                                     <span class="column-name">{{ column.name }}</span>
                                     <VariableSelect
@@ -82,6 +73,7 @@
                                         :modelValue="column.isIncluded"
                                         :options="includeOptions"
                                         @update:modelValue="newValue => updateColumnProperty(index, 'isIncluded', newValue)"
+                                        helpMessage="Include or exclude column for modelling"
                                         style="min-width: 150px">
                                     </VariableSelect>
                                     <!-- Replace q-btn-toggle for role -->
@@ -90,6 +82,7 @@
                                         :modelValue="column.role"
                                         :options="roleOptions"
                                         @update:modelValue="newValue => updateColumnProperty(index, 'role', newValue)"
+                                        helpMessage="What role will the column play in modelling"
                                         style="min-width: 150px">
                                     </VariableSelect>
                                     <VariableSelect
@@ -97,15 +90,16 @@
                                         :modelValue="column.type"
                                         :options="typeOptions"
                                         @update:modelValue="newValue => updateColumnProperty(index, 'type', newValue)"
+                                        helpMessage="Does the column contain categorical or numerical data?"
                                         style="min-width: 150px">
                                     </VariableSelect>
                                     <VariableSelect
-                                            label="Preprocessing"
-                                            :modelValue="column.preprocessing"
-                                            :options="preprocessingOptions"
-                                            @update:modelValue="newValue => updatePreprocessing(index, newValue)"
-                                            helpMessage="Preprocessing Method "
-                                            style="min-width: 150px">
+                                        label="Preprocessing"
+                                        :modelValue="column.preprocessing"
+                                        :options="preprocessingOptions"
+                                        @update:modelValue="newValue => updatePreprocessing(index, newValue)"
+                                        helpMessage="Preprocessing Method"
+                                        style="min-width: 150px">
                                     </VariableSelect>
                             </div>
                         </q-card>
@@ -138,7 +132,7 @@
                 BsContent,
                 BsTooltip
             },
-            props: ['layoutRef'],
+            props: [],
             data() {
                 return {            
                     selectedDatasetString: "",
