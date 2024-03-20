@@ -269,6 +269,7 @@
 
                     // Now modelParameters is available to be included in payload
                     const payload = {
+                        training_dataset:localStorage.getItem('selectedDataset'),
                         model_parameters: modelParameters,
                         variables: variableParameters
                     };

@@ -4,48 +4,62 @@ from dku_config.dku_model_trainer import DataikuMLTask
 # from glm_handler.service import glm_handler
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
-
+import dataiku
+import logging
 # predicted_base = glm_handler.model_handler.get_predicted_and_base()
 # relativities = glm_handler.model_handler.relativities_df
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
-    # request_json = request.get_json()
-    # input_dataset = request_json.get('input_dataset')
-    # distribution_function = request_json.get('distribution_function')
-    # link_function = request_json.get('link_function')
-    # variables = request_json.get('variables')
+    # Log the receipt of a new training request
+    
+    
+    request_json = request.get_json()
+    logging.info(f"Received a model training request: {request_json}")
+    
+    input_dataset = request_json.get('training_dataset')
+    distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
+    link_function = request_json.get('model_parameters', {}).get('link_function')
+    variables = request_json.get('variables')
 
-    # if not all([input_dataset, distribution_function, link_function, variables]):
-    #     return jsonify({'error': 'Missing parameters'}), 400
+    # Log the received parameters for debugging
+    logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
 
-    # try:
-    #     DkuMLTask = DataikuMLTask(input_dataset, distribution_function, link_function, variables)
-    #     DkuMLTask.create_visual_ml_task()
-    #     DkuMLTask.enable_glm_algorithm()
-    #     settings = DkuMLTask.test_settings()
-    #     settings_new = DkuMLTask.configure_variables()
-    #     DkuMLTask.train_model()
-    #     return jsonify({'message': 'Model training initiated successfully.'}), 200
-    # except Exception as e:
-    #     return jsonify({'error': str(e)}), 500
+    if not all([input_dataset, distribution_function, link_function, variables]):
+        logging.error("Missing parameters in the request")
+        return jsonify({'error': 'Missing parameters'}), 400
+
     try:
-        request_json = request.get_json()
-        if request_json is None:
-            raise ValueError("No JSON payload found in the request")
+        DkuMLTask = DataikuMLTask(input_dataset, distribution_function, link_function, variables)
+        DkuMLTask.create_visual_ml_task()
+        logging.debug("Visual ML task created successfully")
 
-        # Debug: Print the JSON content
-        print(request_json)
+        DkuMLTask.enable_glm_algorithm()
+        logging.debug("GLM algorithm enabled successfully")
 
-        # Your logic here
-        model_name = ['glm_model1.4']
-        return jsonify(model_name)
+        settings = DkuMLTask.test_settings()
+        settings_new = DkuMLTask.configure_variables()
+        logging.debug("Model settings configured successfully")
 
+        DkuMLTask.train_model()
+        logging.info("Model training initiated successfully")
+        
+        return jsonify({'message': 'Model training initiated successfully.'}), 200
     except Exception as e:
-        # Print the error to stderr and traceback for debugging
-        print(f"An error occurred: {str(e)}")
-        traceback.print_exc()
-        return jsonify({'error': f"An unexpected error occurred: {str(e)}"}), 500
+        logging.exception("An error occurred during model training")
+        return jsonify({'error': str(e)}), 500
+    
+#     try:
+#         request_json = request.get_json()
+#         if request_json is None:
+#             raise ValueError("No JSON payload found in the request")
+
+#         # Debug: Print the JSON content
+#         print(request_json)
+
+#         # Your logic here
+#         model_name = ['glm_model1.4']
+#         return jsonify(model_name)
 
 
 @fetch_api.route("/models", methods=["GET"])
@@ -159,9 +173,32 @@ def get_projects_datasets():
 
 @fetch_api.route("/get_dataset_columns", methods=["POST"])
 def get_dataset_columns():
-    # request_json = request.get_json()
-    # dataset = request_json["dataset_name"]
+    
+    try:
+        request_json = request.get_json()
+        # Log the entire request JSON for debugging purposes
+        logging.info(f"Received a request for dataset column names: {request_json}")
 
-    colum_names = ['column1', 'column2', 'column3', 'column4','column5']
-    return jsonify(colum_names)
+        # Extract the dataset name from the request
+        dataset_name = request_json["name"]
 
+        # Assuming you're using Dataiku's Python client to fetch dataset columns
+        cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
+        column_names = [column['name'] for column in cols_dict]
+
+        # Log the successfully retrieved column names
+        logging.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
+
+        return jsonify(column_names)
+    except KeyError as e:
+        # Log an error message if the dataset name is not provided in the request
+        logging.error(f"Missing key in request: {e}")
+        return jsonify({'error': f'Missing key in request: {e}'}), 400
+    except Exception as e:
+        # Log any other errors that occur during the process
+        logging.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+#     colum_names = ['column1', 'column2', 'column3', 'column4','column5']
+#     return jsonify(colum_names)
