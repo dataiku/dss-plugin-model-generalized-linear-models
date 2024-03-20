@@ -43,7 +43,7 @@ class DataikuMLTask:
         # Extract special variables based on their roles
         for variable in self.variables:
             role = variable.get("role")
-            if role == "exposure":
+            if role == "Exposure":
                 self.exposure_variable = variable['name']
             elif role == "weights":
                 self.weights_variable = variable['name']
@@ -66,7 +66,7 @@ class DataikuMLTask:
         Raises a ValueError if no target variable is found.
         """
         for variable in self.variables:
-            if variable.get("role") == "target":
+            if variable.get("role") == "Target":
                 self.target_variable = variable['name']
                 return
         raise ValueError("No target variable provided")
