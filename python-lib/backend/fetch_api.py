@@ -167,8 +167,15 @@ def get_relativities():
 
 @fetch_api.route("/get_projects_datasets", methods=["GET"])
 def get_projects_datasets():
-    datasets = ['Dataset1', 'Dataset2', 'Dataset3']
+    client = dataiku.api_client()
+    project = client.get_default_project()
+    datasets = []
+    for i in project.list_datasets():
+        datasets.append(i.name)
     return jsonify(datasets)
+    
+#     datasets = ['Dataset1', 'Dataset2', 'Dataset3']
+#     return jsonify(datasets)
 
 
 @fetch_api.route("/get_dataset_columns", methods=["POST"])
