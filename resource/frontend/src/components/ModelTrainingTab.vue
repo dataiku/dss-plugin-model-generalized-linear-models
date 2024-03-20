@@ -42,7 +42,7 @@
                         <q-card-section>
                             <h5 v-if="datasetColumns.length > 0">Algorithm Parameters </h5>
                         </q-card-section>
-                        <q-card class="q-pa-sm">
+                        <q-card class="q-pa-xl">
                             <div class="form-group">
                                         <VariableSelect
                                             label="Select a Distribution Function"
@@ -66,7 +66,7 @@
                             <h5 v-if="datasetColumns.length > 0">Feature Handling</h5>
                         </q-card-section>
                         <q-card class="q-pa-md">
-                            <div v-for="(column, index) in datasetColumns" :key="index" class="column-management">
+                            <div v-for="(column, index) in datasetColumns" :key="index" class="column-management row-spacing">
                                     <span class="column-name">{{ column.name }}</span>
                                     <VariableSelect
                                         label="Include/Exclude"
@@ -308,47 +308,62 @@
             },
             emits: ['update:modelValue']
         })
-        </script>
-        <style scoped>
-    .column-management {
-            display: flex;
-            align-items: center; /* Align items vertically */
-            gap: 10px; /* Spacing between each item */
-        }
-    .column-name {
-            font-weight: bold; /* Make the variable name stand out */
-            margin-right: 10px; /* Ensure there's spacing after the name */
-        }
-    .form-group {
-        display: flex;
-        flex-direction: column; /* Stack the label and select vertically */
-        margin-bottom: 15px; /* Spacing between each form group */
-    }
+</script>
+<style scoped>
+.row-spacing {
+margin-bottom: 20px; /* Adjust this value as needed */
+}
+.column-management {
+    display: flex;
+    align-items: center; /* Align items vertically */
+    gap: 20px; /* Spacing between each item */
+}
+.column-name {
+    font-weight: bold; /* Make the variable name stand out */
+    margin-right: 10px; /* Ensure there's spacing after the name */
+}
+.form-group {
+display: flex;
+flex-direction: column; /* Stack the label and select vertically */
+margin-bottom: 15px; /* Spacing between each form group */
+}
 
-    .form-group label {
-        margin-bottom: 5px; /* Space between label and select */
-    }
+.form-group label {
+margin-bottom: 5px; /* Space between label and select */
+}
 
-    /* If you want the label and dropdown to be on the same line, switch .form-group to row */
-    .form-group.row {
-        flex-direction: row;
-        align-items: center; /* Align items vertically */
-    }
+/* If you want the label and dropdown to be on the same line, switch .form-group to row */
+.form-group.row {
+flex-direction: row;
+align-items: center; /* Align items vertically */
+}
 
-    .form-group.row label {
-        margin-right: 10px; /* Space between label and select, when inline */
-        margin-bottom: 0; /* Remove bottom margin when inline */
-    }
+.form-group.row label {
+margin-right: 10px; /* Space between label and select, when inline */
+margin-bottom: 0; /* Remove bottom margin when inline */
+}
 
-    .form-group.row select {
-        flex-grow: 1; /* Let the select take up available space */
-    }
-    .outline-box {
-        border: 2px solid #000; /* Solid black border, adjust as needed */
-        padding: 20px; /* Optional: Adds some spacing inside the box */
-        margin: 20px 0; /* Optional: Adds some spacing outside the box */
-        background-color: #f5f5f5; 
-    }
+.form-group.row select {
+flex-grow: 1; /* Let the select take up available space */
+}
+.outline-box {
+border: 2px solid #000; /* Solid black border, adjust as needed */
+padding: 20px; /* Optional: Adds some spacing inside the box */
+margin: 20px 0; /* Optional: Adds some spacing outside the box */
+background-color: #f5f5f5; 
+}
+.close-side-drawer-btn {
+    color: var(--interactions-bs-color-interaction-primary, #2b66ff);
+    position: absolute;
+    top: 7px;
+    right: 10px;
+    z-index: 1000;
+}
+.open-side-drawer-btn {
+    color: var(--interactions-bs-color-interaction-primary, #2b66ff);
+    position: relative;
+    top: 4px;
+}
 
     </style>
 

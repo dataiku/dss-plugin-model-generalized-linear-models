@@ -1,7 +1,7 @@
 <template>
     <BsLayoutDefault ref="layout">
       <ModelTrainingTab>
-        </ModelTrainingTab>
+      </ModelTrainingTab>
         <BsTab
             name="Variable Selection"
             docTitle="GLM Analyzer"
