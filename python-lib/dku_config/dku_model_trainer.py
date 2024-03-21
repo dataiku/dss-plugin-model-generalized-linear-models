@@ -30,8 +30,8 @@ class DataikuMLTask:
         """
         self.client = dataiku.api_client()
         self.input_dataset = input_dataset
-        self.distribution_function = distribution_function
-        self.link_function = link_function
+        self.distribution_function = distribution_function.lower()
+        self.link_function = link_function.lower()
         self.variables = [{'name': key, **value} for key, value in variables.items()]
         self.project = self.client.get_default_project()
         
