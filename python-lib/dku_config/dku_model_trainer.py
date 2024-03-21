@@ -152,7 +152,7 @@ class DataikuMLTask:
         """
         Enables the GLM algorithm for the ML task.
         """
-        logging.info("Enabling GLM algorithm for the ML task.")
+        logging.info("Disabling all algorithms for the ML task.")
         settings = self.mltask.get_settings()
         settings.disable_all_algorithms()
         logging.info("All algorithms disabled.")
