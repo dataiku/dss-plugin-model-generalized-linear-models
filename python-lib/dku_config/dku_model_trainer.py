@@ -20,43 +20,43 @@ class DataikuMLTask:
         offset_variable (str): Name of the offset variable, if any.
     """
     
-       def __init__(self, input_dataset, distribution_function, link_function, variables):
-            logger.info("Initializing DataikuMLTask")
-            self.client = dataiku.api_client()
-            logger.info("Dataiku API client initialized")
+    def __init__(self, input_dataset, distribution_function, link_function, variables):
+        logger.info("Initializing DataikuMLTask")
+        self.client = dataiku.api_client()
+        logger.info("Dataiku API client initialized")
 
-            self.input_dataset = input_dataset
-            logger.info(f"input_dataset set to {input_dataset}")
+        self.input_dataset = input_dataset
+        logger.info(f"input_dataset set to {input_dataset}")
 
-            self.distribution_function = distribution_function.lower()
-            logger.info(f"distribution_function set to {self.distribution_function}")
+        self.distribution_function = distribution_function.lower()
+        logger.info(f"distribution_function set to {self.distribution_function}")
 
-            self.link_function = link_function.lower()
-            logger.info(f"link_function set to {self.link_function}")
+        self.link_function = link_function.lower()
+        logger.info(f"link_function set to {self.link_function}")
 
-            self.variables = [{'name': key, **value} for key, value in variables.items()]
-            logger.info(f"variables set to {self.variables}")
+        self.variables = [{'name': key, **value} for key, value in variables.items()]
+        logger.info(f"variables set to {self.variables}")
 
-            self.project = self.client.get_default_project()
-            logger.info("Default project obtained from Dataiku API client")
+        self.project = self.client.get_default_project()
+        logger.info("Default project obtained from Dataiku API client")
 
-            self.exposure_variable = None
-            self.weights_variable = None
-            self.offset_variable = None
+        self.exposure_variable = None
+        self.weights_variable = None
+        self.offset_variable = None
 
-            for variable in self.variables:
-                role = variable.get("role", "").lower()
-                if role == "exposure":
-                    self.exposure_variable = variable['name']
-                    logger.info(f"exposure_variable set to {self.exposure_variable}")
-                elif role == "weights":
-                    self.weights_variable = variable['name']
-                    logger.info(f"weights_variable set to {self.weights_variable}")
-                elif role == "offset":
-                    self.offset_variable = variable['name']
-                    logger.info(f"offset_variable set to {self.offset_variable}")
+        for variable in self.variables:
+            role = variable.get("role", "").lower()
+            if role == "exposure":
+                self.exposure_variable = variable['name']
+                logger.info(f"exposure_variable set to {self.exposure_variable}")
+            elif role == "weights":
+                self.weights_variable = variable['name']
+                logger.info(f"weights_variable set to {self.weights_variable}")
+            elif role == "offset":
+                self.offset_variable = variable['name']
+                logger.info(f"offset_variable set to {self.offset_variable}")
 
-            logger.info("DataikuMLTask initialized successfully")
+        logger.info("DataikuMLTask initialized successfully")
 
 
     
