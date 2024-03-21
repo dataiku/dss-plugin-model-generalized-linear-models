@@ -31,8 +31,8 @@ class DataikuMLTask:
         """
         self.client = dataiku.api_client()
         self.input_dataset = input_dataset
-        self.distribution_function = distribution_function
-        self.link_function = link_function
+        self.distribution_function = distribution_function.lower()
+        self.link_function = link_function.lower()
         self.variables = [{'name': key, **value} for key, value in variables.items()]
         self.project = self.client.get_default_project()
         
@@ -67,7 +67,7 @@ class DataikuMLTask:
         Raises a ValueError if no target variable is found.
         """
         for variable in self.variables:
-            if variable.get("role") == "target":
+            if variable.get("role").lower() == "target":
                 self.target_variable = variable['name']
                 return
         raise ValueError("No target variable provided")
