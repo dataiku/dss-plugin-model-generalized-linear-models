@@ -190,6 +190,8 @@ class DataikuMLTask:
                     elif processing == 'normalize':
                         fs["rescaling"] = "MINMAX"
                         logging.info(f"Numerical variable '{variable_name}' rescaling set to MINMAX.")
+            elif variable_name == self.target_variable:
+                pass
             else:
                 settings.reject_feature(variable_name)
                 logging.info(f"Variable '{variable_name}' rejected and not used in ML task.")
