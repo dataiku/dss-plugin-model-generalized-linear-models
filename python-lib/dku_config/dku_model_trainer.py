@@ -157,6 +157,7 @@ class DataikuMLTask:
         fs['customHandlingCode'] = ''
         fs['customProcessorWantsMatrix'] = False
         fs['sendToInput'] = 'main'
+        return fs
 
     def update_to_categorical(self, fs, variable_preprocessing_method):
         
