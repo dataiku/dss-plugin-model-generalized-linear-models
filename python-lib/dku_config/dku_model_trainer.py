@@ -43,7 +43,7 @@ class DataikuMLTask:
         
         # Extract special variables based on their roles
         for variable in self.variables:
-            role = variable.get("role")
+            role = variable.get("role").lower()
             if role == "exposure":
                 self.exposure_variable = variable['name']
             elif role == "weights":
