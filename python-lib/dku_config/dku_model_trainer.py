@@ -201,7 +201,7 @@ class DataikuMLTask:
         """
         Trains the model with the current configuration.
         """
-        logging.info(f"Starting model training with these settings {}.")
+        logging.info(f"Starting model training with these settings {self.mltask.get_settings()}.")
         self.mltask.start_train()
         self.mltask.wait_train_complete()
         logging.info("Model training completed.")
