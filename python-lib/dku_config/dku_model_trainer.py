@@ -140,6 +140,39 @@ class DataikuMLTask:
     def test_settings(self):
         return self.mltask.get_settings()
     
+    def update_to_categorical(self, fs, variable_preprocessing_method):
+        
+        fs['missing_impute_with']= 'MODE'
+        fs['type']= 'CATEGORY'
+        fs['category_handling'] = variable_preprocessing_method
+        fs['missing_handling'] = 'NONE'
+        fs['dummy_clip'] = 'MAX_NB_CATEGORIES'
+        fs['cumulative_proportion'] = 0.95
+        fs['min_samples'] = 10
+        fs['max_nb_categories'] = 100
+        fs['max_cat_safety'] = 200
+        fs['nb_bins_hashing'] = 1048576
+        fs['hash_whole_categories'] = True
+        fs['dummy_drop'] = 'AUTO'
+        fs['impact_method'] = 'M_ESTIMATOR'
+        fs['impact_m'] = 10
+        fs['impact_kfold'] = True
+        fs['impact_kfold_k'] = 5
+        fs['impact_kfold_seed'] = 1337
+        fs['ordinal_order'] = 'COUNT'
+        fs['ordinal_ascending'] = False
+        fs['ordinal_default_mode'] = 'HIGHEST'
+        fs['ordinal_default_value'] = 0
+        fs['frequency_default_mode'] = 'EXPLICIT'
+        fs['frequency_default_value'] = 0.0
+        fs['frequency_normalized'] = True
+        fs['role'] = 'INPUT'
+        fs['customHandlingCode'] = ''
+        fs['customProcessorWantsMatrix'] = False
+        fs['sendToInput'] = 'main'
+        
+        return fs
+    
     def configure_variables(self):
         """
         Configures the variables for the ML task, setting the type of processing for each.
@@ -154,7 +187,9 @@ class DataikuMLTask:
                 
                 # Configure categorical variables
                 if variable['type'] == 'categorical':
-                    fs["category_handling"] = variable.get('processing', 'NONE')
+                    variable_preprocessing_method = variable.get('processing', 'NONE')
+                    fs = self.update_to_categorical(fs, variable_preprocessing_method)
+
                 
                 # Configure numerical variables with specific processing types
                 elif variable['type'] == 'numerical':
