@@ -68,7 +68,10 @@ class DataikuMLTask:
             message = "No target variable provided."
             logging.error(message)
             raise ValueError(message)
-
+    
+    def test_settings(self):
+        return self.mltask.get_settings()
+    
     def update_mltask_modelling_params(self):
         """
         Updates the modeling parameters based on the distribution function, link function,
