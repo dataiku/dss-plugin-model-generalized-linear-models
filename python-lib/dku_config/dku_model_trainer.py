@@ -197,7 +197,7 @@ class DataikuMLTask:
                 logging.info(f"Variable '{variable_name}' rejected and not used in ML task.")
                 
         try:
-            logging.info(f"Attempting to save settings {settings}")
+            logging.info(f"Attempting to save settings {settings.get_raw()}")
             settings.save()
         except:
             logging.error(f"Failed to save settings. Error: {e}")
