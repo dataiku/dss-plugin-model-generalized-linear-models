@@ -211,9 +211,8 @@ class DataikuMLTask:
                 
                 # Configure numerical variables with specific processing types
                 elif variable['type'] == 'numerical':
-                    processing = variable.get('processing', 'NONE')
+#                     processing = variable.get('processing', 'NONE')
                     fs = self.update_to_numeric(fs,processing)
-                    processing = variable.get('processing', 'NONE')
             elif variable_name == self.target_variable:
                     pass
             else:
