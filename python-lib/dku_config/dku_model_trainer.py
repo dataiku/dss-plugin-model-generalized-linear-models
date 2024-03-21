@@ -195,8 +195,13 @@ class DataikuMLTask:
             else:
                 settings.reject_feature(variable_name)
                 logging.info(f"Variable '{variable_name}' rejected and not used in ML task.")
-
-        settings.save()
+                
+        try:
+            logging.info(f"Attempting to save settings {settings}")
+            settings.save()
+        except:
+            logging.error(f"Failed to save settings. Error: {e}")
+            
         logging.info("ML task settings updated with configured variables.")
 
     def train_model(self):
