@@ -148,7 +148,7 @@ class DataikuMLTask:
         
         for variable in self.variables:
             variable_name = variable['name']
-            if variable_name != self.target_variable and variable['role'] != 'reject':
+            if variable_name != self.target_variable and variable['included']:
                 settings.use_feature(variable_name)
                 fs = settings.get_feature_preprocessing(variable_name)
                 
