@@ -140,6 +140,24 @@ class DataikuMLTask:
     def test_settings(self):
         return self.mltask.get_settings()
     
+    def update_to_numeric(self, fs, variable_preprocessing_method='REGULAR'):
+        fs['generate_derivative'] = False
+        fs['numerical_handling'] = variable_preprocessing_method
+        fs['missing_handling'] = 'IMPUTE'
+        fs['missing_impute_with'] = 'MEAN'
+        fs['impute_constant_value'] = 0.0
+        fs['keep_regular'] = False
+        fs['rescaling'] = 'AVGSTD'
+        fs['quantile_bin_nb_bins'] = 4
+        fs['binarize_threshold_mode'] = 'MEDIAN'
+        fs['binarize_constant_threshold'] = 0.0
+        fs['datetime_cyclical_periods'] = []
+        fs['role'] = 'INPUT'
+        fs['type'] = 'NUMERIC'
+        fs['customHandlingCode'] = ''
+        fs['customProcessorWantsMatrix'] = False
+        fs['sendToInput'] = 'main'
+
     def update_to_categorical(self, fs, variable_preprocessing_method):
         
         fs['missing_impute_with']= 'MODE'
@@ -194,10 +212,8 @@ class DataikuMLTask:
                 # Configure numerical variables with specific processing types
                 elif variable['type'] == 'numerical':
                     processing = variable.get('processing', 'NONE')
-                    if processing == 'standardize':
-                        fs["rescaling"] = "STANDARD"
-                    elif processing == 'normalize':
-                        fs["rescaling"] = "MINMAX"
+                    fs = self.update_to_numeric(fs,processing)
+                    processing = variable.get('processing', 'NONE')
             elif variable_name == self.target_variable:
                     pass
             else:
