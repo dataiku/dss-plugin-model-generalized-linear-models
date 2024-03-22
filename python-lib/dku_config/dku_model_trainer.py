@@ -177,6 +177,7 @@ class DataikuMLTask:
         
         fs['missing_impute_with']= 'MODE'
         fs['type']= 'CATEGORY'
+#         fs['category_handling'] = "variable_preprocessing_method"
         fs['category_handling'] = "CUSTOM"
         fs['missing_handling'] = 'NONE'
         fs['dummy_clip'] = 'MAX_NB_CATEGORIES'
