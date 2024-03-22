@@ -278,9 +278,9 @@ class DataikuMLTask:
         settings.set_target_variable(self.target_variable)
         settings.save()
 
-    def train_model(self):
+    def train_model(self, session_name):
         """
         Trains the model with the current configuration.
         """
-        self.mltask.start_train()
+        self.mltask.start_train(session_name=session_name)
         self.mltask.wait_train_complete()
