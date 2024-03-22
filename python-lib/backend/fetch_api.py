@@ -20,6 +20,7 @@ def train_model():
     input_dataset = request_json.get('training_dataset')
     distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
     link_function = request_json.get('model_parameters', {}).get('link_function')
+    session_name = request_json.get('model_parameters', {}).get('link_function', None)
     variables = request_json.get('variables')
 
     # Log the received parameters for debugging
@@ -41,7 +42,7 @@ def train_model():
         settings_new = DkuMLTask.configure_variables()
         logging.debug("Model settings configured successfully")
 
-        DkuMLTask.train_model()
+        DkuMLTask.train_model(session_name=session_name)
         logging.info("Model training initiated successfully")
         
         return jsonify({'message': 'Model training initiated successfully.'}), 200
