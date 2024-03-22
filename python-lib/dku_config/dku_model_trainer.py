@@ -180,7 +180,7 @@ class DataikuMLTask:
         fs['type']= 'CATEGORY'
 #         fs['category_handling'] = "variable_preprocessing_method"
         fs['category_handling'] = "CUSTOM"
-        fs['missing_handling'] = 'NONE'
+        fs['missing_handling'] = 'IMPUTE'
         fs['dummy_clip'] = 'MAX_NB_CATEGORIES'
         fs['cumulative_proportion'] = 0.95
         fs['min_samples'] = 10
