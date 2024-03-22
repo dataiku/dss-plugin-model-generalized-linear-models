@@ -156,7 +156,8 @@ class DataikuMLTask:
     
     def update_to_numeric(self, fs, variable_preprocessing_method='REGULAR'):
         fs['generate_derivative'] = False
-        fs['numerical_handling'] = variable_preprocessing_method
+#         fs['numerical_handling'] = variable_preprocessing_method
+        fs['numerical_handling'] = 'REGULAR'
         fs['missing_handling'] = 'IMPUTE'
         fs['missing_impute_with'] = 'MEAN'
         fs['impute_constant_value'] = 0.0
