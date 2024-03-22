@@ -100,6 +100,30 @@ def get_data():
         })
     return jsonify(df.to_dict('records'))
 
+@fetch_api.route("/lift_data", methods=["POST"])
+def get_lift_data():
+    request_json = request.get_json()
+    model = request_json["id"]
+    # df = predicted_base.copy()
+    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    # return jsonify(df.to_dict('records'))
+    if model == 'model_1':
+        df = pd.DataFrame({
+            'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
+            'Value': [100, 103, 101, 98, 100, 100, 101, 102],
+            'observedAverage': [0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1],
+            'fittedAverage': [0.12, 0.16, 0.19, 0.32, 0.37, 0.55, 0.83, 1.02]
+        })
+    else:
+        df = pd.DataFrame({
+            'Category': ['0.1', '0.15', '0.22', '0.3', '0.45', '0.6', '0.8', '1'],
+            'Value': [100, 103, 101, 100, 101, 100, 101, 102],
+            'observedAverage': [0.1, 0.15, 0.22, 0.3, 0.45, 0.6, 0.8, 1],
+            'fittedAverage': [0.12, 0.16, 0.23, 0.32, 0.37, 0.62, 0.83, 1.02]
+        })
+    return jsonify(df.to_dict('records'))
+
+
 @fetch_api.route("/update_bins", methods=["POST"])
 def get_updated_data():
     request_json = request.get_json()

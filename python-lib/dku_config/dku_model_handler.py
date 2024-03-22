@@ -239,6 +239,38 @@ class ModelHandler:
         variable_names = self.predictor._model.clf.column_labels
         return dict(zip(variable_names, coefficients))
 
+    def get_lift_chart(self, nb_bins):
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+
+        tempdata = train_set.sort_values(by=self.target, ascending=False)
+        tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
+        tempdata['bin'] = pd.cut(tempdata['weight_cumsum'].round(16), bins=[round(x / Number_of_bins,8) for x in range(Number_of_bins+1)], labels=[x + 1 for x in range(Number_of_bins)])
+        # Set the value of each bin to the mean of the bin
+
+        tempdata['bin'] = tempdata['bin'].astype(int)
+
+        for i in tempdata['bin'].unique():
+
+            tempdata.loc[tempdata['bin']==i,new_var] = tempdata.loc[tempdata['bin']==i,Pred_var].mean()
+
+
+
+        new_data = data.join(tempdata[[new_var,'bin']]).copy(deep=True)
+        #Mention the list of vars to be rolled and how they will be rolled up
+    #    new_data.loc['actual_freq']=new_data.WATER_CLM_B*new_data.FINAL_EXP_B
+        new_data.loc[:,'predict_count'] = data.prediction*data.FINAL_EXP_B
+        grouped = new_data.groupby([new_var]).aggregate({'CLIENT_ID': 'count','FINAL_EXP_B':'sum', 'WATER_CLM_B': 'sum','predict_count':'sum'})
+
+        #Calculating observed and predicted loss cost as they are my response and model prediction
+        grouped['Actual claim freq']=(grouped.WATER_CLM_B/grouped.FINAL_EXP_B)
+
+        grouped['Predicted claim freq']=(grouped.predict_count/grouped.FINAL_EXP_B)
+
+        grouped['Bins']=grouped.index
+
+
+        return grouped
+
     def get_link_function(self):
         """
         Retrieves the link function of the original model as a statsmodel object
