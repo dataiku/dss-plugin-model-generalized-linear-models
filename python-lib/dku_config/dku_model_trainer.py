@@ -100,6 +100,13 @@ class DataikuMLTask:
                 "exposure_columns": [self.exposure_variable],
                 "training_dataset": self.input_dataset
             })
+        elif self.exposure_variable:
+            algo_settings['params'].update({
+                "offset_mode": "OFFSETS/EXPOSURES",
+                "offset_columns": [],
+                "exposure_columns": [self.exposure_variable],
+                "training_dataset": self.input_dataset
+            })
         elif self.offset_variable:
             algo_settings['params'].update({
                 "offset_mode": "OFFSETS",
