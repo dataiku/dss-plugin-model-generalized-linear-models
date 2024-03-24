@@ -6,6 +6,7 @@ import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 import dataiku
 import logging
+from dataiku.customwebapp import get_webapp_config
 # predicted_base = glm_handler.model_handler.get_predicted_and_base()
 # relativities = glm_handler.model_handler.relativities_df
 
@@ -16,11 +17,17 @@ def train_model():
     
     request_json = request.get_json()
     logging.info(f"Received a model training request: {request_json}")
-    
-    input_dataset = request_json.get('training_dataset')
+    try: 
+        web_app_config = get_webapp_config()
+        input_dataset = web_app_config.get("training_dataset_string")
+        code_env_string = web_app_config.get("code_env_string")
+    except:
+        input_dataset = "claim_train"
+        code_env_string="py39_sol"
+    logging.info(f"Training Dataset name selected is: {input_dataset}") 
     distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
     link_function = request_json.get('model_parameters', {}).get('link_function')
-    session_name = request_json.get('model_parameters', {}).get('link_function', None)
+    model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
     variables = request_json.get('variables')
 
     # Log the received parameters for debugging
@@ -42,7 +49,7 @@ def train_model():
         settings_new = DkuMLTask.configure_variables()
         logging.debug("Model settings configured successfully")
 
-        DkuMLTask.train_model(session_name=session_name)
+        DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
         logging.info("Model training initiated successfully")
         
         return jsonify({'message': 'Model training initiated successfully.'}), 200
@@ -166,29 +173,39 @@ def get_relativities():
     return jsonify(df.to_dict('records'))
 
 
-@fetch_api.route("/get_projects_datasets", methods=["GET"])
-def get_projects_datasets():
-    client = dataiku.api_client()
-    project = client.get_default_project()
-    datasets = []
-    for i in project.list_datasets():
-        datasets.append(i.name)
-    return jsonify(datasets)
+@fetch_api.route("/get_project_dataset", methods=["GET"])
+def get_project_dataset():
+    try: 
+        web_app_config = get_webapp_config()
+        dataset_name = web_app_config.get("training_dataset_string")
+    except:
+        dataset_name = "claim_train"
+    logging.info(f"Training Dataset name selected is: {dataset_name}")
+    return jsonify(dataset_name)
+
+    # client = dataiku.api_client()
+    # project = client.get_default_project()
+    # datasets = []
+    # for i in project.list_datasets():
+    #     datasets.append(i.name)
+    # return jsonify(datasets)
     
 #     datasets = ['Dataset1', 'Dataset2', 'Dataset3']
 #     return jsonify(datasets)
 
 
-@fetch_api.route("/get_dataset_columns", methods=["POST"])
+@fetch_api.route("/get_dataset_columns", methods=["GET"])
 def get_dataset_columns():
     
     try:
-        request_json = request.get_json()
-        # Log the entire request JSON for debugging purposes
-        logging.info(f"Received a request for dataset column names: {request_json}")
-
-        # Extract the dataset name from the request
-        dataset_name = request_json["name"]
+        # This try statement is just for local development remove the except 
+        # which explicitly assins the dataset name
+        try: 
+            web_app_config = get_webapp_config()
+            dataset_name = web_app_config.get("training_dataset_string")
+        except:
+            dataset_name = "claim_train"
+        logging.info(f"Training Dataset name selected is: {dataset_name}")
 
         # Assuming you're using Dataiku's Python client to fetch dataset columns
         cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')

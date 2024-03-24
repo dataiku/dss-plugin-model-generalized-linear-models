@@ -154,7 +154,7 @@ class DataikuMLTask:
     def test_settings(self):
         return self.mltask.get_settings()
     
-    def update_to_numeric(self, fs, variable_preprocessing_method='REGULAR'):
+    def update_to_numeric(self, fs, variable_preprocessing_method='AVGSTD'):
         fs['generate_derivative'] = False
 #         fs['numerical_handling'] = variable_preprocessing_method
         fs['numerical_handling'] = 'REGULAR'
@@ -162,7 +162,7 @@ class DataikuMLTask:
         fs['missing_impute_with'] = 'MEAN'
         fs['impute_constant_value'] = 0.0
         fs['keep_regular'] = False
-        fs['rescaling'] = 'AVGSTD'
+        fs['rescaling'] = variable_preprocessing_method
         fs['quantile_bin_nb_bins'] = 4
         fs['binarize_threshold_mode'] = 'MEDIAN'
         fs['binarize_constant_threshold'] = 0.0
@@ -242,7 +242,7 @@ class DataikuMLTask:
         
         for variable in self.variables:
             variable_name = variable['name']
-            if variable_name != self.target_variable and variable['included']:
+            if variable_name != self.target_variable and variable_name != self.exposure_variable and variable['included']:
                 settings.use_feature(variable_name)
                 fs = settings.get_feature_preprocessing(variable_name)
                 
@@ -255,9 +255,13 @@ class DataikuMLTask:
                 # Configure numerical variables with specific processing types
                 elif variable['type'] == 'numerical':
 #                     processing = variable.get('processing', 'NONE')
-                    fs = self.update_to_numeric(fs, None)
+                    fs = self.update_to_numeric(fs, "AVGSTD")
             elif variable_name == self.target_variable:
                     pass
+            elif variable_name == self.exposure_variable:
+                settings.use_feature(variable_name)
+                fs = settings.get_feature_preprocessing(variable_name)
+                fs = self.update_to_numeric(fs, "NONE")
             else:
                 settings.reject_feature(variable_name)
 
@@ -277,10 +281,18 @@ class DataikuMLTask:
         settings = self.mltask.get_settings()
         settings.set_target_variable(self.target_variable)
         settings.save()
+    
+    def set_code_env_settings(self,code_env_string):
+        settings = self.mltask.get_settings()
+        settings.mltask_settings['envSelection']['envMode'] = 'EXPLICIT_ENV'
+        settings.mltask_settings['envSelection']['envName'] = code_env_string
+        settings.save()
+        logger.info(f"set code env settings to {self.mltask.get_settings().mltask_settings.get('envSelection')} ")
 
-    def train_model(self, session_name=None):
+    def train_model(self,code_env_string,session_name=None):
         """
         Trains the model with the current configuration.
         """
+        self.set_code_env_settings(code_env_string)
         self.mltask.start_train(session_name=session_name)
         self.mltask.wait_train_complete()

@@ -12,6 +12,7 @@ CONFIG = {
         "model_id": "aHJZVrBQ",
     },
     "default_project_key": DEFAULT_PROJECT_KEY,
+    "training_dataset_string": "claim_train",
 }
 
 os.environ["DKU_CURRENT_PROJECT_KEY"] = CONFIG.get("default_project_key")
@@ -21,6 +22,7 @@ def get_setup_for_dataiku_client():
     return {
         "webapp_config": CONFIG.get("webapp_config"),
         "default_project_key": CONFIG.get("default_project_key"),
+        "training_dataset_string": CONFIG.get("claim_train")
     }
 
 

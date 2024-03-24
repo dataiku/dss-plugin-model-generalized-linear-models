@@ -40,7 +40,7 @@ export let API = {
     getRelativities: (data: ModelPoint) => axios.post<RelativityPoint[]>("/api/relativities", data),
     getModels: () => axios.get<ModelPoint[]>("/api/models"),
     getVariables: (data: ModelPoint) => axios.post< []>("/api/variables", data),
-    getProjectDatasets: () => axios.get<string[]>("/api/get_projects_datasets", {}),
-    getDatasetColumns: (datasetName: string) => axios.post("/api/get_dataset_columns", { name: datasetName }).then(response => response.data),
+    getProjectDataset: () => axios.get<string[]>("/api/get_project_dataset", {}),
+    getDatasetColumns: () => axios.get("/api/get_dataset_columns", {}),
     trainModel: (payload: any) => axios.post<string[]>("/api/train_model",payload),
 }
