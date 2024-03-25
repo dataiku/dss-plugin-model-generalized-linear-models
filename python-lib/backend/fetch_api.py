@@ -102,6 +102,7 @@ def get_data():
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
     request_json = request.get_json()
+    print(request_json)
     model = request_json["id"]
     lift_chart = glm_handler.model_handler.get_lift_chart()
     df = lift_chart.copy()
