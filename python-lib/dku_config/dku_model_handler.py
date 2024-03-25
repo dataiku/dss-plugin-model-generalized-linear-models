@@ -59,6 +59,7 @@ class ModelHandler:
         modeling_params = self.model_info_handler.get_modeling_params()
         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
+        self.exposure = self.exposure_columns[0] # assumes there is only one
         important_columns = self.offset_columns + self.exposure_columns + [self.target] + [self.weight]
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
         self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='INPUT']
@@ -238,6 +239,28 @@ class ModelHandler:
         coefficients = self.predictor._model.clf.coef_
         variable_names = self.predictor._model.clf.column_labels
         return dict(zip(variable_names, coefficients))
+
+    def get_lift_chart(self, nb_bins):
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+        predicted = self.predictor.predict(train_set)
+        train_set['prediction'] = predicted
+        tempdata = train_set.sort_values(by='prediction', ascending=True)
+        print(tempdata)
+        
+
+        tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
+        tempdata['bin'] = pd.cut(tempdata['exposure_cumsum'].round(16), bins=[round(x / nb_bins, 8) for x in range(nb_bins+1)][:-1] + [float("inf")], labels=[x + 1 for x in range(nb_bins)])
+        tempdata['bin'] = tempdata['bin'].astype(int)
+        new_data = train_set.join(tempdata[['bin']]).copy(deep=True)
+        new_data['weighted_prediction'] = new_data.prediction * new_data[self.exposure]
+        new_data['weighted_target'] = new_data[self.target] * new_data[self.exposure]
+        grouped = new_data.groupby(["bin"]).aggregate({self.exposure: 'sum', 'weighted_target': 'sum', 'weighted_prediction':'sum'})
+        grouped['observedData'] = grouped['weighted_target'] / grouped[self.exposure]
+        grouped['predictedData'] = grouped['weighted_prediction'] / grouped[self.exposure]
+        grouped.reset_index(inplace=True)
+        grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
+        
+        return grouped
 
     def get_link_function(self):
         """
