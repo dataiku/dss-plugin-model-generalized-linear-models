@@ -242,10 +242,11 @@ class ModelHandler:
 
     def get_lift_chart(self, nb_bins):
         train_set = self.model_info_handler.get_train_df()[0].copy()
-        tempdata = train_set.sort_values(by=self.target, ascending=True)
-        print(tempdata)
         predicted = self.predictor.predict(train_set)
         train_set['prediction'] = predicted
+        tempdata = train_set.sort_values(by='predicted', ascending=True)
+        print(tempdata)
+        
 
         tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
         tempdata['bin'] = pd.cut(tempdata['exposure_cumsum'].round(16), bins=[round(x / nb_bins, 8) for x in range(nb_bins+1)][:-1] + [float("inf")], labels=[x + 1 for x in range(nb_bins)])
