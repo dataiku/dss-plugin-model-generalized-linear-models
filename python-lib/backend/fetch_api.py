@@ -105,9 +105,10 @@ def get_lift_data():
     request_json = request.get_json()
     model = request_json["id"]
     lift_chart = glm_handler.model_handler.get_lift_chart()
-    # df = predicted_base.copy()
-    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    # return jsonify(df.to_dict('records'))
+    df = lift_chart.copy()
+    print(df)
+    df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    return jsonify(df.to_dict('records'))
     if model == 'model_1':
         df = pd.DataFrame({
             'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
