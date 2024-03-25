@@ -256,7 +256,6 @@ class ModelHandler:
         grouped['observedData'] = grouped['weighted_target'] / grouped[self.exposure]
         grouped['predictedData'] = grouped['weighted_prediction'] / grouped[self.exposure]
         grouped.reset_index(inplace=True)
-        print(grouped)
         grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
         
         return grouped
