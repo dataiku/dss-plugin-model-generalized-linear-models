@@ -240,35 +240,22 @@ class ModelHandler:
         return dict(zip(variable_names, coefficients))
 
     def get_lift_chart(self, nb_bins):
-        train_set = self.model_info_handler.get_train_df()[0].copy()
+        train_set = model_handler.model_info_handler.get_train_df()[0].copy()
+        tempdata = train_set.sort_values(by=model_handler.target, ascending=False)
+        predicted = model_handler.predictor.predict(train_set)
+        train_set['prediction'] = predicted
 
-        tempdata = train_set.sort_values(by=self.target, ascending=False)
-        tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
-        tempdata['bin'] = pd.cut(tempdata['weight_cumsum'].round(16), bins=[round(x / Number_of_bins,8) for x in range(Number_of_bins+1)], labels=[x + 1 for x in range(Number_of_bins)])
-        # Set the value of each bin to the mean of the bin
-
+        tempdata['exposure_cumsum'] = tempdata[model_handler.exposure].cumsum() / tempdata[model_handler.exposure].sum()
+        tempdata['bin'] = pd.cut(tempdata['exposure_cumsum'].round(16), bins=[round(x / nb_bins,8) for x in range(nb_bins+1)][:-1] + [float("inf")], labels=[x + 1 for x in range(nb_bins)])
         tempdata['bin'] = tempdata['bin'].astype(int)
-
-        for i in tempdata['bin'].unique():
-
-            tempdata.loc[tempdata['bin']==i,new_var] = tempdata.loc[tempdata['bin']==i,Pred_var].mean()
-
-
-
-        new_data = data.join(tempdata[[new_var,'bin']]).copy(deep=True)
-        #Mention the list of vars to be rolled and how they will be rolled up
-    #    new_data.loc['actual_freq']=new_data.WATER_CLM_B*new_data.FINAL_EXP_B
-        new_data.loc[:,'predict_count'] = data.prediction*data.FINAL_EXP_B
-        grouped = new_data.groupby([new_var]).aggregate({'CLIENT_ID': 'count','FINAL_EXP_B':'sum', 'WATER_CLM_B': 'sum','predict_count':'sum'})
-
-        #Calculating observed and predicted loss cost as they are my response and model prediction
-        grouped['Actual claim freq']=(grouped.WATER_CLM_B/grouped.FINAL_EXP_B)
-
-        grouped['Predicted claim freq']=(grouped.predict_count/grouped.FINAL_EXP_B)
-
-        grouped['Bins']=grouped.index
-
-
+        new_data = train_set.join(tempdata[['bin']]).copy(deep=True)
+        new_data['weighted_prediction'] = new_data.prediction * new_data[model_handler.exposure]
+        new_data['weighted_target'] = new_data[model_handler.target] * new_data[model_handler.exposure]
+        grouped = new_data.groupby(["bin"]).aggregate({model_handler.exposure: 'sum', 'weighted_target': 'sum', 'weighted_prediction':'sum'})
+        grouped['observedData'] = grouped['weighted_target'] / grouped[model_handler.exposure]
+        grouped['predictedData'] = grouped['weighted_prediction'] / grouped[model_handler.exposure]
+        grouped.reset_index(inplace=True)
+        
         return grouped
 
     def get_link_function(self):
