@@ -104,7 +104,7 @@ def get_lift_data():
     request_json = request.get_json()
     print(request_json)
     model = request_json["id"]
-    lift_chart = glm_handler.model_handler.get_lift_chart()
+    lift_chart = glm_handler.model_handler.get_lift_chart(8)
     df = lift_chart.copy()
     print(df)
     df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
