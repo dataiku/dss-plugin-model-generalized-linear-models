@@ -246,7 +246,7 @@ class ModelHandler:
         train_set['prediction'] = predicted
 
         tempdata['exposure_cumsum'] = tempdata[model_handler.exposure].cumsum() / tempdata[model_handler.exposure].sum()
-        tempdata['bin'] = pd.cut(tempdata['exposure_cumsum'].round(16), bins=[round(x / nb_bins,8) for x in range(nb_bins+1)][:-1] + [float("inf")], labels=[x + 1 for x in range(nb_bins)])
+        tempdata['bin'] = pd.cut(tempdata['exposure_cumsum'].round(16), bins=[round(x / nb_bins, 8) for x in range(nb_bins+1)][:-1] + [float("inf")], labels=[x + 1 for x in range(nb_bins)])
         tempdata['bin'] = tempdata['bin'].astype(int)
         new_data = train_set.join(tempdata[['bin']]).copy(deep=True)
         new_data['weighted_prediction'] = new_data.prediction * new_data[model_handler.exposure]
