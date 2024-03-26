@@ -72,7 +72,7 @@ class ModelHandler:
         preprocessing = self.predictor.get_preprocessing()
         for step in preprocessing.pipeline.steps:
             try:
-                self.base_levels[step.input_col] = step.processor.mode_column
+                self.base_values[step.input_col] = step.processor.mode_column
                 self.modalities[step.input_col] = step.processor.modalities
             except AttributeError:
                 pass
