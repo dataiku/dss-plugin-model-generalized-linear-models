@@ -68,7 +68,6 @@ class ModelHandler:
     def compute_base_values(self):
         self.base_values = dict()
         self.modalities = dict()
-        #self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
         preprocessing = self.predictor.get_preprocessing()
         for step in preprocessing.pipeline.steps:
             try:
