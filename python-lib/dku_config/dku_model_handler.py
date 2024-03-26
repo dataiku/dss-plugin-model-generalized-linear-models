@@ -68,13 +68,19 @@ class ModelHandler:
     def compute_base_values(self):
         self.base_values = {}
         self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
-        for feature in self.used_features:
-            if self.features[feature]['type'] == 'CATEGORY':
-                print(feature)
-                self.base_values[feature] = self.collector_data[feature]['dropped_modality']
-            else:
-                # Should weight the average with exposure/weight
-                self.base_values[feature] = self.collector_data[feature]['stats']['average']
+        preprocessing = self.predictor.get_preprocessing()
+        for step in preprocessing.pipeline.steps:
+            try:
+                self.base_levels[step.input_col] = step.processor.mode_column
+            except AttributeError:
+                pass
+        #for feature in self.used_features:
+        #    if self.features[feature]['type'] == 'CATEGORY':
+        #        print(feature)
+        #        self.base_values[feature] = self.collector_data[feature]['dropped_modality']
+        #    else:
+        #        # Should weight the average with exposure/weight
+        #        self.base_values[feature] = self.collector_data[feature]['stats']['average']
 
     def compute_relativities(self):
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
