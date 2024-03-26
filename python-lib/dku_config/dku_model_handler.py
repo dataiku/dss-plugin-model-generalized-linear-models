@@ -68,7 +68,7 @@ class ModelHandler:
     def compute_base_values(self):
         self.base_values = dict()
         self.modalities = dict()
-        self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
+        #self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
         preprocessing = self.predictor.get_preprocessing()
         for step in preprocessing.pipeline.steps:
             try:
@@ -93,19 +93,23 @@ class ModelHandler:
         for feature in self.base_values.keys():
             train_row_copy = sample_train_row.copy()
             self.relativities[feature] =  {self.base_values[feature]: 1.0}
-            if self.features[feature]['type'] == 'CATEGORY':
-                for modality in self.collector_data[feature]['category_possible_values']:
-                    train_row_copy[feature] = modality
-                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                    self.relativities[feature][modality] = prediction/baseline_prediction
-            else:
-                train_row_copy = sample_train_row.copy()
-                min_value = self.collector_data[feature]['stats']['min']
-                max_value = self.collector_data[feature]['stats']['max']
-                for value in np.linspace(min_value, max_value, 10):
-                    train_row_copy[feature] = value
-                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                    self.relativities[feature][value] = prediction/baseline_prediction
+            for modality in self.modalities:
+                train_row_copy[feature] = modality
+                prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+                self.relativities[feature][modality] = prediction/baseline_prediction
+            #if self.features[feature]['type'] == 'CATEGORY':
+            #    for modality in self.collector_data[feature]['category_possible_values']:
+            #        train_row_copy[feature] = modality
+            #        prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+            #        self.relativities[feature][modality] = prediction/baseline_prediction
+            #else:
+            #    train_row_copy = sample_train_row.copy()
+            #    min_value = self.collector_data[feature]['stats']['min']
+            #    max_value = self.collector_data[feature]['stats']['max']
+            #    for value in np.linspace(min_value, max_value, 10):
+            #        train_row_copy[feature] = value
+            #        prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+            #        self.relativities[feature][value] = prediction/baseline_prediction
         
         self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
 
