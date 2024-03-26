@@ -91,9 +91,9 @@ class ModelHandler:
             sample_train_row[feature] = self.base_values[feature]
         baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
         for feature in self.base_values.keys():
-            train_row_copy = sample_train_row.copy()
             self.relativities[feature] =  {self.base_values[feature]: 1.0}
-            for modality in self.modalities:
+            for modality in self.modalities[feature]:
+                train_row_copy = sample_train_row.copy()
                 train_row_copy[feature] = modality
                 prediction = self.predictor.predict(train_row_copy).iloc[0][0]
                 self.relativities[feature][modality] = prediction/baseline_prediction
