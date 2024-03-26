@@ -66,12 +66,14 @@ class ModelHandler:
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='REJECT']
 
     def compute_base_values(self):
-        self.base_values = {}
+        self.base_values = dict()
+        self.modalities = dict()
         self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
         preprocessing = self.predictor.get_preprocessing()
         for step in preprocessing.pipeline.steps:
             try:
                 self.base_levels[step.input_col] = step.processor.mode_column
+                self.modalities[step.input_col] = step.processor.modalities
             except AttributeError:
                 pass
         #for feature in self.used_features:
