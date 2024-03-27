@@ -86,7 +86,7 @@ class ModelHandler:
                         self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
                     else:
                         self.base_values[feature] = train_set[feature].mean()
-                    self.modalities[feature] = {'min': train_set[feature].min(), 'max' = train_set[feature].max()}
+                    self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
                 else:
                     raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
 
