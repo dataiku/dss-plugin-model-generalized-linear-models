@@ -182,10 +182,10 @@ class ModelHandler:
         test_set['predicted'] = predicted
         used_features = list(self.base_values.keys())
         
-        if self.weight is None:
+        if self.exposure is None:
             test_set['weight'] = 1
         else:
-            test_set['weight'] = test_set[self.weight]
+            test_set['weight'] = test_set[self.exposure]
         
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
