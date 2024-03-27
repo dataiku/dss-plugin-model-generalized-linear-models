@@ -62,7 +62,7 @@ class ModelHandler:
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
         if len(self.exposure_columns) > 0:
             self.exposure = self.exposure_columns[0] # assumes there is only one
-        important_columns = self.offset_columns + self.exposure_columns + [self.target] + [self.weight]
+        important_columns = self.offset_columns + self.exposure_columns + [self.target]
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
         self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='INPUT']
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='REJECT']
@@ -125,10 +125,10 @@ class ModelHandler:
         test_set['predicted'] = predicted
         used_features = list(self.base_values.keys())
 
-        if self.weight is None:
+        if self.exposure is None:
             test_set['weight'] = 1
         else:
-            test_set['weight'] = test_set[self.weight]
+            test_set['weight'] = test_set[self.exposure]
         
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
