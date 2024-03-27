@@ -106,8 +106,8 @@ class ModelHandler:
                     self.relativities[feature][modality] = prediction/baseline_prediction
             else:
                 train_row_copy = sample_train_row.copy()
-                min_value = self.modalities['min']
-                max_value = self.modalities['max']
+                min_value = self.modalities[feature]['min']
+                max_value = self.modalities[feature]['max']
                 for value in np.linspace(min_value, max_value, 10):
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
