@@ -83,9 +83,11 @@ class ModelHandler:
                 # feature has to be numerical unscaled
                 if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
                     if self.exposure is not None:
-                        self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
+                        self.base_values[feature] = {'mean': (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()}
                     else:
-                        self.base_values[feature] = train_set[feature].mean()
+                        self.base_values[feature] = {'mean': train_set[feature].mean()}
+                    self.base_values[feature]['min'] = train_set[feature].min()
+                    self.base_values[feature]['max'] = train_set[feature].max()
                 else:
                     raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
 
@@ -96,12 +98,21 @@ class ModelHandler:
             sample_train_row[feature] = self.base_values[feature]
         baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
         for feature in self.base_values.keys():
-            self.relativities[feature] =  {self.base_values[feature]: 1.0}
-            for modality in self.modalities[feature]:
+            if self.features[feature]['type'] == 'CATEGORY':
+                self.relativities[feature] =  {self.base_values[feature]: 1.0}
+                for modality in self.modalities[feature]:
+                    train_row_copy = sample_train_row.copy()
+                    train_row_copy[feature] = modality
+                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+                    self.relativities[feature][modality] = prediction/baseline_prediction
+            else:
                 train_row_copy = sample_train_row.copy()
-                train_row_copy[feature] = modality
-                prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                self.relativities[feature][modality] = prediction/baseline_prediction
+                min_value = self.base_values[feature]['min']
+                max_value = self.base_values[feature]['max']
+                for value in np.linspace(min_value, max_value, 10):
+                    train_row_copy[feature] = value
+                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+                    self.relativities[feature][value] = prediction/baseline_prediction
             #if self.features[feature]['type'] == 'CATEGORY':
             #    for modality in self.collector_data[feature]['category_possible_values']:
             #        train_row_copy[feature] = modality
