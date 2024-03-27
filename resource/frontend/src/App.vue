@@ -2,21 +2,26 @@
     <BsLayoutDefault ref="layout">
       <ModelTrainingTab>
       </ModelTrainingTab>
-        <OneWayTab>
-        </OneWayTab>
-        <LiftChartTab>
-        </LiftChartTab>
+      <OneWayTab>
+      </OneWayTab>
+      <LiftChartTab>
+      </LiftChartTab>
+      <ModelComparisonTab>
+      </ModelComparisonTab>
+
     </BsLayoutDefault>
 </template>
 
 <script lang="ts">
 import LiftChartTab from './components/LiftChartTab.vue';
 import ModelTrainingTab from './components/ModelTrainingTab.vue';
+import ModelComparisonTab from './components/ModelComparisonTab.vue';
 import OneWayTab from './components/OneWayTab.vue';
 import { defineComponent } from "vue";
 export default defineComponent({
     components: {
         ModelTrainingTab,
+        ModelComparisonTab,
         OneWayTab,
         LiftChartTab,
     }

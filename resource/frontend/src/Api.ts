@@ -15,6 +15,11 @@ interface LiftDataPoint {
     observedAverage: number;
     fittedAverage: number;
 }
+interface ModelComparisonDataPoint {
+    Variable: number;
+    Exposure: number;
+    claim_frequency: number;
+}
 
 interface RelativityPoint {
     variable: string;
@@ -51,4 +56,7 @@ export let API = {
     getProjectDataset: () => axios.get<string[]>("/api/get_project_dataset", {}),
     getDatasetColumns: () => axios.get("/api/get_dataset_columns", {}),
     trainModel: (payload: any) => axios.post<string[]>("/api/train_model",payload),
+    getModelComparisonData: (data: any) => axios.post<ModelComparisonDataPoint[]>("/api/get_model_comparison_data", data),
+    getModelMetrics: (data: any) => axios.post<ModelComparisonDataPoint[]>("/api/get_model_metrics", data),
 }
+
