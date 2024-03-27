@@ -83,11 +83,10 @@ class ModelHandler:
                 # feature has to be numerical unscaled
                 if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
                     if self.exposure is not None:
-                        self.base_values[feature] = {'mean': (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()}
+                        self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
                     else:
-                        self.base_values[feature] = {'mean': train_set[feature].mean()}
-                    self.base_values[feature]['min'] = train_set[feature].min()
-                    self.base_values[feature]['max'] = train_set[feature].max()
+                        self.base_values[feature] = train_set[feature].mean()
+                    self.modalities[feature] = {'min': train_set[feature].min(), 'max' = train_set[feature].max()}
                 else:
                     raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
 
