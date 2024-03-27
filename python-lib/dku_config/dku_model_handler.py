@@ -55,11 +55,13 @@ class ModelHandler:
           'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} for feature in self.non_excluded_features]
 
     def compute_features(self):
+        self.exposure = None
         self.features = self.model_info_handler.get_per_feature()
         modeling_params = self.model_info_handler.get_modeling_params()
         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
-        self.exposure = self.exposure_columns[0] # assumes there is only one
+        if len(self.exposure_columns) > 0:
+            self.exposure = self.exposure_columns[0] # assumes there is only one
         important_columns = self.offset_columns + self.exposure_columns + [self.target] + [self.weight]
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
         self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='INPUT']
@@ -69,19 +71,23 @@ class ModelHandler:
         self.base_values = dict()
         self.modalities = dict()
         preprocessing = self.predictor.get_preprocessing()
+        train_set = self.model_info_handler.get_train_df()[0].copy()
         for step in preprocessing.pipeline.steps:
             try:
                 self.base_values[step.input_col] = step.processor.mode_column
                 self.modalities[step.input_col] = step.processor.modalities
             except AttributeError:
                 pass
-        #for feature in self.used_features:
-        #    if self.features[feature]['type'] == 'CATEGORY':
-        #        print(feature)
-        #        self.base_values[feature] = self.collector_data[feature]['dropped_modality']
-        #    else:
-        #        # Should weight the average with exposure/weight
-        #        self.base_values[feature] = self.collector_data[feature]['stats']['average']
+        for feature in self.used_features:
+            if feature not in self.base_values.keys():
+                # feature has to be numerical unscaled
+                if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
+                    if self.exposure is not None:
+                        self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
+                    else:
+                        self.base_values[feature] = train_set[feature].mean()
+                else:
+                    raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
 
     def compute_relativities(self):
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
