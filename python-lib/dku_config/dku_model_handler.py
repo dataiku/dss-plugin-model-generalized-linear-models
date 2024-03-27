@@ -98,7 +98,7 @@ class ModelHandler:
         baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
         for feature in self.base_values.keys():
             if self.features[feature]['type'] == 'CATEGORY':
-                self.relativities[feature] =  {self.base_values[feature]: 1.0}
+                self.relativities[feature] = {self.base_values[feature]: 1.0}
                 for modality in self.modalities[feature]:
                     train_row_copy = sample_train_row.copy()
                     train_row_copy[feature] = modality
@@ -108,6 +108,7 @@ class ModelHandler:
                 train_row_copy = sample_train_row.copy()
                 min_value = self.modalities[feature]['min']
                 max_value = self.modalities[feature]['max']
+                self.relativities[feature] = {self.base_values[feature]: 1.0}
                 for value in np.linspace(min_value, max_value, 10):
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
