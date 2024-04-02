@@ -29,7 +29,7 @@ class ModelHandler:
         self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.target = self.model_info_handler.get_target_variable()
-        self.weight = self.model_info_handler.get_sample_weight_variable()
+        #self.weight = self.model_info_handler.get_sample_weight_variable()
         self.compute_features()
         self.compute_base_values()
         self.compute_relativities()
@@ -55,26 +55,40 @@ class ModelHandler:
           'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} for feature in self.non_excluded_features]
 
     def compute_features(self):
+        self.exposure = None
         self.features = self.model_info_handler.get_per_feature()
         modeling_params = self.model_info_handler.get_modeling_params()
         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
-        self.exposure = self.exposure_columns[0] # assumes there is only one
-        important_columns = self.offset_columns + self.exposure_columns + [self.target] + [self.weight]
+        if len(self.exposure_columns) > 0:
+            self.exposure = self.exposure_columns[0] # assumes there is only one
+        important_columns = self.offset_columns + self.exposure_columns + [self.target]
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
         self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='INPUT']
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='REJECT']
 
     def compute_base_values(self):
-        self.base_values = {}
-        self.collector_data = self.model_info_handler.get_collector_data()['per_feature']
+        self.base_values = dict()
+        self.modalities = dict()
+        preprocessing = self.predictor.get_preprocessing()
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+        for step in preprocessing.pipeline.steps:
+            try:
+                self.base_values[step.input_col] = step.processor.mode_column
+                self.modalities[step.input_col] = step.processor.modalities
+            except AttributeError:
+                pass
         for feature in self.used_features:
-            if self.features[feature]['type'] == 'CATEGORY':
-                print(feature)
-                self.base_values[feature] = self.collector_data[feature]['dropped_modality']
-            else:
-                # Should weight the average with exposure/weight
-                self.base_values[feature] = self.collector_data[feature]['stats']['average']
+            if feature not in self.base_values.keys():
+                # feature has to be numerical unscaled
+                if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
+                    if self.exposure is not None:
+                        self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
+                    else:
+                        self.base_values[feature] = train_set[feature].mean()
+                    self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
+                else:
+                    raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
 
     def compute_relativities(self):
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
@@ -83,22 +97,22 @@ class ModelHandler:
             sample_train_row[feature] = self.base_values[feature]
         baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
         for feature in self.base_values.keys():
-            train_row_copy = sample_train_row.copy()
-            self.relativities[feature] =  {self.base_values[feature]: 1.0}
-            if self.features[feature]['type'] == 'CATEGORY':
-                for modality in self.collector_data[feature]['category_possible_values']:
+            self.relativities[feature] = {self.base_values[feature]: 1.0}
+            if self.features[feature]['type'] == 'CATEGORY':    
+                for modality in self.modalities[feature]:
+                    train_row_copy = sample_train_row.copy()
                     train_row_copy[feature] = modality
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
                     self.relativities[feature][modality] = prediction/baseline_prediction
             else:
                 train_row_copy = sample_train_row.copy()
-                min_value = self.collector_data[feature]['stats']['min']
-                max_value = self.collector_data[feature]['stats']['max']
+                min_value = self.modalities[feature]['min']
+                max_value = self.modalities[feature]['max']
                 for value in np.linspace(min_value, max_value, 10):
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
                     self.relativities[feature][value] = prediction/baseline_prediction
-        
+                    
         self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
 
         for feature, values in self.relativities.items():
@@ -111,10 +125,10 @@ class ModelHandler:
         test_set['predicted'] = predicted
         used_features = list(self.base_values.keys())
 
-        if self.weight is None:
+        if self.exposure is None:
             test_set['weight'] = 1
         else:
-            test_set['weight'] = test_set[self.weight]
+            test_set['weight'] = test_set[self.exposure]
         
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
@@ -168,10 +182,10 @@ class ModelHandler:
         test_set['predicted'] = predicted
         used_features = list(self.base_values.keys())
         
-        if self.weight is None:
+        if self.exposure is None:
             test_set['weight'] = 1
         else:
-            test_set['weight'] = test_set[self.weight]
+            test_set['weight'] = test_set[self.exposure]
         
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']

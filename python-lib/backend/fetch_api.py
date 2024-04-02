@@ -1,15 +1,18 @@
 from flask import Blueprint, jsonify, request
 import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
-# from glm_handler.service import glm_handler
+
+from glm_handler.service import glm_handler
+
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
+
+predicted_base = glm_handler.model_handler.get_predicted_and_base()
+relativities = glm_handler.model_handler.relativities_df
 import numpy as np
-# predicted_base = glm_handler.model_handler.get_predicted_and_base()
-# relativities = glm_handler.model_handler.relativities_df
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
@@ -129,6 +132,7 @@ def get_lift_data():
     request_json = request.get_json()
     print(request_json)
     model = request_json["id"]
+    glm_handler.model_handler.switch_model(model)
     lift_chart = glm_handler.model_handler.get_lift_chart(8)
     df = lift_chart.copy()
     print(df)
