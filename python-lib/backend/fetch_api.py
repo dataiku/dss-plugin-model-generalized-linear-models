@@ -1,14 +1,14 @@
 from flask import Blueprint, jsonify, request
 import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
-# from glm_handler.service import glm_handler
+from glm_handler.service import glm_handler
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
-# predicted_base = glm_handler.model_handler.get_predicted_and_base()
-# relativities = glm_handler.model_handler.relativities_df
+predicted_base = glm_handler.model_handler.get_predicted_and_base()
+relativities = glm_handler.model_handler.relativities_df
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
@@ -72,9 +72,9 @@ def train_model():
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
-    # versions = glm_handler.model_handler.get_model_versions()
-    # models = [{'id': k, 'name': v} for k,v in versions.items()]
-    # return jsonify(models)
+    versions = glm_handler.model_handler.get_model_versions()
+    models = [{'id': k, 'name': v} for k,v in versions.items()]
+    return jsonify(models)
     models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
     return jsonify(models)
 
@@ -82,10 +82,9 @@ def get_models():
 def get_variables():
     request_json = request.get_json()
     model = request_json["id"]
-    # glm_handler.model_handler.switch_model(model)
-    # variables = glm_handler.model_handler.get_features()
-    # print(variables)
-    # return jsonify(variables)
+    glm_handler.model_handler.switch_model(model)
+    variables = glm_handler.model_handler.get_features()
+    return jsonify(variables)
     if model == 'model_1':
         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
@@ -99,9 +98,9 @@ def get_variables():
 def get_data():
     request_json = request.get_json()
     model = request_json["id"]
-    # df = predicted_base.copy()
-    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    # return jsonify(df.to_dict('records'))
+    df = predicted_base.copy()
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
     if model == 'model_1':
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -121,6 +120,34 @@ def get_data():
             'baseLevelPrediction': [0.5, 0.5, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7]
         })
     return jsonify(df.to_dict('records'))
+
+@fetch_api.route("/lift_data", methods=["POST"])
+def get_lift_data():
+    request_json = request.get_json()
+    print(request_json)
+    model = request_json["id"]
+    glm_handler.model_handler.switch_model(model)
+    lift_chart = glm_handler.model_handler.get_lift_chart(8)
+    df = lift_chart.copy()
+    print(df)
+    df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    return jsonify(df.to_dict('records'))
+    if model == 'model_1':
+        df = pd.DataFrame({
+            'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
+            'Value': [100, 103, 101, 98, 100, 100, 101, 102],
+            'observedAverage': [0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1],
+            'fittedAverage': [0.12, 0.16, 0.19, 0.32, 0.37, 0.55, 0.83, 1.02]
+        })
+    else:
+        df = pd.DataFrame({
+            'Category': ['0.1', '0.15', '0.22', '0.3', '0.45', '0.6', '0.8', '1'],
+            'Value': [100, 103, 101, 100, 101, 100, 101, 102],
+            'observedAverage': [0.1, 0.15, 0.22, 0.3, 0.45, 0.6, 0.8, 1],
+            'fittedAverage': [0.12, 0.16, 0.23, 0.32, 0.37, 0.62, 0.83, 1.02]
+        })
+    return jsonify(df.to_dict('records'))
+
 
 @fetch_api.route("/update_bins", methods=["POST"])
 def get_updated_data():
@@ -159,9 +186,9 @@ def get_updated_data():
 def get_relativities():
     request_json = request.get_json()
     model = request_json["id"]
-    # df = relativities
-    # df.columns = ['variable', 'category', 'relativity']
-    # return jsonify(df.to_dict('records'))
+    df = relativities
+    df.columns = ['variable', 'category', 'relativity']
+    return jsonify(df.to_dict('records'))
     if model == 'model_1':
         df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],

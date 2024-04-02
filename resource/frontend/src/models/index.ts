@@ -7,6 +7,13 @@ export type DataPoint = {
     baseLevelPrediction: number;
 }
 
+export type LiftDataPoint = { 
+    Category: string;
+    Value: number;
+    observedAverage: number;
+    fittedAverage: number;
+}
+
 export type RelativityPoint = {
     variable: string;
     category: string;

@@ -229,6 +229,7 @@ class DataikuMLTask:
         '        for c in self.columns:\n'
         '            if c not in df.columns:\n'
         '                df[c] = 0\n'
+        '        df = df[self.columns]\n'
         '        return df\n'
         'processor = rebase_mode()')
         
