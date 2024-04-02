@@ -265,6 +265,7 @@ def get_model_comparison_data():
     df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]
     df['model_1_claim_frequency'] =  np.random.uniform(50, 60, size=11)
     df['model_2_claim_frequency'] =  np.random.uniform(45, 55, size=11)
+    df['observed_average'] =  np.random.uniform(15, 30, size=11)
     df['exposure'] = np.random.uniform(0, 100, size=11)
     return jsonify(df.to_dict('records'))
 

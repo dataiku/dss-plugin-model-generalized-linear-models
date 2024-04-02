@@ -6,7 +6,7 @@
       :init-options="{
           renderer: 'canvas',
       }"
-      style="height: 400px; width: 100%; min-width: 500px"
+      style="height: 400px; width: 100%; min-width: 500px; min-width: 500px; min-height: 500px"
     />
   </template>
   
@@ -34,6 +34,10 @@
       required: true
     },
     exposures: {
+      type: Array,
+      required: true
+    },
+    observedAverage: {
       type: Array,
       required: true
     },
@@ -100,13 +104,24 @@
                     itemStyle: {
                         color: "#008675",
                     },
+                    
+                },
+                {
+                    name: "Observed Average",
+                    type: "line",
+                    data: this.observedAverage,
+                    itemStyle: {
+                        color: "#FFD700",
+                    },
+                    
                 },
                 // Optionally, represent Exposure by bar size or color here
             ],
             legend: {
-                orient: 'vertical',
+                orient: 'horizontal',
                 right: 0,
-                bottom:0
+                top:30,
+
             },
             title: {
                 text: this.chartTitle,

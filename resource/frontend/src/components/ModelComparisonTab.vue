@@ -1,10 +1,11 @@
+
 <template>
 <BsTab name="Model Comparison" docTitle="GLM Analyzer" :docIcon="docLogo">
     <BsTabIcon>
         <img :src="firstTabIcon" alt="Target Definition Icon" />
     </BsTabIcon>
     <BsHeader>
-        <BsButton
+        <BsButton   
             v-if="!layoutRef?.drawerOpen" flat round class="open-side-drawer-btn" size="15px"
             @click="closeSideDrawer" icon="mdi-arrow-right">
             <BsTooltip>Open sidebar</BsTooltip>
@@ -32,14 +33,14 @@
         </div>
         <h5 class="h5-spacing">Variable Analysis</h5>
         <div v-if="isVariableSelectEnabled" class="variable-select-container">
-        <VariableSelect
-            label="Select a Variable For Investigation"
-            :modelValue="selectedVariable"
-            :options="datasetColumns"
-            @update:modelValue="updateVariableString"
-            helpMessage="Target Variable for GLM "
-            style="min-width: 150px">
-        </VariableSelect>
+            <VariableSelect
+                label="Select a Variable For Investigation"
+                :modelValue="selectedVariable"
+                :options="datasetColumns"
+                @update:modelValue="updateVariableString"
+                helpMessage="Target Variable for GLM "
+                style="min-width: 150px">
+            </VariableSelect>
         </div>
     </BsDrawer>
     <BsContent>
@@ -47,23 +48,28 @@
                 class="tab-content"
                 title="Model Comparison"
                 subtitle="Select two models in the left to comapre"
-                v-if="chartData.length==0"/>
+                v-if="modelComparisonData.length==0"/>
             <div class="tab-content" v-else>
-                <ModelComparisonChart
-                v-if="selectedVariable"
-                    :variableValues="chartData.map(item => item.variable_values)"
-                    :model1ClaimFrequency="chartData.map(item => item.model_1_claim_frequency)"
-                    :model2ClaimFrequency="chartData.map(item => item.model_2_claim_frequency)"
-                    :exposures="chartData.map(item => item.exposure)"
-                    :chartTitle="selectedVariable"
+                <div>
+                    <ModelComparisonChart
+                    v-if="selectedVariable"
+                        :variableValues="modelComparisonData.map(item => item.variable_values)"
+                        :model1ClaimFrequency="modelComparisonData.map(item => item.model_1_claim_frequency)"
+                        :model2ClaimFrequency="modelComparisonData.map(item => item.model_2_claim_frequency)"
+                        :exposures="modelComparisonData.map(item => item.exposure)"
+                        :observedAverage ="modelComparisonData.map(item => item.observed_average)" 
+                        :chartTitle="selectedVariable"
+                        />
+                </div>
+                <div>
+                    <BsTable
+                        :title="comparisonChartTitle"
+                        :rows="tableData"
+                        :columns="tableColumns"
+                        :globalSearch="false"
+                        row-key="model"
                     />
-                <BsTable
-                    :title="this.ComparisonChartTitle"
-                    :rows="tableData"
-                    :columns="tableColumns"
-                    :globalSearch="false"
-                    row-key="model"
-                />
+                </div>
             </div>
     </BsContent>
     
@@ -80,6 +86,7 @@ import docLogo from "../assets/images/doc-logo-example.svg";
 import firstTabIcon from "../assets/images/first-tab-icon.svg";
 import { API } from '../Api';
 import ModelComparisonChart from './ModelComparisonChart.vue'
+import type { QTableColumn } from 'quasar';
 
 export default defineComponent({
 components: {
@@ -92,22 +99,26 @@ components: {
     BsButton,
     BsDrawer,
     BsContent,
-    BsTooltip
+    BsTooltip,
+    BsTable
 },
 props: [],
 data() {
     return {    
         datasetsString: [] as string[],
-        chartData: [],  
+        chartData: [] as chartDataItem[],  
         layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
         firstTabIcon,
         docLogo,
+        models: [] as { name: string }[],
         selectedModelString: "",
         selectedModelTwoString: "", 
         selectedVariable : "", 
-        datasetColumns: [] as string[], 
-        selectedVariable:"",
-        modelMetrics: {},
+        datasetColumns: columns,
+        modelsString: [] as string[],
+        comparisonChartTitle: "Model Metrics",
+        modelMetrics: {} as ModelMetrics,
+        modelComparisonData: [] as chartDataItem[]
     };
 },
 computed:{
@@ -131,18 +142,18 @@ computed:{
         };
     });
 
-return modelsArray;
-    
+    return modelsArray;
+        
 
-},
-tableColumns() {
-    return [
-        { name: 'model', label: 'Model', field: 'model', align: 'left' },
-        { name: 'AIC', label: 'AIC', field: 'AIC', align: 'left' },
-        { name: 'BIC', label: 'BIC', field: 'BIC', align: 'left' },
-        { name: 'Deviance', label: 'Deviance', field: 'Deviance', align: 'left' },
-    ];
-}
+    },
+    tableColumns() {
+        return [
+            { name: 'model', label: 'Model', field: 'model', align: 'center' },
+            { name: 'AIC', label: 'AIC', field: 'AIC', align: 'center' },
+            { name: 'BIC', label: 'BIC', field: 'BIC', align: 'center' },
+            { name: 'Deviance', label: 'Deviance', field: 'Deviance', align: 'center' },
+        ];
+    }
 },
 watch: {    
 },
@@ -160,12 +171,12 @@ methods: {
 
         }
         const dataResponse = await API.getModelComparisonData(payload);
-        this.chartData = dataResponse?.data;
-        console.log("Model Comaprison data:", this.chartData );
+        this.modelComparisonData = dataResponse?.data;
+        console.log("Model Comparison data:", this.modelComparisonData );
         const ModelMetricsResponse = await API.getModelMetrics(payload);
-        this.modelMetrics = ModelMetricsResponse?.data;
+        this.modelMetrics = ModelMetricsResponse?.data as ModelMetrics;
 
-        console.log("Model Metricc data:", this.modelMetrics);
+        console.log("Model Metric data:", this.modelMetrics);
 
     },
     async updateModelString(value: string) {
@@ -190,14 +201,40 @@ methods: {
 mounted() {
     API.getModels().then((data: any) => {
     this.models = data.data;
-    this.modelsString = this.models.map(item => item.name);
+    this.modelsString = this.models.map((item: { name: string }) => item.name);
     
     });
     this.getDatasetColumns(); 
-    this.ComparisonChartTitle = "Model Metrics";
 },
 emits: ['update:modelValue']
 })
+interface chartDataItem{
+    variable_values: any[];
+    model_1_claim_frequency: number;
+    model_2_claim_frequency: number;
+    exposure: number;
+    observed_average: number;
+}
+
+interface ModelMetricsDataPoint {
+    AIC: number;
+    BIC: number;
+    Deviance: number;
+}
+
+interface ModelMetrics {
+    models: {
+        [models: string]: ModelMetricsDataPoint; // Use an index signature for dynamic keys
+    }
+}
+
+const columns: QTableColumn[] = [
+    { name: 'model', align: 'left', label: 'Model', field: 'model', sortable: true },
+    { name: 'AIC', align: 'left', label: 'AIC', field: 'AIC', sortable: true },
+    { name: 'BIC', align: 'left', label: 'BIC', field: 'BIC', sortable: true },
+    { name: 'Deviance', align: 'left', label: 'Deviance', field: 'Deviance', sortable: true },
+];
+
 </script>   
 <style scoped>
 .row-spacing {
@@ -279,12 +316,14 @@ margin-top: 5px;
 }
 .tab-content {
 padding-left: 0px;
+flex-direction: row;
 padding-right: 0px;
 padding-top: 20px;
 display: flex;
 align-items: center;
 gap: var(--bs-spacing-13, 52px);
 min-height: 350px;
+min-width: 700px;
 }
 </style>
 
