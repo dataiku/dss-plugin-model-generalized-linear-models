@@ -1,14 +1,18 @@
 from flask import Blueprint, jsonify, request
 import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
+
 from glm_handler.service import glm_handler
+
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
+
 predicted_base = glm_handler.model_handler.get_predicted_and_base()
 relativities = glm_handler.model_handler.relativities_df
+import numpy as np
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
@@ -72,19 +76,20 @@ def train_model():
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
-    versions = glm_handler.model_handler.get_model_versions()
-    models = [{'id': k, 'name': v} for k,v in versions.items()]
-    return jsonify(models)
+    # versions = glm_handler.model_handler.get_model_versions()
+    # models = [{'id': k, 'name': v} for k,v in versions.items()]
+    # return jsonify(models)
     models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
     return jsonify(models)
 
 @fetch_api.route("/variables", methods=["POST"])
 def get_variables():
-    request_json = request.get_json()
-    model = request_json["id"]
-    glm_handler.model_handler.switch_model(model)
-    variables = glm_handler.model_handler.get_features()
-    return jsonify(variables)
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # glm_handler.model_handler.switch_model(model)
+    # variables = glm_handler.model_handler.get_features()
+    # return jsonify(variables)
+    model = 'model_1'
     if model == 'model_1':
         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
@@ -96,11 +101,12 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
-    request_json = request.get_json()
-    model = request_json["id"]
-    df = predicted_base.copy()
-    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    return jsonify(df.to_dict('records'))
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = predicted_base.copy()
+    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    # return jsonify(df.to_dict('records'))
+    model = 'model_1'
     if model == 'model_1':
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -184,11 +190,12 @@ def get_updated_data():
 
 @fetch_api.route("/relativities", methods=["POST"])
 def get_relativities():
-    request_json = request.get_json()
-    model = request_json["id"]
-    df = relativities
-    df.columns = ['variable', 'category', 'relativity']
-    return jsonify(df.to_dict('records'))
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = relativities
+    # df.columns = ['variable', 'category', 'relativity']
+    # return jsonify(df.to_dict('records'))
+    model="model_1"
     if model == 'model_1':
         df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
@@ -251,6 +258,43 @@ def get_dataset_columns():
         logging.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
         return jsonify({'error': str(e)}), 500
 
+@fetch_api.route("/get_model_comparison_data", methods=["POST"])
+def get_model_comparison_data():
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = relativities
+    # df.columns = ['variable', 'category', 'relativity']
+    # return jsonify(df.to_dict('records'))
+    df = pd.DataFrame()
+    df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]
+    df['model_1_claim_frequency'] =  np.random.uniform(50, 60, size=11)
+    df['model_2_claim_frequency'] =  np.random.uniform(45, 55, size=11)
+    df['observed_average'] =  np.random.uniform(15, 30, size=11)
+    df['exposure'] = np.random.uniform(0, 100, size=11)
+    return jsonify(df.to_dict('records'))
 
-#     colum_names = ['column1', 'column2', 'column3', 'column4','column5']
-#     return jsonify(colum_names)
+@fetch_api.route("/get_model_metrics", methods=["POST"])
+def get_model_metrics():
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = relativities
+    # df.columns = ['variable', 'category', 'relativity']
+    # return jsonify(df.to_dict('records'))
+    json_data = {
+        "models": {
+            "Model_1": {
+            "AIC": 100,
+            "BIC": 120,
+            "Deviance": 5.5
+            },
+            "Model_2": {
+            "AIC": 95,
+            "BIC": 110,
+            "Deviance": 5.0
+            }
+        }
+        }
+
+    return jsonify(json_data)
+
+
