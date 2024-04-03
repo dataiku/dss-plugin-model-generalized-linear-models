@@ -118,7 +118,8 @@ data() {
         modelsString: [] as string[],
         comparisonChartTitle: "Model Metrics",
         modelMetrics: {} as ModelMetrics,
-        modelComparisonData: [] as chartDataItem[]
+        modelComparisonData: [] as chartDataItem[],
+        tableColumns: columns
     };
 },
 computed:{
@@ -148,6 +149,7 @@ computed:{
     },
     tableColumns() {
         return [
+
             { name: 'model', label: 'Model', field: 'model', align: 'center' },
             { name: 'AIC', label: 'AIC', field: 'AIC', align: 'center' },
             { name: 'BIC', label: 'BIC', field: 'BIC', align: 'center' },
@@ -233,10 +235,11 @@ const columns: QTableColumn[] = [
     { name: 'AIC', align: 'left', label: 'AIC', field: 'AIC', sortable: true },
     { name: 'BIC', align: 'left', label: 'BIC', field: 'BIC', sortable: true },
     { name: 'Deviance', align: 'left', label: 'Deviance', field: 'Deviance', sortable: true },
+    { name: 'observed_average', align: 'left', label: 'Observed Average', field: 'Observed Average', sortable: true },
 ];
 
 </script>   
-<style scoped>
+<style scoped>s
 .row-spacing {
 margin-bottom: 20px; /* Adjust this value as needed */
 }

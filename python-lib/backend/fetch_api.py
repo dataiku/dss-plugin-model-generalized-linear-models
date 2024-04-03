@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
 
-from glm_handler.service import glm_handler
+# from glm_handler.service import glm_handler
 
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
@@ -10,8 +10,8 @@ import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
 
-predicted_base = glm_handler.model_handler.get_predicted_and_base()
-relativities = glm_handler.model_handler.relativities_df
+# predicted_base = glm_handler.model_handler.get_predicted_and_base()
+# relativities = glm_handler.model_handler.relativities_df
 import numpy as np
 
 @fetch_api.route("/train_model", methods=["POST"])
@@ -129,15 +129,16 @@ def get_data():
 
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
-    request_json = request.get_json()
-    print(request_json)
-    model = request_json["id"]
-    glm_handler.model_handler.switch_model(model)
-    lift_chart = glm_handler.model_handler.get_lift_chart(8)
-    df = lift_chart.copy()
-    print(df)
-    df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
-    return jsonify(df.to_dict('records'))
+    # request_json = request.get_json()
+    # print(request_json)
+    # model = request_json["id"]
+    # glm_handler.model_handler.switch_model(model)
+    # lift_chart = glm_handler.model_handler.get_lift_chart(8)
+    # df = lift_chart.copy()
+    # print(df)
+    # df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    # return jsonify(df.to_dict('records'))
+    model = "model_1"
     if model == 'model_1':
         df = pd.DataFrame({
             'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
