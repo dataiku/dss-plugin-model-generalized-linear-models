@@ -3,7 +3,7 @@ import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
 from io import BytesIO
 
-#from glm_handler.service import glm_handler
+from glm_handler.service import glm_handler
 
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
