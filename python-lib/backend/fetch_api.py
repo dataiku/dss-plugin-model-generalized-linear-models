@@ -1,8 +1,9 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
+from io import BytesIO
 
-from glm_handler.service import glm_handler
+#from glm_handler.service import glm_handler
 
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
@@ -10,8 +11,8 @@ import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
 
-predicted_base = glm_handler.model_handler.get_predicted_and_base()
-relativities = glm_handler.model_handler.relativities_df
+#predicted_base = glm_handler.model_handler.get_predicted_and_base()
+#elativities = glm_handler.model_handler.relativities_df
 import numpy as np
 
 @fetch_api.route("/train_model", methods=["POST"])
@@ -296,5 +297,24 @@ def get_model_metrics():
         }
 
     return jsonify(json_data)
+
+@fetch_api.route('/export_model', methods=['GET'])
+def export_model():
+    data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+    df = pd.DataFrame(data)
+
+    # Convert DataFrame to CSV format
+    csv_data = df.to_csv(index=False).encode('utf-8')
+
+    # Create an in-memory file-like object for CSV data
+    csv_io = BytesIO(csv_data)
+
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='model.csv'
+    )
 
 

@@ -21,6 +21,7 @@
                 </BsButton>
             </BsHeader>
             <BsDrawer>
+              <div class="variable-select-container">
               <VariableSelect
                   :modelValue="selectedModelString"
                   :options="modelsString"
@@ -50,6 +51,8 @@
                               </q-item>
                         </template>
                   </BsSelect>
+                  <BsButton class="bs-btn dku-text" unelevated @click="onClick">Export</BsButton>
+                </div>
                 <BsButton
                     flat
                     round
@@ -126,6 +129,13 @@ const rows = [
         relativity: 1.12,
     }
   ]
+
+  function s2ab(s: any) {
+          var buf = new ArrayBuffer(s.length);
+          var view = new Uint8Array(buf);
+          for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+          return buf;
+        }
 
 export default defineComponent({
     components: {
@@ -211,6 +221,19 @@ export default defineComponent({
           const relativityResponse = await API.getRelativities(model);
           this.relativitiesData = relativityResponse?.data;
         },
+        onClick: function() {
+          API.exportModel().then(response => {
+              const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', 'model.csv'); // Set the filename for the download
+              document.body.appendChild(link);
+              link.click();
+              window.URL.revokeObjectURL(url); // Clean up
+          }).catch(error => {
+              console.error('Error exporting model:', error);
+          });
+        },
     },
     mounted() {
       API.getModels().then((data: any) => {
@@ -231,6 +254,10 @@ header {
   line-height: 1.5;
 }
 
+.variable-select-container {
+    padding: 20px;
+}
+
 .tab-content {
   padding-left: 0px;
   padding-right: 0px;
@@ -244,6 +271,10 @@ header {
 .logo {
   display: block;
   margin: 0 auto 2rem;
+}
+
+.bs-btn {
+  margin-top: 12px;
 }
 
 @media (min-width: 1024px) {

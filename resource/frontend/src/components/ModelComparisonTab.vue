@@ -88,6 +88,11 @@ import { API } from '../Api';
 import ModelComparisonChart from './ModelComparisonChart.vue'
 import type { QTableColumn } from 'quasar';
 
+// const columns: QTableColumn[] = [
+//     { name: 'class', align: 'center', label: 'Class', field: 'class',sortable: true},
+//     { name: 'relativity', align: 'center', label: 'Relativity', field: 'relativity', sortable: true},
+// ]
+
 export default defineComponent({
 components: {
     VariableSelect,
@@ -118,7 +123,8 @@ data() {
         modelsString: [] as string[],
         comparisonChartTitle: "Model Metrics",
         modelMetrics: {} as ModelMetrics,
-        modelComparisonData: [] as chartDataItem[]
+        modelComparisonData: [] as chartDataItem[],
+        tableColumns: columns,
     };
 },
 computed:{
@@ -145,14 +151,6 @@ computed:{
     return modelsArray;
         
 
-    },
-    tableColumns() {
-        return [
-            { name: 'model', label: 'Model', field: 'model', align: 'center' },
-            { name: 'AIC', label: 'AIC', field: 'AIC', align: 'center' },
-            { name: 'BIC', label: 'BIC', field: 'BIC', align: 'center' },
-            { name: 'Deviance', label: 'Deviance', field: 'Deviance', align: 'center' },
-        ];
     }
 },
 watch: {    
