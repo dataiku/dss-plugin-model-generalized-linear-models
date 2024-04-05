@@ -77,19 +77,19 @@ def train_model():
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
-    # versions = glm_handler.model_handler.get_model_versions()
-    # models = [{'id': k, 'name': v} for k,v in versions.items()]
-    # return jsonify(models)
+    versions = glm_handler.model_handler.get_model_versions()
+    models = [{'id': k, 'name': v} for k,v in versions.items()]
+    return jsonify(models)
     models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
     return jsonify(models)
 
 @fetch_api.route("/variables", methods=["POST"])
 def get_variables():
-    # request_json = request.get_json()
-    # model = request_json["id"]
-    # glm_handler.model_handler.switch_model(model)
-    # variables = glm_handler.model_handler.get_features()
-    # return jsonify(variables)
+    request_json = request.get_json()
+    model = request_json["id"]
+    glm_handler.model_handler.switch_model(model)
+    variables = glm_handler.model_handler.get_features()
+    return jsonify(variables)
     model = 'model_1'
     if model == 'model_1':
         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
@@ -102,11 +102,11 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
-    # request_json = request.get_json()
-    # model = request_json["id"]
-    # df = predicted_base.copy()
-    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    # return jsonify(df.to_dict('records'))
+    request_json = request.get_json()
+    model = request_json["id"]
+    df = predicted_base.copy()
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
     model = 'model_1'
     if model == 'model_1':
         df = pd.DataFrame({
@@ -162,10 +162,10 @@ def get_updated_data():
     print(request_json)
     feature = request_json["feature"]
     nb_bins = request_json["nbBin"]
-    # predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
-    # df = predicted_base.copy()
-    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    # return jsonify(df.to_dict('records'))
+    predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
+    df = predicted_base.copy()
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
     if True:
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -191,11 +191,11 @@ def get_updated_data():
 
 @fetch_api.route("/relativities", methods=["POST"])
 def get_relativities():
-    # request_json = request.get_json()
-    # model = request_json["id"]
-    # df = relativities
-    # df.columns = ['variable', 'category', 'relativity']
-    # return jsonify(df.to_dict('records'))
+    request_json = request.get_json()
+    model = request_json["id"]
+    df = relativities
+    df.columns = ['variable', 'category', 'relativity']
+    return jsonify(df.to_dict('records'))
     model="model_1"
     if model == 'model_1':
         df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -261,11 +261,11 @@ def get_dataset_columns():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
-    # request_json = request.get_json()
-    # model = request_json["id"]
-    # df = relativities
-    # df.columns = ['variable', 'category', 'relativity']
-    # return jsonify(df.to_dict('records'))
+    request_json = request.get_json()
+    model = request_json["id"]
+    df = relativities
+    df.columns = ['variable', 'category', 'relativity']
+    return jsonify(df.to_dict('records'))
     df = pd.DataFrame()
     df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]
     df['model_1_claim_frequency'] =  np.random.uniform(50, 60, size=11)
@@ -300,6 +300,7 @@ def get_model_metrics():
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
+    relativities
     data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
     df = pd.DataFrame(data)
 
