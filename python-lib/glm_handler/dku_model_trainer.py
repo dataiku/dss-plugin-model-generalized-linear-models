@@ -30,7 +30,7 @@ class DataikuMLTask:
         logger.info("Initializing DataikuMLTask")
         self.client = dataiku.api_client()
         self.project = self.client.get_default_project()
-        self.project_key = self.project_key 
+        self.project_key = self.project.project_key 
         logger.info("Dataiku API client initialized")
 
         self.input_dataset = input_dataset
