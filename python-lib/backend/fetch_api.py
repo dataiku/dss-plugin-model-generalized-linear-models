@@ -10,8 +10,8 @@ import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
 
-# predicted_base = glm_handler.model_handler.get_predicted_and_base()
-# relativities = glm_handler.model_handler.relativities_df
+predicted_base = glm_handler.model_handler.get_predicted_and_base()
+relativities = glm_handler.model_handler.relativities_df
 import numpy as np
 
 @fetch_api.route("/train_model", methods=["POST"])
