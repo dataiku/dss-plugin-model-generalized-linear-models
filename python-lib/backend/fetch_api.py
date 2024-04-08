@@ -9,10 +9,9 @@ fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
-
-
-
 import numpy as np
+
+
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
@@ -61,18 +60,6 @@ def train_model():
         logging.exception("An error occurred during model training")
         return jsonify({'error': str(e)}), 500
     
-#     try:
-#         request_json = request.get_json()
-#         if request_json is None:
-#             raise ValueError("No JSON payload found in the request")
-
-#         # Debug: Print the JSON content
-#         print(request_json)
-
-#         # Your logic here
-#         model_name = ['glm_model1.4']
-#         return jsonify(model_name)
-
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
