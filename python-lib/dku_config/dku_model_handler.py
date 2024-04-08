@@ -254,11 +254,42 @@ class ModelHandler:
         variable_names = self.predictor._model.clf.column_labels
         return dict(zip(variable_names, coefficients))
 
-    def get_lift_chart(self, nb_bins):
+    def get_model_predictions_on_train(self):
+        """
+        Generates model predictions on the training dataset.
+
+        Returns:
+            pd.DataFrame: A DataFrame of the training dataset with an additional column for predictions.
+        """
         train_set = self.model_info_handler.get_train_df()[0].copy()
         predicted = self.predictor.predict(train_set)
         train_set['prediction'] = predicted
+        
+        return train_set['prediction']
+    
+    def sort_and_cumsum_exposure(self, data):
+        """
+        Sorts the data by prediction values in ascending order and calculates
+        the cumulative sum of exposure, normalized by the total exposure.
+
+        Args:
+            data (pd.DataFrame): The DataFrame containing model predictions and exposures.
+
+        Returns:
+            pd.DataFrame: The input DataFrame with additional columns for the cumulative sum
+                          and binning information based on exposure.
+        """
+        tempdata = data.sort_values(by='prediction', ascending=True)
+        tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
+        return tempdata
+
+    
+    def get_lift_chart(self, nb_bins):
+        
+        train_set = get_model_predictions_on_train()
+        
         tempdata = train_set.sort_values(by='prediction', ascending=True)
+        
         print(tempdata)
         
 
