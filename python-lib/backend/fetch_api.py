@@ -7,13 +7,14 @@ from glm_handler.dku_model_trainer import DataikuMLTask
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 import dataiku
-import logging
 from dataiku.customwebapp import get_webapp_config
 import numpy as np
 
 global_dku_mltask = None
 
-
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
@@ -53,9 +54,12 @@ def train_model():
 
     try:
         if global_dku_mltask:
+            logger.info("Utilising an existing ML Task at the API")
+            
             DkuMLTask = global_dku_mltask
 
         else: #First initialisation 
+            logger.info("Initalising an new ML Task at the API")
             DkuMLTask = DataikuMLTask(input_dataset)
             global_dku_mltasks = DkuMLTask
             
@@ -109,14 +113,16 @@ def get_dataset_columns():
         logging.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
         return jsonify({'error': str(e)}), 500
 
-# @fetch_api.route("/models", methods=["GET"])
-# def get_models():
-#     global_dku_mltasks["inital_task"]
-#     versions = glm_handler.model_handler.get_model_versions()
-#     models = [{'id': k, 'name': v} for k,v in versions.items()]
-#     return jsonify(models)
-#     models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
-#     return jsonify(models)
+@fetch_api.route("/models", methods=["GET"])
+def get_models():
+    global_dku_mltask
+    
+    
+    versions = glm_handler.model_handler.get_model_versions()
+    models = [{'id': k, 'name': v} for k,v in versions.items()]
+    return jsonify(models)
+    models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
+    return jsonify(models)
 
 # @fetch_api.route("/variables", methods=["POST"])
 # def get_variables():
