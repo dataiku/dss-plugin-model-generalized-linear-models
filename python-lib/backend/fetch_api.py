@@ -57,6 +57,7 @@ def train_model():
 
         else: #First initialisation 
             DkuMLTask = DataikuMLTask(input_dataset)
+            global_dku_mltasks = DkuMLTask
             
         DkuMLTask.update_parameters(distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
@@ -71,7 +72,6 @@ def train_model():
 
         DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
         
-        global_dku_mltasks["inital_task"] = DkuMLTask
         
         logging.info("Model training initiated successfully")
         
