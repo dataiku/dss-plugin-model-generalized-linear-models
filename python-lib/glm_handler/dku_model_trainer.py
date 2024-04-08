@@ -63,7 +63,8 @@ class DataikuMLTask:
                 self.offset_variable = variable['name']
                 logger.info(f"offset_variable set to {self.offset_variable}")
         
-        
+        self.analysis_id = None
+        self.mltask_id = None
         
         logger.info("DataikuMLTask initialized successfully")
 
