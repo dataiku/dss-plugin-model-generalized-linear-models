@@ -39,7 +39,7 @@ def train_model():
 
     # Log the received parameters for debugging
     logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
-        params = {
+    params = {
         "model_id": model_id,
         "input_dataset": input_dataset,
         "distribution_function": distribution_function,
