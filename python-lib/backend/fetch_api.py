@@ -302,13 +302,13 @@ def get_model_metrics():
 def export_model():
     relativities_dict = glm_handler.model_handler.relativities
     
-    nb_col = (len(relativities.keys()) - 1) * 3
-    variables = [col for col in relativities.keys() if col != "base"]
-    variable_keys = {variable: list(relativities[variable].keys()) for variable in variables}
+    nb_col = (len(relativities_dict.keys()) - 1) * 3
+    variables = [col for col in relativities_dict.keys() if col != "base"]
+    variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
     max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
     
     csv_output = ",,\n"
-    csv_output += "Base,,{}\n".format(relativities['base']['base'])
+    csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
     csv_output += ",,\n"
     csv_output += ",,\n"
     csv_output += ",,".join(variables) + ",,\n"
@@ -319,7 +319,7 @@ def export_model():
         for variable in variables:
             if i < len(variable_keys[variable]):
                 value = variable_keys[variable][i]
-                csv_output += "{},{},,".format(value, relativities[variable][value])
+                csv_output += "{},{},,".format(value, relativities_dict[variable][value])
             else:
                 csv_output += ",,,"
         csv_output += "\n"
