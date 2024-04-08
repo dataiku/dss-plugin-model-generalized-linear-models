@@ -300,7 +300,7 @@ def get_model_metrics():
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
-    relativities
+    print(relativities)
     data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
     df = pd.DataFrame(data)
 
