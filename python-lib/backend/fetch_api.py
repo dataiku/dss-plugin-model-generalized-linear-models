@@ -285,7 +285,7 @@ def get_model_comparison_data():
                              on=['observedAverage','Category', 'variable_values'], 
                              how='outer')
     
-    
+    merged_lift_chart['exposure'] = 1
     
     
     
