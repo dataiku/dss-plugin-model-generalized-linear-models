@@ -95,6 +95,8 @@ class ModelHandler:
         self.relativities = {}
         for feature in self.base_values.keys():
             sample_train_row[feature] = self.base_values[feature]
+        if self.exposure is not None:
+            sample_train_row[self.exposure] = 1
         baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
         for feature in self.base_values.keys():
             self.relativities[feature] = {self.base_values[feature]: 1.0}
