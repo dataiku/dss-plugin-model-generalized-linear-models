@@ -79,28 +79,36 @@
         </q-card-section>
         <q-card class="q-pa-xl">
             <div v-for="(column, index) in filteredColumns" class="column-management row-spacing">
-                    <span class="column-name">{{ abbreviateColumnName(column.name) }}</span>
-                    <q-checkbox 
-                        label="Include?" 
-                        v-model="column.isIncluded" 
+                    <q-toggle
+                        label=""
+                        v-model="column.isIncluded"
                         @update:modelValue="newValue => updateColumnProperty(index, 'isIncluded', newValue)"
-                    ></q-checkbox>
-                    <VariableSelect
+                    ></q-toggle>
+                    <span class="column-name">{{ abbreviateColumnName(column.name) }}</span>
+
+ 
+                    <div class="q-gutter-sm row items-center">
+                        <q-radio v-model="column.type" val="numerical" label="Numerical" />
+                    </div>
+                    <div class="q-gutter-sm row items-center">
+                        <q-radio v-model="column.type" val="categorical" label="Categorical" />
+                    </div>
+                    <!-- <VariableSelect
                         label="Column Type"
                         :modelValue="column.type"
                         :options="typeOptions"
                         @update:modelValue="newValue => updateColumnProperty(index, 'type', newValue)"
                         helpMessage="Does the column contain categorical or numerical data?"
                         style="min-width: 150px">
-                    </VariableSelect>
-                    <VariableSelect
+                    </VariableSelect> -->
+                    <!-- <VariableSelect
                         label="Preprocessing"
                         :modelValue="column.preprocessing"
                         :options="preprocessingOptions"
                         @update:modelValue="newValue => updatePreprocessing(index, newValue)"
                         helpMessage="Preprocessing Method"
                         style="min-width: 150px">
-                    </VariableSelect>
+                    </VariableSelect> -->
             </div>
         </q-card>
     </BsContent>
@@ -138,6 +146,7 @@ import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsCont
 import docLogo from "../assets/images/doc-logo-example.svg";
 import firstTabIcon from "../assets/images/first-tab-icon.svg";
 import { API } from '../Api';
+import { QRadio } from 'quasar';
 
 export default defineComponent({
 components: {
@@ -149,7 +158,9 @@ components: {
     BsButton,
     BsDrawer,
     BsContent,
-    BsTooltip
+    BsTooltip,
+    QRadio
+
 },
 props: [],
 data() {
@@ -252,9 +263,11 @@ watch: {
     datasetColumns: {
     handler(newVal, oldVal) {
         console.log('datasetColumns changed:', newVal);
+        this.updateDatasetColumnsPreprocessing();
     },
     deep: true
-}
+    }   
+    
 },
 methods: {
     validateSubmission() {
@@ -270,6 +283,31 @@ methods: {
         return false;
         }
         return true; // Validation passed
+    },
+    updateDatasetColumnsPreprocessing() {
+        const updatedColumns = this.datasetColumns.map(column => {
+            let preprocessing;
+            if (column.type === "categorical") {
+                preprocessing = { label: 'Dummy Encode', value: 'CUSTOM' };
+            } else if (column.type === "numerical") {
+                preprocessing = { label: 'Standard Rescaling', value: 'REGULAR' };
+            } else {
+                // Preserve the existing preprocessing if the type doesn't match
+                preprocessing = column.preprocessing;
+            }
+
+            // Only update preprocessing if it's different to avoid infinite loops
+            if (JSON.stringify(column.preprocessing) !== JSON.stringify(preprocessing)) {
+                return { ...column, preprocessing };
+            } else {
+                return column;
+            }
+        });
+
+        // Check if the update is necessary to avoid unnecessary reactivity triggering
+        if (JSON.stringify(this.datasetColumns) !== JSON.stringify(updatedColumns)) {
+            this.datasetColumns = updatedColumns;
+        }
     },
     abbreviateColumnName(name:string) {
         const maxLength = 15; // Maximum length of column name
@@ -347,10 +385,10 @@ methods: {
 
         console.log("Datasets:", response.data);
         this.datasetColumns = response.data.map((columnName: string) => ({
-            name: columnName,
-            isIncluded: {label: 'Include', value: true},
+            name: columnName,   
+            isIncluded: true,
             role: {label: 'Variable', value: 'Variable'},
-            type: { label: 'Categorical', value: 'categorical' },
+            type: 'categorical',
             preprocessing: { label: 'Dummy Encode', value: 'CUSTOM' }
         }));
         console.log("First assignment:", this.datasetColumns);

@@ -18,12 +18,12 @@
                 :modelValue="selectedModelString"
                 :options="modelsString"
                 @update:modelValue="updateModelString"
-                label="Select a Model for Comaprison"
+                label="Select a Model for Comparison"
                 helpMessage="Model 1"
                 style="min-width: 250px">
             </VariableSelect>
             <VariableSelect
-                label="Select a Second Model for Comaprison"
+                label="Select a Second Model for Comparison"
                 :modelValue="selectedModelTwoString"
                 :options="modelsString"
                 @update:modelValue="updateModelTwoString"
@@ -227,7 +227,7 @@ interface ModelMetricsDataPoint {
 interface ModelMetrics {
     models: {
         [models: string]: ModelMetricsDataPoint; // Use an index signature for dynamic keys
-    }
+    },
 }
 
 const columns: QTableColumn[] = [
@@ -235,7 +235,6 @@ const columns: QTableColumn[] = [
     { name: 'AIC', align: 'left', label: 'AIC', field: 'AIC', sortable: true },
     { name: 'BIC', align: 'left', label: 'BIC', field: 'BIC', sortable: true },
     { name: 'Deviance', align: 'left', label: 'Deviance', field: 'Deviance', sortable: true },
-    { name: 'observed_average', align: 'left', label: 'Observed Average', field: 'Observed Average', sortable: true },
 ];
 
 </script>   
