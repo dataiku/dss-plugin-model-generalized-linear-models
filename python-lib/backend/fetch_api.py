@@ -11,6 +11,8 @@ import logging
 from dataiku.customwebapp import get_webapp_config
 import numpy as np
 
+global_dku_mltasks = {}
+
 
 
 @fetch_api.route("/train_model", methods=["POST"])
@@ -66,6 +68,9 @@ def train_model():
         logging.debug("Model settings configured successfully")
 
         DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
+        
+        global_dku_mltasks[model_id] = DkuMLTask
+        
         logging.info("Model training initiated successfully")
         
         return jsonify({'message': 'Model training initiated successfully.'}), 200
