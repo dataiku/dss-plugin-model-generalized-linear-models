@@ -64,7 +64,7 @@ class DataikuMLTask:
 
         self.model = dataiku.Model(model_id)
         self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
-        self.ml_task = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+        self.mltask = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         
         logger.info("DataikuMLTask initialized successfully")
 
