@@ -164,7 +164,7 @@ class DataikuMLTask:
             self.mltask.wait_guess_complete()
             
             self.analysis_id = self.mltask.analysis_id
-            self.mltask_id = self.mltask.ml_taskid
+            self.mltask_id = self.mltask.mltask_id
         else:
             self.mltask = DSSMLTask(client, project_key, self.mltask.analysis_id, self.mltask.ml_taskid)
             
