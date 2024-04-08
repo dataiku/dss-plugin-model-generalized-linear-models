@@ -72,14 +72,17 @@ class ModelHandler:
         self.modalities = dict()
         preprocessing = self.predictor.get_preprocessing()
         train_set = self.model_info_handler.get_train_df()[0].copy()
+        print(self.used_features)
         for step in preprocessing.pipeline.steps:
             try:
                 self.base_values[step.input_col] = step.processor.mode_column
                 self.modalities[step.input_col] = step.processor.modalities
             except AttributeError:
                 pass
+        print(self.base_values.keys())
         for feature in self.used_features:
             if feature not in self.base_values.keys():
+                print(feature)
                 # feature has to be numerical unscaled
                 if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
                     if self.exposure is not None:
