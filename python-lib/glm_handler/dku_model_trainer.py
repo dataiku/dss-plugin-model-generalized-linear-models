@@ -170,9 +170,9 @@ class DataikuMLTask:
             self.mltask_id = self.mltask.mltask_id
             
         else:
-            logger.info("Analysis ID detected, updating existing sessions")
+            logger.info(f"Analysis ID detected as {self.analysis_id}, updating existing sessions")
             
-            self.mltask = DSSMLTask(client, project_key, self.mltask.analysis_id, self.mltask.ml_taskid)
+            self.mltask = DSSMLTask(self.client, project_key, self.mltask.analysis_id, self.mltask.ml_taskid)
             
         self.update_mltask_modelling_params()
         
