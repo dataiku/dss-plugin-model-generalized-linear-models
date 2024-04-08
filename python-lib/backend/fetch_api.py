@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
 
-from glm_handler.service import glm_handler
+# from glm_handler.service import glm_handler
 
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
@@ -10,8 +10,8 @@ import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
 
-predicted_base = glm_handler.model_handler.get_predicted_and_base()
-relativities = glm_handler.model_handler.relativities_df
+
+
 import numpy as np
 
 @fetch_api.route("/train_model", methods=["POST"])
@@ -103,6 +103,8 @@ def get_variables():
 def get_data():
     # request_json = request.get_json()
     # model = request_json["id"]
+#     predicted_base = glm_handler.model_handler.get_predicted_and_base()
+#     relativities = glm_handler.model_handler.relativities_df
     # df = predicted_base.copy()
     # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
     # return jsonify(df.to_dict('records'))
