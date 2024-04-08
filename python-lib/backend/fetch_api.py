@@ -63,7 +63,36 @@ def train_model():
     except Exception as e:
         logging.exception("An error occurred during model training")
         return jsonify({'error': str(e)}), 500
+
+@fetch_api.route("/get_dataset_columns", methods=["GET"])
+def get_dataset_columns():
     
+    try:
+        # This try statement is just for local development remove the except 
+        # which explicitly assins the dataset name
+        try: 
+            web_app_config = get_webapp_config()
+            dataset_name = web_app_config.get("training_dataset_string")
+        except:
+            dataset_name = "claim_train"
+        logging.info(f"Training Dataset name selected is: {dataset_name}")
+
+        # Assuming you're using Dataiku's Python client to fetch dataset columns
+        cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
+        column_names = [column['name'] for column in cols_dict]
+
+        # Log the successfully retrieved column names
+        logging.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
+
+        return jsonify(column_names)
+    except KeyError as e:
+        # Log an error message if the dataset name is not provided in the request
+        logging.error(f"Missing key in request: {e}")
+        return jsonify({'error': f'Missing key in request: {e}'}), 400
+    except Exception as e:
+        # Log any other errors that occur during the process
+        logging.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
+        return jsonify({'error': str(e)}), 500
 
 # @fetch_api.route("/models", methods=["GET"])
 # def get_models():
@@ -222,35 +251,7 @@ def train_model():
 # #     return jsonify(datasets)
 
 
-# @fetch_api.route("/get_dataset_columns", methods=["GET"])
-# def get_dataset_columns():
-    
-#     try:
-#         # This try statement is just for local development remove the except 
-#         # which explicitly assins the dataset name
-#         try: 
-#             web_app_config = get_webapp_config()
-#             dataset_name = web_app_config.get("training_dataset_string")
-#         except:
-#             dataset_name = "claim_train"
-#         logging.info(f"Training Dataset name selected is: {dataset_name}")
 
-#         # Assuming you're using Dataiku's Python client to fetch dataset columns
-#         cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
-#         column_names = [column['name'] for column in cols_dict]
-
-#         # Log the successfully retrieved column names
-#         logging.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
-
-#         return jsonify(column_names)
-#     except KeyError as e:
-#         # Log an error message if the dataset name is not provided in the request
-#         logging.error(f"Missing key in request: {e}")
-#         return jsonify({'error': f'Missing key in request: {e}'}), 400
-#     except Exception as e:
-#         # Log any other errors that occur during the process
-#         logging.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
-#         return jsonify({'error': str(e)}), 500
 
 # @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 # def get_model_comparison_data():
