@@ -39,10 +39,19 @@ def train_model():
 
     # Log the received parameters for debugging
     logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
+        params = {
+        "model_id": model_id,
+        "input_dataset": input_dataset,
+        "distribution_function": distribution_function,
+        "link_function": link_function,
+        "variables": variables
+    }
+    missing_params = [key for key, value in params.items() if not value]
+    if missing_params:
+        missing_str = ", ".join(missing_params)
+        logging.error(f"Missing parameters in the request: {missing_str}")
+        return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
 
-    if not all([model_id, input_dataset, distribution_function, link_function, variables]):
-        logging.error("Missing parameters in the request")
-        return jsonify({'error': 'Missing parameters'}), 400
 
     try:
         DkuMLTask = DataikuMLTask(model_id, input_dataset, distribution_function, link_function, variables)
