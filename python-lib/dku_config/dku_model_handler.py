@@ -114,7 +114,8 @@ class ModelHandler:
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
                     self.relativities[feature][value] = prediction/baseline_prediction
-                    
+        
+        self.relativities['base'] = {'base': baseline_prediction}
         self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
 
         for feature, values in self.relativities.items():
