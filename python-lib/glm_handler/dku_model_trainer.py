@@ -29,6 +29,7 @@ class DataikuMLTask:
     def __init__(self, input_dataset):
         logger.info("Initializing DataikuMLTask")
         self.client = dataiku.api_client()
+        self.project = self.client.get_default_project()
         
         logger.info("Dataiku API client initialized")
 
