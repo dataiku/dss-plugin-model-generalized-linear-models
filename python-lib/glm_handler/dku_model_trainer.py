@@ -150,9 +150,10 @@ class DataikuMLTask:
         """
         
         self.set_target()
-        # Create a new ML Task to predict the variable from the specified dataset
         
-        if not self.analysis_id:
+        # Create a new ML Task to predict the variable from the specified dataset
+        if self.analysis_id:
+            logger.info("No analysis ID Training a new mltask")
         
             self.mltask = self.project.create_prediction_ml_task(
                 input_dataset=self.input_dataset,
@@ -167,7 +168,10 @@ class DataikuMLTask:
             
             self.analysis_id = self.mltask.analysis_id
             self.mltask_id = self.mltask.mltask_id
+            
         else:
+            logger.info("Analysis ID detected, updating existing sessions")
+            
             self.mltask = DSSMLTask(client, project_key, self.mltask.analysis_id, self.mltask.ml_taskid)
             
         self.update_mltask_modelling_params()

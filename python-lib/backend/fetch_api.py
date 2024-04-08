@@ -51,7 +51,6 @@ def train_model():
         logging.error(f"Missing parameters in the request: {missing_str}")
         return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
 
-
     try:
         if global_dku_mltask:
             DkuMLTask = global_dku_mltask
