@@ -152,7 +152,7 @@ class DataikuMLTask:
         self.set_target()
         
         # Create a new ML Task to predict the variable from the specified dataset
-        if self.analysis_id:
+        if not self.analysis_id:
             logger.info("No analysis ID Training a new mltask")
         
             self.mltask = self.project.create_prediction_ml_task(
