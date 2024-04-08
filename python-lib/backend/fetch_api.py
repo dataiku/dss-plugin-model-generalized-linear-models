@@ -11,7 +11,7 @@ import logging
 from dataiku.customwebapp import get_webapp_config
 import numpy as np
 
-global_dku_mltasks = {}
+global_dku_mltask = None
 
 
 
@@ -26,7 +26,6 @@ def train_model():
         web_app_config = get_webapp_config()
         input_dataset = web_app_config.get("training_dataset_string")
         code_env_string = web_app_config.get("code_env_string")
-        model_id = web_app_config.get("saved_model_id")
         
     except:
         input_dataset = "claim_train"
@@ -41,7 +40,6 @@ def train_model():
 
     logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
     params = {
-        "model_id": model_id,
         "input_dataset": input_dataset,
         "distribution_function": distribution_function,
         "link_function": link_function,
@@ -55,7 +53,13 @@ def train_model():
 
 
     try:
-        DkuMLTask = DataikuMLTask(model_id, input_dataset, distribution_function, link_function, variables)
+        if global_dku_mltask:
+            DkuMLTask = global_dku_mltask
+
+        else: #First initialisation 
+            DkuMLTask = DataikuMLTask(input_dataset)
+            
+        DkuMLTask.update_parameters(distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
         logging.debug("Visual ML task created successfully")
 
