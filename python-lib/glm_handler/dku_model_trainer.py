@@ -153,7 +153,7 @@ class DataikuMLTask:
         
         # Create a new ML Task to predict the variable from the specified dataset
         if not self.analysis_id:
-            logger.info("No analysis ID Training a new mltask")
+            logger.info("No analysis ID Training a new mltask in DKU Model Trainer")
         
             self.mltask = self.project.create_prediction_ml_task(
                 input_dataset=self.input_dataset,
