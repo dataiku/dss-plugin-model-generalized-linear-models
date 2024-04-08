@@ -30,7 +30,7 @@ class DataikuMLTask:
         logger.info("Initializing DataikuMLTask")
         self.client = dataiku.api_client()
         self.project = self.client.get_default_project()
-        
+        self.project_key = self.project_key 
         logger.info("Dataiku API client initialized")
 
         self.input_dataset = input_dataset
@@ -173,7 +173,7 @@ class DataikuMLTask:
         else:
             logger.info(f"Analysis ID detected as {self.analysis_id}, updating existing sessions")
             
-            self.mltask = DSSMLTask(self.client, project_key, self.mltask.analysis_id, self.mltask.ml_taskid)
+            self.mltask = DSSMLTask(self.client, self.project_key, self.mltask.analysis_id, self.mltask.ml_taskid)
             
         self.update_mltask_modelling_params()
         
