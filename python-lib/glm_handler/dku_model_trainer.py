@@ -69,7 +69,7 @@ class DataikuMLTask:
         logger.info("DataikuMLTask initialized successfully")
 
 
-    def extract_active_fullModelId( json_data):
+    def extract_active_fullModelId(self, json_data):
         """
         Extracts the fullModelId of the active model version from the given JSON data.
 
