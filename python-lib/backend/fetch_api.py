@@ -300,12 +300,37 @@ def get_model_metrics():
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
-    print(relativities)
-    data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
-    df = pd.DataFrame(data)
+    relativities_dict = glm_handler.model_handler.relativities
+    
+    nb_col = (len(relativities.keys()) - 1) * 3
+    variables = [col for col in relativities.keys() if col != "base"]
+    variable_keys = {variable: list(relativities[variable].keys()) for variable in variables}
+    max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
+    
+    csv_output = ",,\n"
+    csv_output += "Base,,{}\n".format(relativities['base']['base'])
+    csv_output += ",,\n"
+    csv_output += ",,\n"
+    csv_output += ",,".join(variables) + ",,\n"
+    csv_output += ",,\n"
+    csv_output += ",,".join(variables) + ",,\n"
+    
+    for i in range(max_len):
+        for variable in variables:
+            if i < len(variable_keys[variable]):
+                value = variable_keys[variable][i]
+                csv_output += "{},{},,".format(value, relativities[variable][value])
+            else:
+                csv_output += ",,,"
+        csv_output += "\n"
+    
+    csv_data = csv_output.encode('utf-8')
+    
+    #data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+    #df = pd.DataFrame(data)
 
     # Convert DataFrame to CSV format
-    csv_data = df.to_csv(index=False).encode('utf-8')
+    #csv_data = df.to_csv(index=False).encode('utf-8')
 
     # Create an in-memory file-like object for CSV data
     csv_io = BytesIO(csv_data)
