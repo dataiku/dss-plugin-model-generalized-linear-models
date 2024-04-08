@@ -283,29 +283,83 @@ class ModelHandler:
         tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
         return tempdata
 
-    
-    def get_lift_chart(self, nb_bins):
-        
-        train_set = get_model_predictions_on_train()
-        
-        tempdata = train_set.sort_values(by='prediction', ascending=True)
-        
-        print(tempdata)
-        
+    def sort_and_cumsum_exposure(self, data):
+        """
+        Sorts the data by prediction values in ascending order and calculates
+        the cumulative sum of exposure, normalized by the total exposure.
 
+        Args:
+            data (pd.DataFrame): The DataFrame containing model predictions and exposures.
+
+        Returns:
+            pd.DataFrame: The input DataFrame with additional columns for the cumulative sum
+                          and binning information based on exposure.
+        """
+        tempdata = data.sort_values(by='prediction', ascending=True)
         tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
-        tempdata['bin'] = pd.cut(tempdata['exposure_cumsum'].round(16), bins=[round(x / nb_bins, 8) for x in range(nb_bins+1)][:-1] + [float("inf")], labels=[x + 1 for x in range(nb_bins)])
-        tempdata['bin'] = tempdata['bin'].astype(int)
-        new_data = train_set.join(tempdata[['bin']]).copy(deep=True)
-        new_data['weighted_prediction'] = new_data.prediction * new_data[self.exposure]
-        new_data['weighted_target'] = new_data[self.target] * new_data[self.exposure]
-        grouped = new_data.groupby(["bin"]).aggregate({self.exposure: 'sum', 'weighted_target': 'sum', 'weighted_prediction':'sum'})
+        return tempdata
+    
+    def bin_data(self, data, nb_bins):
+        """
+        Bins the data into specified number of bins based on the cumulative sum of exposure.
+
+        Args:
+            data (pd.DataFrame): The DataFrame containing cumulative sum of exposures.
+            nb_bins (int): The number of bins to divide the data into.
+
+        Returns:
+            pd.DataFrame: The input DataFrame with a new column indicating the bin for each row.
+        """
+        bins = [round(x / nb_bins, 8) for x in range(nb_bins + 1)][:-1] + [float("inf")]
+        data['bin'] = pd.cut(data['exposure_cumsum'].round(16), bins=bins, labels=[x + 1 for x in range(nb_bins)])
+        data['bin'] = data['bin'].astype(int)
+        return data
+    
+    def aggregate_metrics_by_bin(self, data):
+        """
+        Aggregates and calculates metrics within each bin, including sum of exposures,
+        weighted predictions, and targets, and calculates observed and predicted data metrics.
+
+        Args:
+            data (pd.DataFrame): The DataFrame with predictions, targets, and bin information.
+
+        Returns:
+            pd.DataFrame: A summarized DataFrame with metrics calculated for each bin.
+        """
+        data['weighted_prediction'] = data.prediction * data[self.exposure]
+        data['weighted_target'] = data[self.target] * data[self.exposure]
+        grouped = data.groupby(["bin"]).aggregate({
+            self.exposure: 'sum',
+            'weighted_target': 'sum',
+            'weighted_prediction': 'sum'
+        })
         grouped['observedData'] = grouped['weighted_target'] / grouped[self.exposure]
         grouped['predictedData'] = grouped['weighted_prediction'] / grouped[self.exposure]
         grouped.reset_index(inplace=True)
         grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
-        
         return grouped
+
+
+    def get_lift_chart(self, nb_bins):
+        """
+        Calculates and returns the lift chart data for the model on the training set,
+        divided into the specified number of bins.
+
+        Args:
+            nb_bins (int): The number of bins to divide the data into for the lift chart.
+
+        Returns:
+            pd.DataFrame: The aggregated lift chart data with observed and predicted metrics.
+        """
+        train_set = self.get_model_predictions_on_train()
+        
+        tempdata = self.sort_and_cumsum_exposure(train_set)
+        binned_data = self.bin_data(tempdata, nb_bins)
+        
+        new_data = train_set.join(binned_data[['bin']], how='inner')
+        lift_chart_data = self.aggregate_metrics_by_bin(new_data)
+        return lift_chart_data
+
 
     def get_link_function(self):
         """
