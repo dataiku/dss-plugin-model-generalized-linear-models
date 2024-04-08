@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
     # Log the receipt of a new training request
+    global global_dku_mltask
     
     request_json = request.get_json()
     logging.info(f"Received a model training request: {request_json}")
@@ -61,7 +62,7 @@ def train_model():
         else: #First initialisation 
             logger.info("Initalising an new ML Task at the API")
             DkuMLTask = DataikuMLTask(input_dataset)
-            global_dku_mltasks = DkuMLTask
+            global_dku_mltask = DkuMLTask
             
         DkuMLTask.update_parameters(distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
