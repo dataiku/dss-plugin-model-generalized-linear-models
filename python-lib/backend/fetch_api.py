@@ -17,17 +17,21 @@ import numpy as np
 def train_model():
     # Log the receipt of a new training request
     
-    
     request_json = request.get_json()
     logging.info(f"Received a model training request: {request_json}")
+    
     try: 
         web_app_config = get_webapp_config()
         input_dataset = web_app_config.get("training_dataset_string")
         code_env_string = web_app_config.get("code_env_string")
+        model_id = web_app_config.get("code_env_string")
+        
     except:
         input_dataset = "claim_train"
         code_env_string="py39_sol"
+        
     logging.info(f"Training Dataset name selected is: {input_dataset}") 
+    
     distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
     link_function = request_json.get('model_parameters', {}).get('link_function')
     model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
@@ -36,12 +40,12 @@ def train_model():
     # Log the received parameters for debugging
     logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
 
-    if not all([input_dataset, distribution_function, link_function, variables]):
+    if not all([model_id, input_dataset, distribution_function, link_function, variables]):
         logging.error("Missing parameters in the request")
         return jsonify({'error': 'Missing parameters'}), 400
 
     try:
-        DkuMLTask = DataikuMLTask(input_dataset, distribution_function, link_function, variables)
+        DkuMLTask = DataikuMLTask(model_id, input_dataset, distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
         logging.debug("Visual ML task created successfully")
 

@@ -1,11 +1,14 @@
 import dataiku
 from dataiku import pandasutils as pdu
 import pandas as pd
-import logging 
+import logging
+from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 logger = logging.getLogger(__name__)
+
 class DataikuMLTask:
     """
     A class to manage machine learning tasks in Dataiku DSS.
@@ -22,9 +25,10 @@ class DataikuMLTask:
         offset_variable (str): Name of the offset variable, if any.
     """
     
-    def __init__(self, input_dataset, distribution_function, link_function, variables):
+    def __init__(self, model_id, input_dataset, distribution_function, link_function, variables):
         logger.info("Initializing DataikuMLTask")
         self.client = dataiku.api_client()
+        
         logger.info("Dataiku API client initialized")
 
         self.input_dataset = input_dataset
@@ -58,9 +62,27 @@ class DataikuMLTask:
                 self.offset_variable = variable['name']
                 logger.info(f"offset_variable set to {self.offset_variable}")
 
+        self.model = dataiku.Model(model_id)
+        self.full_model_id = self.extract_active_fullModelId(model.list_versions())
+        self.ml_task = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+        
         logger.info("DataikuMLTask initialized successfully")
 
 
+    def extract_active_fullModelId( json_data):
+        """
+        Extracts the fullModelId of the active model version from the given JSON data.
+
+        Args:
+            json_data (list): A list of dictionaries containing model version details.
+
+        Returns:
+            str: The fullModelId of the active model version, or None if not found.
+        """
+        for item in json_data:
+            if item.get('active'):
+                return item['snippet'].get('fullModelId')
+        return None
     
     def disable_existing_variables(self):
             # First, disable all existing variables
@@ -127,12 +149,14 @@ class DataikuMLTask:
         """
         self.set_target()
         # Create a new ML Task to predict the variable from the specified dataset
-        self.mltask = self.project.create_prediction_ml_task(
-            input_dataset=self.input_dataset,
-            target_variable=self.target_variable,
-            ml_backend_type='PY_MEMORY',  # ML backend to use
-            guess_policy='DEFAULT'  # Template to use for setting default parameters
-        )
+#         self.mltask = self.project.create_prediction_ml_task(
+#             input_dataset=self.input_dataset,
+#             target_variable=self.target_variable,
+#             ml_backend_type='PY_MEMORY',  # ML backend to use
+#             guess_policy='DEFAULT'  # Template to use for setting default parameters
+#         )
+
+
         # Wait for the ML task to be ready
         self.mltask.wait_guess_complete()
         
