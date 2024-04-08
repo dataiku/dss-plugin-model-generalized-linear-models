@@ -88,8 +88,8 @@ def get_variables():
     request_json = request.get_json()
     model = request_json["id"]
     glm_handler.model_handler.switch_model(model)
-    predicted_base = glm_handler.model_handler.get_predicted_and_base()
-    relativities = glm_handler.model_handler.relativities_df
+    global predicted_base = glm_handler.model_handler.get_predicted_and_base()
+    global relativities = glm_handler.model_handler.relativities_df
     variables = glm_handler.model_handler.get_features()
     return jsonify(variables)
     model = 'model_1'
