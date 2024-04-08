@@ -261,6 +261,34 @@ def get_dataset_columns():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
+    
+    
+    
+    request_json = request.get_json()
+    print(request_json)
+    model1, model2 = request_json["model1"], request_json["model2"]
+    
+    
+    glm_handler.model_handler.switch_model(model1)
+    model_1_lift_chart = glm_handler.model_handler.get_lift_chart(8)
+    
+    model_1_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_1_fittedAverage']
+    
+    
+    glm_handler.model_handler.switch_model(model2)
+    model_2_lift_chart = glm_handler.model_handler.get_lift_chart(8)
+    
+  
+    model_2_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_2_fittedAverage']
+    
+    merged_lift_chart = pd.merge(model_1_lift_chart, model_2_lift_chart, 
+                             on=['observedAverage','Category', 'variable_values'], 
+                             how='outer')
+    
+    
+    
+    
+    
     # request_json = request.get_json()
     # model = request_json["id"]
     # df = relativities
