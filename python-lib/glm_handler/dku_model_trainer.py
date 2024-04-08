@@ -3,6 +3,7 @@ from dataiku import pandasutils as pdu
 import pandas as pd
 import logging
 from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
+from dataikuapi.dss.ml import DSSMLTask
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -61,10 +62,8 @@ class DataikuMLTask:
             elif role == "offset":
                 self.offset_variable = variable['name']
                 logger.info(f"offset_variable set to {self.offset_variable}")
-
-        self.model = dataiku.Model(model_id)
-        self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
-        self.mltask = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+        
+        
         
         logger.info("DataikuMLTask initialized successfully")
 
@@ -149,17 +148,25 @@ class DataikuMLTask:
         """
         self.set_target()
         # Create a new ML Task to predict the variable from the specified dataset
-#         self.mltask = self.project.create_prediction_ml_task(
-#             input_dataset=self.input_dataset,
-#             target_variable=self.target_variable,
-#             ml_backend_type='PY_MEMORY',  # ML backend to use
-#             guess_policy='DEFAULT'  # Template to use for setting default parameters
-#         )
-
-
-        # Wait for the ML task to be ready
-        self.mltask.wait_guess_complete()
         
+        if not self.analysis_id:
+        
+            self.mltask = self.project.create_prediction_ml_task(
+                input_dataset=self.input_dataset,
+                target_variable=self.target_variable,
+                ml_backend_type='PY_MEMORY',  # ML backend to use
+                guess_policy='DEFAULT'  # Template to use for setting default parameters
+            )
+
+
+            # Wait for the ML task to be ready
+            self.mltask.wait_guess_complete()
+            
+            self.analysis_id = self.mltask.analysis_id
+            self.mltask_id = self.mltask.ml_taskid
+        else:
+            self.mltask = DSSMLTask(client, project_key, self.mltask.analysis_id, self.mltask.ml_taskid)
+            
         self.update_mltask_modelling_params()
         
         
