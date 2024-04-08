@@ -283,22 +283,7 @@ class ModelHandler:
         tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
         return tempdata
 
-    def sort_and_cumsum_exposure(self, data):
-        """
-        Sorts the data by prediction values in ascending order and calculates
-        the cumulative sum of exposure, normalized by the total exposure.
 
-        Args:
-            data (pd.DataFrame): The DataFrame containing model predictions and exposures.
-
-        Returns:
-            pd.DataFrame: The input DataFrame with additional columns for the cumulative sum
-                          and binning information based on exposure.
-        """
-        tempdata = data.sort_values(by='prediction', ascending=True)
-        tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
-        return tempdata
-    
     def bin_data(self, data, nb_bins):
         """
         Bins the data into specified number of bins based on the cumulative sum of exposure.
