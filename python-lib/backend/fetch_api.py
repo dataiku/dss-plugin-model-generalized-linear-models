@@ -116,15 +116,24 @@ def get_dataset_columns():
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
+    # Ensure that global_dku_mltask is accessible and has been initialized
+    if global_dku_mltask is None:
+        return jsonify({'error': 'ML task not initialized'}), 500
 
-    # Initialize an empty list to hold the models' details
-    models = []
-    for ml_id in list_ml_id:
-        model_details = global_dku_mltask.mltask.get_trained_model_details(ml_id)
-        model_name = model_details.get_user_meta()['name']
-        models.append({"id": ml_id, "name": model_name})
+    try:
+        # Assuming global_dku_mltask has a method to return trained model IDs
+        list_ml_id = global_dku_mltask.mltask.get_trained_models_ids()
 
-    return jsonify(models)
+        models = []
+        for ml_id in list_ml_id:
+            model_details = global_dku_mltask.mltask.get_trained_model_details(ml_id)
+            model_name = model_details.get_user_meta()['name']
+            models.append({"id": ml_id, "name": model_name})
+
+        return jsonify(models)
+    except Exception as e:
+        logging.exception("An error occurred while retrieving models")
+        return jsonify({'error': str(e)}), 500
 
 #     versions = glm_handler.model_handler.get_model_versions()
 #     models = [{'id': k, 'name': v} for k,v in versions.items()]
