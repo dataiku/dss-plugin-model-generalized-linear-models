@@ -315,9 +315,9 @@ def export_model():
     csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
     csv_output += ",,\n"
     csv_output += ",,\n"
-    csv_output += ",,".join(variables) + ",,\n"
+    csv_output += ",,,".join(variables) + ",,\n"
     csv_output += ",,\n"
-    csv_output += ",,".join(variables) + ",,\n"
+    csv_output += ",,,".join(variables) + ",,\n"
     
     for i in range(max_len):
         for variable in variables:
