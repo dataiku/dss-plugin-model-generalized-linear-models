@@ -24,7 +24,7 @@ def train_model():
         web_app_config = get_webapp_config()
         input_dataset = web_app_config.get("training_dataset_string")
         code_env_string = web_app_config.get("code_env_string")
-        model_id = web_app_config.get("code_env_string")
+        model_id = web_app_config.get("saved_model_id")
         
     except:
         input_dataset = "claim_train"
