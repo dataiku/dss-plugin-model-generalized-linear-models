@@ -1,4 +1,4 @@
 pytest==6.2.1
 requests<2.22,>=2
 dataiku-api-client
-git+https://github.com/dataiku/dataiku-plugin-tests-utils.git@master#egg=dataiku-plugin-tests-utils
+git+https://github.com/dataiku/dataiku-plugin-tests-utils.git@fix/skip_test_when_no_python_avail#egg=dataiku-plugin-tests-utils

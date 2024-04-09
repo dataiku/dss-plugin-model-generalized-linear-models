@@ -1,6 +1,6 @@
 # Makefile variables set automatically
-plugin_id=`cat plugin.json | python3.9 -c "import sys, json; print(str(json.load(sys.stdin)['id']).replace('/',''))"`
-plugin_version=`cat plugin.json | python3.9 -c "import sys, json; print(str(json.load(sys.stdin)['version']).replace('/',''))"`
+plugin_id=`cat plugin.json | python -c "import sys, json; print(str(json.load(sys.stdin)['id']).replace('/',''))"`
+plugin_version=`cat plugin.json | python -c "import sys, json; print(str(json.load(sys.stdin)['version']).replace('/',''))"`
 archive_file_name="dss-plugin-${plugin_id}-${plugin_version}.zip"
 remote_url=`git config --get remote.origin.url`
 last_commit_id=`git rev-parse HEAD`
@@ -21,13 +21,13 @@ plugin:
 unit-tests:
 	@echo "Running unit tests..."
 	@( \
-		PYTHON_VERSION=`python3.9 -V 2>&1 | sed 's/[^0-9]*//g' | cut -c 1,2`; \
-		PYTHON_VERSION_IS_CORRECT=`cat code-env/python/desc.json | python3.9 -c "import sys, json; print(str($$PYTHON_VERSION) in [x[-2:] for x in json.load(sys.stdin)['acceptedPythonInterpreters']]);"`; \
+		PYTHON_VERSION=`python -V 2>&1 | sed 's/[^0-9]*//g' | cut -c 1,2`; \
+		PYTHON_VERSION_IS_CORRECT=`cat code-env/python/desc.json | python -c "import sys, json; print(str($$PYTHON_VERSION) in [x[-2:] for x in json.load(sys.stdin)['acceptedPythonInterpreters']]);"`; \
 		if [ $$PYTHON_VERSION_IS_CORRECT == "False" ]; then echo "Python version $$PYTHON_VERSION is not in acceptedPythonInterpreters"; exit 1; else echo "Python version $$PYTHON_VERSION is in acceptedPythonInterpreters"; fi; \
 	)
 	@( \
 		rm -rf ./env/; \
-		python3.9 -m venv env/; \
+		python -m venv env/; \
 		source env/bin/activate; \
 		pip install --upgrade pip;\
 		pip install --no-cache-dir -r tests/python/unit/requirements.txt; \
@@ -40,9 +40,9 @@ integration-tests:
 	@echo "Running integration tests..."
 	@( \
 		rm -rf ./env/; \
-		python3.9 -m venv env/; \
+		python -m venv env/; \
 		source env/bin/activate; \
-		pip3 install --upgrade pip;\
+		pip install --upgrade pip;\
 		pip install --no-cache-dir -r tests/python/integration/requirements.txt; \
 		pytest tests/python/integration --exclude-dss-targets="DSS11" --alluredir=tests/allure_report || ret=$$?; exit $$ret \
 	)

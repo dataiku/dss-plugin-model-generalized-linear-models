@@ -27,11 +27,10 @@ class ModelHandler:
         """
         self.model_id = model_id
         self.model = dataiku.Model(model_id)
-        self.predictor = self.model.get_predictor()
-        self.full_model_id = extract_active_fullModelId(self.model.list_versions())
+        self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+        self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
-        #self.weight = self.model_info_handler.get_sample_weight_variable()
         self.compute_features()
         self.compute_base_values()
         self.compute_relativities()
@@ -40,6 +39,7 @@ class ModelHandler:
         if full_model_id != self.full_model_id:
             self.full_model_id = full_model_id
             self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+            self.predictor = self.model_info_handler.get_predictor()
             self.target = self.model_info_handler.get_target_variable()
             self.weight = self.model_info_handler.get_sample_weight_variable()
             self.compute_features()
@@ -97,6 +97,8 @@ class ModelHandler:
         self.relativities = {}
         for feature in self.base_values.keys():
             sample_train_row[feature] = self.base_values[feature]
+        if self.exposure is not None:
+            sample_train_row[self.exposure] = 1
         baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
         for feature in self.base_values.keys():
             self.relativities[feature] = {self.base_values[feature]: 1.0}
@@ -114,12 +116,14 @@ class ModelHandler:
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
                     self.relativities[feature][value] = prediction/baseline_prediction
-                    
+        
+        self.relativities['base'] = {'base': baseline_prediction}
         self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
 
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
                 self.relativities_df = self.relativities_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
+        self.relativities_df = self.relativities_df.append({'feature': 'base', 'value': 'base', 'relativity': baseline_prediction}, ignore_index=True)
 
     def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
         test_set = self.model_info_handler.get_test_df()[0].copy()

@@ -1,6 +1,8 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 import pandas as pd
+
 from glm_handler.dku_model_trainer import DataikuMLTask
+from io import BytesIO
 
 # from glm_handler.service import glm_handler
 
@@ -147,12 +149,21 @@ def get_models():
 @fetch_api.route("/variables", methods=["POST"])
 def get_variables():
     request_json = request.get_json()
-    logger.info(f"INcoming request for get_variables payload is {request_json}")
-    
     model = request_json["id"]
-    
     glm_handler.model_handler.switch_model(model)
+    global predicted_base
+    global relativities
+    predicted_base = glm_handler.model_handler.get_predicted_and_base()
+    relativities = glm_handler.model_handler.relativities_df
     variables = glm_handler.model_handler.get_features()
+    return jsonify(variables)
+    model = 'model_1'
+    if model == 'model_1':
+        variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
+                    {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
+    else:
+        variables = [{'variable': 'Variable3', 'isInModel': False, 'variableType': 'categorical'},
+                    {'variable': 'Variable4', 'isInModel': True, 'variableType': 'numeric'}]
     return jsonify(variables)
 #     model = 'model_1'
 #     if model == 'model_1':
@@ -166,13 +177,11 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
-    # request_json = request.get_json()
-    # model = request_json["id"]
-#     predicted_base = glm_handler.model_handler.get_predicted_and_base()
-#     relativities = glm_handler.model_handler.relativities_df
-    # df = predicted_base.copy()
-    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    # return jsonify(df.to_dict('records'))
+    request_json = request.get_json()
+    model = request_json["id"]
+    df = predicted_base.copy()
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
     model = 'model_1'
     if model == 'model_1':
         df = pd.DataFrame({
@@ -229,10 +238,10 @@ def get_updated_data():
     print(request_json)
     feature = request_json["feature"]
     nb_bins = request_json["nbBin"]
-    # predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
-    # df = predicted_base.copy()
-    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    # return jsonify(df.to_dict('records'))
+    predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
+    df = predicted_base.copy()
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
     if True:
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -258,11 +267,11 @@ def get_updated_data():
 
 @fetch_api.route("/relativities", methods=["POST"])
 def get_relativities():
-    # request_json = request.get_json()
-    # model = request_json["id"]
-    # df = relativities
-    # df.columns = ['variable', 'category', 'relativity']
-    # return jsonify(df.to_dict('records'))
+    request_json = request.get_json()
+    model = request_json["id"]
+    df = relativities
+    df.columns = ['variable', 'category', 'relativity']
+    return jsonify(df.to_dict('records'))
     model="model_1"
     if model == 'model_1':
         df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -366,5 +375,50 @@ def get_model_metrics():
         }
 
     return jsonify(json_data)
+
+@fetch_api.route('/export_model', methods=['GET'])
+def export_model():
+    relativities_dict = glm_handler.model_handler.relativities
+    
+    nb_col = (len(relativities_dict.keys()) - 1) * 3
+    variables = [col for col in relativities_dict.keys() if col != "base"]
+    variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
+    max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
+    
+    csv_output = ",,\n"
+    csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
+    csv_output += ",,\n"
+    csv_output += ",,\n"
+    csv_output += ",,,".join(variables) + ",,\n"
+    csv_output += ",,\n"
+    csv_output += ",,,".join(variables) + ",,\n"
+    
+    for i in range(max_len):
+        for variable in variables:
+            if i < len(variable_keys[variable]):
+                value = variable_keys[variable][i]
+                csv_output += "{},{},,".format(value, relativities_dict[variable][value])
+            else:
+                csv_output += ",,,"
+        csv_output += "\n"
+    
+    csv_data = csv_output.encode('utf-8')
+    
+    #data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+    #df = pd.DataFrame(data)
+
+    # Convert DataFrame to CSV format
+    #csv_data = df.to_csv(index=False).encode('utf-8')
+
+    # Create an in-memory file-like object for CSV data
+    csv_io = BytesIO(csv_data)
+
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='model.csv'
+    )
 
 

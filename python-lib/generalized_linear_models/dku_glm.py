@@ -10,6 +10,7 @@ from glum import NegativeBinomialDistribution
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 import generalized_linear_models.link as link
+import pandas as pd
 
 class BaseGLM(BaseEstimator, ClassifierMixin):
     """
@@ -229,9 +230,12 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         offset_output = self.compute_aggregate_offset(offsets, exposures)
 
         #  fits and stores glum glm
-        model = GeneralizedLinearRegressor(alpha=self.penalty, l1_ratio=self.l1_ratio, fit_intercept=True,
+        self.fitted_model = GeneralizedLinearRegressor(alpha=self.penalty, l1_ratio=self.l1_ratio, fit_intercept=True,
                                             family=self.family, link=self.link)
-        self.fitted_model = model.fit(X, y, sample_weight=sample_weight, offset=offset_output)
+        X_df = pd.DataFrame(X, columns=self.final_labels)
+        self.fitted_model.fit(X_df, y, sample_weight=sample_weight, offset=offset_output, store_covariance_matrix=True)
+        
+        self.coef_table = self.fitted_model.coef_table()
         
         self.compute_coefs(prediction_is_classification)
         
@@ -271,6 +275,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
     def process_fixed_columns(self, X):
         self.removed_indices = None
+        self.final_labels = self.column_labels.copy()
         if self.offset_indices is not None:
             self.removed_indices = self.offset_indices
         if self.exposure_indices is not None:
@@ -288,6 +293,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
             self.removed_indices = list(set(self.removed_indices))
 
             X = np.delete(X, self.removed_indices, axis=1)
+            
+            for ind in sorted(self.removed_indices, reverse=True):
+                del self.final_labels[ind]
 
         return X
     
