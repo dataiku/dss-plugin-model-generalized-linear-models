@@ -14,6 +14,12 @@
     "font_awesome"
   ],
   "params": [
+      {
+          "name": "saved_model_id",
+          "label": "Model",
+          "description": "Select the GLM Model to Analyze",
+          "type": "SAVED_MODEL"
+      },
 
       {
         "name": "training_dataset_string",

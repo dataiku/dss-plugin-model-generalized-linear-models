@@ -142,13 +142,16 @@ def get_models():
 
 
 
-# @fetch_api.route("/variables", methods=["POST"])
-# def get_variables():
-#     # request_json = request.get_json()
-#     # model = request_json["id"]
-#     # glm_handler.model_handler.switch_model(model)
-#     # variables = glm_handler.model_handler.get_features()
-#     # return jsonify(variables)
+@fetch_api.route("/variables", methods=["POST"])
+def get_variables():
+    request_json = request.get_json()
+    logger.info(f"INcoming request for get_variables payload is {request_json}")
+    
+    model = request_json["id"]
+    
+    glm_handler.model_handler.switch_model(model)
+    variables = glm_handler.model_handler.get_features()
+    return jsonify(variables)
 #     model = 'model_1'
 #     if model == 'model_1':
 #         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
