@@ -40,7 +40,7 @@ class DataikuMLTask:
             self.ml_task = self.model.get_origin_ml_task()
         except:
             raise ValueError("""There is no associated ML task for your model. 
-            This model was likely imported or trainned somewhere else and is not compatible""")
+        This model was likely imported or trained somewhere else and is not compatible."""
         
         self.analysis_id = None
         self.mltask_id = None
