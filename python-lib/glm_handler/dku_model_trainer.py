@@ -26,7 +26,7 @@ class DataikuMLTask:
         offset_variable (str): Name of the offset variable, if any.
     """
     
-    def __init__(self, input_dataset):
+    def __init__(self, input_dataset, saved_model_id):
         logger.info("Initializing DataikuMLTask")
         self.client = dataiku.api_client()
         self.project = self.client.get_default_project()
@@ -35,7 +35,8 @@ class DataikuMLTask:
 
         self.input_dataset = input_dataset
         logger.info(f"input_dataset set to {input_dataset}")
-
+        self.model = dataiku.Model(saved_model_id)
+        self.ml_task = self.model.get_origin_ml_task()
         
         self.analysis_id = None
         self.mltask_id = None
@@ -153,25 +154,25 @@ class DataikuMLTask:
         self.set_target()
         
         # Create a new ML Task to predict the variable from the specified dataset
-        if not self.analysis_id:
-            logger.info("No analysis ID Training a new mltask in DKU Model Trainer")
+        if not self.ml_task:
+            logger.info("No ML task exists check the set up of saved model")
         
-            self.mltask = self.project.create_prediction_ml_task(
-                input_dataset=self.input_dataset,
-                target_variable=self.target_variable,
-                ml_backend_type='PY_MEMORY',  # ML backend to use
-                guess_policy='DEFAULT'  # Template to use for setting default parameters
-            )
+#             self.mltask = self.project.create_prediction_ml_task(
+#                 input_dataset=self.input_dataset,
+#                 target_variable=self.target_variable,
+#                 ml_backend_type='PY_MEMORY',  # ML backend to use
+#                 guess_policy='DEFAULT'  # Template to use for setting default parameters
+#             )
 
 
-            # Wait for the ML task to be ready
-            self.mltask.wait_guess_complete()
+#             # Wait for the ML task to be ready
+#             self.mltask.wait_guess_complete()
             
-            self.analysis_id = self.mltask.analysis_id
-            self.mltask_id = self.mltask.mltask_id
+#             self.analysis_id = self.mltask.analysis_id
+#             self.mltask_id = self.mltask.mltask_id
             
         else:
-            logger.info(f"Analysis ID detected as {self.analysis_id}, updating existing sessions")
+            logger.info(f"Using Saved model detected as {self.model.id}, updating existing sessions")
             
 #             self.mltask = DSSMLTask(self.client, self.project_key, self.analysis_id, self.mltask_id)
             

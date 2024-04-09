@@ -28,6 +28,7 @@ def train_model():
         web_app_config = get_webapp_config()
         input_dataset = web_app_config.get("training_dataset_string")
         code_env_string = web_app_config.get("code_env_string")
+        saved_model_id = web_app_config.get("saved_model_id")
         
     except:
         input_dataset = "claim_train"
@@ -45,7 +46,8 @@ def train_model():
         "input_dataset": input_dataset,
         "distribution_function": distribution_function,
         "link_function": link_function,
-        "variables": variables
+        "variables": variables,
+        "saved_model_id":saved_model_id
     }
     missing_params = [key for key, value in params.items() if not value]
     if missing_params:
@@ -61,7 +63,7 @@ def train_model():
 
         else: #First initialisation 
             logger.info("Initalising an new ML Task at the API")
-            DkuMLTask = DataikuMLTask(input_dataset)
+            DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
             global_dku_mltask = DkuMLTask
             
         DkuMLTask.update_parameters(distribution_function, link_function, variables)
