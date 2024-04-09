@@ -35,7 +35,7 @@ class DataikuMLTask:
 
         self.input_dataset = input_dataset
         logger.info(f"input_dataset set to {input_dataset}")
-        self.model = dataiku.Model(saved_model_id)
+        self.model = self.project.get_saved_model(saved_model_id)
         try:
             self.ml_task = self.model.get_origin_ml_task()
         except:
