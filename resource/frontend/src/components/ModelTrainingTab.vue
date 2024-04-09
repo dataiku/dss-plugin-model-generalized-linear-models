@@ -88,10 +88,10 @@
 
  
                     <div class="q-gutter-sm row items-center">
-                        <q-radio v-model="column.type" val="numerical" label="Numerical" />
+                        <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
                     </div>
                     <div class="q-gutter-sm row items-center">
-                        <q-radio v-model="column.type" val="categorical" label="Categorical" />
+                        <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
                     </div>
                     <!-- <VariableSelect
                         label="Column Type"
@@ -101,14 +101,14 @@
                         helpMessage="Does the column contain categorical or numerical data?"
                         style="min-width: 150px">
                     </VariableSelect> -->
-                    <!-- <VariableSelect
+                    <VariableSelect
                         label="Preprocessing"
                         :modelValue="column.preprocessing"
                         :options="preprocessingOptions"
                         @update:modelValue="newValue => updatePreprocessing(index, newValue)"
                         helpMessage="Preprocessing Method"
                         style="min-width: 150px">
-                    </VariableSelect> -->
+                    </VariableSelect>
             </div>
         </q-card>
     </BsContent>
@@ -120,11 +120,14 @@
 <script lang="ts">
 type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing';
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
+interface TypeWithValue {
+  value: string;
+}
 interface Column {
         name: string;
         isIncluded: boolean | { label: string; value: boolean };
         role: string | { label: string; value: string };
-        type: string | { label: string; value: string };
+        type: string | TypeWithValue;
         preprocessing: string | { label: string; value: string };
         }
 interface SelectionOption {
