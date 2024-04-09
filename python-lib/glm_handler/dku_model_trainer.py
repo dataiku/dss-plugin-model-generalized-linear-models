@@ -36,7 +36,11 @@ class DataikuMLTask:
         self.input_dataset = input_dataset
         logger.info(f"input_dataset set to {input_dataset}")
         self.model = dataiku.Model(saved_model_id)
-        self.ml_task = self.model.get_origin_ml_task()
+        try:
+            self.ml_task = self.model.get_origin_ml_task()
+        except:
+            raise ValueError("""There is no associated ML task for your model. 
+            This model was likely imported or trainned somewhere else and is not compatible""")
         
         self.analysis_id = None
         self.mltask_id = None
