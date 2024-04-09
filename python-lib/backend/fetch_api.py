@@ -3,7 +3,7 @@ import pandas as pd
 from dku_config.dku_model_trainer import DataikuMLTask
 from io import BytesIO
 
-from glm_handler.service import glm_handler
+# from glm_handler.service import glm_handler
 
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
@@ -11,8 +11,8 @@ import dataiku
 import logging
 from dataiku.customwebapp import get_webapp_config
 
-predicted_base = glm_handler.model_handler.get_predicted_and_base()
-relativities = glm_handler.model_handler.relativities_df
+# predicted_base = glm_handler.model_handler.get_predicted_and_base()
+# relativities = glm_handler.model_handler.relativities_df
 import numpy as np
 
 @fetch_api.route("/train_model", methods=["POST"])
@@ -77,23 +77,23 @@ def train_model():
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
-    versions = glm_handler.model_handler.get_model_versions()
-    models = [{'id': k, 'name': v} for k,v in versions.items()]
-    return jsonify(models)
+    # versions = glm_handler.model_handler.get_model_versions()
+    # models = [{'id': k, 'name': v} for k,v in versions.items()]
+    # return jsonify(models)
     models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
     return jsonify(models)
 
 @fetch_api.route("/variables", methods=["POST"])
 def get_variables():
-    request_json = request.get_json()
-    model = request_json["id"]
-    glm_handler.model_handler.switch_model(model)
-    global predicted_base
-    global relativities
-    predicted_base = glm_handler.model_handler.get_predicted_and_base()
-    relativities = glm_handler.model_handler.relativities_df
-    variables = glm_handler.model_handler.get_features()
-    return jsonify(variables)
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # glm_handler.model_handler.switch_model(model)
+    # global predicted_base
+    # global relativities
+    # predicted_base = glm_handler.model_handler.get_predicted_and_base()
+    # relativities = glm_handler.model_handler.relativities_df
+    # variables = glm_handler.model_handler.get_features()
+    # return jsonify(variables)
     model = 'model_1'
     if model == 'model_1':
         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
@@ -106,11 +106,11 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
-    request_json = request.get_json()
-    model = request_json["id"]
-    df = predicted_base.copy()
-    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    return jsonify(df.to_dict('records'))
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = predicted_base.copy()
+    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    # return jsonify(df.to_dict('records'))
     model = 'model_1'
     if model == 'model_1':
         df = pd.DataFrame({
@@ -135,14 +135,13 @@ def get_data():
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
     request_json = request.get_json()
-    print(request_json)
     model = request_json["id"]
-    glm_handler.model_handler.switch_model(model)
-    lift_chart = glm_handler.model_handler.get_lift_chart(8)
-    df = lift_chart.copy()
-    print(df)
-    df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
-    return jsonify(df.to_dict('records'))
+    # glm_handler.model_handler.switch_model(model)
+    # lift_chart = glm_handler.model_handler.get_lift_chart(8)
+    # df = lift_chart.copy()
+    # print(df)
+    # df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    # return jsonify(df.to_dict('records'))
     if model == 'model_1':
         df = pd.DataFrame({
             'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
@@ -162,14 +161,14 @@ def get_lift_data():
 
 @fetch_api.route("/update_bins", methods=["POST"])
 def get_updated_data():
-    request_json = request.get_json()
-    print(request_json)
-    feature = request_json["feature"]
-    nb_bins = request_json["nbBin"]
-    predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
-    df = predicted_base.copy()
-    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    return jsonify(df.to_dict('records'))
+    # request_json = request.get_json()
+    # print(request_json)
+    # feature = request_json["feature"]
+    # nb_bins = request_json["nbBin"]
+    # predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
+    # df = predicted_base.copy()
+    # df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    # return jsonify(df.to_dict('records'))
     if True:
         df = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -195,11 +194,11 @@ def get_updated_data():
 
 @fetch_api.route("/relativities", methods=["POST"])
 def get_relativities():
-    request_json = request.get_json()
-    model = request_json["id"]
-    df = relativities
-    df.columns = ['variable', 'category', 'relativity']
-    return jsonify(df.to_dict('records'))
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = relativities
+    # df.columns = ['variable', 'category', 'relativity']
+    # return jsonify(df.to_dict('records'))
     model="model_1"
     if model == 'model_1':
         df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -211,6 +210,22 @@ def get_relativities():
                         'relativity': [1.0, 1.08723155, 0.9844522, 0.79251098, 1.0, 0.9951252, 1.10971, 1.0542428]})
     return jsonify(df.to_dict('records'))
 
+@fetch_api.route("/get_variable_level_stats", methods=["POST"])
+def get_variable_level_stats():
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = relativities
+    # df.columns = ['variable', 'category', 'relativity']
+    # return jsonify(df.to_dict('records'))
+    df = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
+                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
+                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
+                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
+                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
+                        'weight': [234, 87, 73, 122, 90], 
+                        'weight_pct': [60, 20, 20, 65, 35], 
+                        'relativity': [1, 1.23, 1.077, 1, 0.98]})
+    return jsonify(df.to_dict('records'))
 
 @fetch_api.route("/get_project_dataset", methods=["GET"])
 def get_project_dataset():
@@ -265,11 +280,11 @@ def get_dataset_columns():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
-    request_json = request.get_json()
-    model = request_json["id"]
-    df = relativities
-    df.columns = ['variable', 'category', 'relativity']
-    return jsonify(df.to_dict('records'))
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = relativities
+    # df.columns = ['variable', 'category', 'relativity']
+    # return jsonify(df.to_dict('records'))
     df = pd.DataFrame()
     df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]
     df['model_1_claim_frequency'] =  np.random.uniform(50, 60, size=11)
@@ -304,37 +319,37 @@ def get_model_metrics():
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
-    relativities_dict = glm_handler.model_handler.relativities
+    # relativities_dict = glm_handler.model_handler.relativities
     
-    nb_col = (len(relativities_dict.keys()) - 1) * 3
-    variables = [col for col in relativities_dict.keys() if col != "base"]
-    variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
-    max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
+    # nb_col = (len(relativities_dict.keys()) - 1) * 3
+    # variables = [col for col in relativities_dict.keys() if col != "base"]
+    # variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
+    # max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
     
-    csv_output = ",,\n"
-    csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
-    csv_output += ",,\n"
-    csv_output += ",,\n"
-    csv_output += ",,,".join(variables) + ",,\n"
-    csv_output += ",,\n"
-    csv_output += ",,,".join(variables) + ",,\n"
+    # csv_output = ",,\n"
+    # csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
+    # csv_output += ",,\n"
+    # csv_output += ",,\n"
+    # csv_output += ",,,".join(variables) + ",,\n"
+    # csv_output += ",,\n"
+    # csv_output += ",,,".join(variables) + ",,\n"
     
-    for i in range(max_len):
-        for variable in variables:
-            if i < len(variable_keys[variable]):
-                value = variable_keys[variable][i]
-                csv_output += "{},{},,".format(value, relativities_dict[variable][value])
-            else:
-                csv_output += ",,,"
-        csv_output += "\n"
+    # for i in range(max_len):
+    #     for variable in variables:
+    #         if i < len(variable_keys[variable]):
+    #             value = variable_keys[variable][i]
+    #             csv_output += "{},{},,".format(value, relativities_dict[variable][value])
+    #         else:
+    #             csv_output += ",,,"
+    #     csv_output += "\n"
     
-    csv_data = csv_output.encode('utf-8')
+    # csv_data = csv_output.encode('utf-8')
     
-    #data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
-    #df = pd.DataFrame(data)
+    data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+    df = pd.DataFrame(data)
 
     # Convert DataFrame to CSV format
-    #csv_data = df.to_csv(index=False).encode('utf-8')
+    csv_data = df.to_csv(index=False).encode('utf-8')
 
     # Create an in-memory file-like object for CSV data
     csv_io = BytesIO(csv_data)

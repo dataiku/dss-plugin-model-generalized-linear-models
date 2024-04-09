@@ -1,6 +1,6 @@
 <template>
 <BsTab
-            name="Variable Selection"
+            name="One Way Variable"
             docTitle="GLM Analyzer"
             :docIcon="docLogo"
         >

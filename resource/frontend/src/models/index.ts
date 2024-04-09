@@ -20,6 +20,17 @@ export type RelativityPoint = {
     relativity: number;
 }
 
+export type VariableLevelStatsPoint = {
+    variable: string;
+    value: string;
+    coefficient: number;
+    standard_error: number;
+    standard_error_pct: number;
+    weight: number;
+    weight_pct: number;
+    relativity: number;
+}
+
 export type ModelPoint = { 
     id: string;
     name: string;

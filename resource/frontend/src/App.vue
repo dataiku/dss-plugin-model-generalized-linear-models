@@ -4,6 +4,8 @@
       </ModelTrainingTab>
       <OneWayTab>
       </OneWayTab>
+      <VariableLevelStatsTab>
+      </VariableLevelStatsTab>
       <LiftChartTab>
       </LiftChartTab>
       <ModelComparisonTab>
@@ -17,12 +19,14 @@ import LiftChartTab from './components/LiftChartTab.vue';
 import ModelTrainingTab from './components/ModelTrainingTab.vue';
 import ModelComparisonTab from './components/ModelComparisonTab.vue';
 import OneWayTab from './components/OneWayTab.vue';
+import VariableLevelStatsTab from './components/VariableLevelStatsTab.vue';
 import { defineComponent } from "vue";
 export default defineComponent({
     components: {
         ModelTrainingTab,
         ModelComparisonTab,
         OneWayTab,
+        VariableLevelStatsTab,
         LiftChartTab,
     }
 })
