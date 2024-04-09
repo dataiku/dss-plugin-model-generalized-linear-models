@@ -158,7 +158,7 @@ class DataikuMLTask:
         self.set_target()
         
         # Create a new ML Task to predict the variable from the specified dataset
-        if not self.ml_task:
+        if not self.mltask:
             logger.info("No ML task exists check the set up of saved model")
         
 #             self.mltask = self.project.create_prediction_ml_task(
