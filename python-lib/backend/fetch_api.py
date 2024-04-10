@@ -57,7 +57,8 @@ def get_models():
 def get_variables():
     request_json = request.get_json()
     full_model_id = request_json["id"]
-    saved_model_id = request_json.get('model_parameters', {}).get('model_name', None)
+    web_app_config = get_webapp_config()
+    saved_model_id = web_app_config.get("saved_model_id")
     
     glm_model = ModelHandler(saved_model_id, full_model_id)
     
