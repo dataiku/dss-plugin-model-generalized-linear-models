@@ -19,6 +19,7 @@ saved_model_id = web_app_config.get("saved_model_id")
 saved_model = project.get_saved_model('FKR4pOc8')
 global_dku_mltask = saved_model.get_origin_ml_task()
 model_deployer = ModelDeployer(global_dku_mltask, saved_model_id)
+model_handler = ModelHandler(saved_model_id)
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

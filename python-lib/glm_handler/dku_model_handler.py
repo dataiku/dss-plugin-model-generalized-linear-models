@@ -28,8 +28,6 @@ class ModelHandler:
         self.model_id = model_id
         self.model = dataiku.Model(model_id)
         
-        
-
 
     def set_active_version():
         self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
