@@ -403,5 +403,6 @@ class DataikuMLTask:
         logging.info("Model training completed. Deploying the model.")
         try:
             self.deploy_model()
-        except:
-            logging.info("Failed to deploy model to the flow.")
+        except Exception as e:
+            # This logs the error message along with the stack trace.
+            logging.exception("Failed to deploy model to the flow: %s", e)
