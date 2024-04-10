@@ -118,8 +118,7 @@ class ModelHandler:
         return self.relativities_df
 
     def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
-        
-        self.compute_base_values()
+
         
         test_set = self.model_info_handler.get_test_df()[0].copy()
         predicted = self.predictor.predict(test_set)
@@ -178,6 +177,7 @@ class ModelHandler:
         return self.predicted_base_df
     
     def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
+        self.compute_base_values()
         test_set = self.model_info_handler.get_test_df()[0].copy()
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted
