@@ -35,16 +35,6 @@ class ModelHandler:
         self.compute_base_values()
         self.compute_relativities()
     
-    def switch_model(self, full_model_id):
-        if full_model_id != self.full_model_id:
-            self.full_model_id = full_model_id
-            self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
-            self.predictor = self.model_info_handler.get_predictor()
-            self.target = self.model_info_handler.get_target_variable()
-            self.weight = self.model_info_handler.get_sample_weight_variable()
-            self.compute_features()
-            self.compute_base_values()
-            self.compute_relativities()
     
     def get_model_versions(self):
         versions = self.model.list_versions()
