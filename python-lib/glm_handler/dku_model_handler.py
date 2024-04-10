@@ -30,7 +30,7 @@ class ModelHandler:
         
 
     def update_active_version(self):
-        self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
+        self.full_model_id = extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
