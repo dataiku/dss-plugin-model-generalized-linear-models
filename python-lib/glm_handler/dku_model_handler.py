@@ -82,7 +82,7 @@ class ModelHandler:
                 else:
                     raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
 
-    def get_relativities(self):
+    def get_relativities_df(self):
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
         self.relativities = {}
         for feature in self.base_values.keys():
