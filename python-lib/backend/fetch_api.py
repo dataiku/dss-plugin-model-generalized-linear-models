@@ -2,9 +2,9 @@ from flask import Blueprint, jsonify, request, send_file
 import pandas as pd
 
 from glm_handler.dku_model_trainer import DataikuMLTask
+from glm_handler 
 from io import BytesIO
-
-# from glm_handler.service import glm_handler
+from glm_handler.dku_model_handler import ModelHandler
 
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
@@ -49,16 +49,27 @@ def get_models():
 
 
 
-# @fetch_api.route("/variables", methods=["POST"])
-# def get_variables():
-#     request_json = request.get_json()
-#     model = request_json["id"]
-#     glm_handler.model_handler.switch_model(model)
-#     global predicted_base
-#     global relativities
-#     predicted_base = glm_handler.model_handler.get_predicted_and_base()
-#     relativities = glm_handler.model_handler.relativities_df
-#     variables = glm_handler.model_handler.get_features()
+@fetch_api.route("/variables", methods=["POST"])
+def get_variables():
+    request_json = request.get_json()
+    full_model_id = request_json["id"]
+    saved_model_id = request_json.get('model_parameters', {}).get('model_name', None)
+    
+    glm_model = ModelHandler(saved_model_id, full_model_id)
+    
+    global predicted_base
+    global relativities
+    predicted_base = glm_modelget_predicted_and_base()
+    relativities = glm_modelrelativities_df
+    variables = glm_model.get_features()
+    return jsonify(variables)
+#     model = 'model_1'
+#     if model == 'model_1':
+#         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
+#                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
+#     else:
+#         variables = [{'variable': 'Variable3', 'isInModel': False, 'variableType': 'categorical'},
+#                     {'variable': 'Variable4', 'isInModel': True, 'variableType': 'numeric'}]
 #     return jsonify(variables)
 #     model = 'model_1'
 #     if model == 'model_1':
@@ -68,14 +79,6 @@ def get_models():
 #         variables = [{'variable': 'Variable3', 'isInModel': False, 'variableType': 'categorical'},
 #                     {'variable': 'Variable4', 'isInModel': True, 'variableType': 'numeric'}]
 #     return jsonify(variables)
-# #     model = 'model_1'
-# #     if model == 'model_1':
-# #         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
-# #                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
-# #     else:
-# #         variables = [{'variable': 'Variable3', 'isInModel': False, 'variableType': 'categorical'},
-# #                     {'variable': 'Variable4', 'isInModel': True, 'variableType': 'numeric'}]
-# #     return jsonify(variables)
 
 
 # @fetch_api.route("/data", methods=["POST"])
