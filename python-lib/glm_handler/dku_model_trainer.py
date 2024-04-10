@@ -383,7 +383,7 @@ class DataikuMLTask:
         if model_id is None:
             logging.error("No model to deploy. Exiting deployment process.")
             return
-        self.mltask.deploy_to_flow(model_id, self.dku_model_obj.get_name(), self.input_dataset)
+#         self.mltask.deploy_to_flow(model_id, self.dku_model_obj.get_name(), self.input_dataset)
         self.mltask.redeploy_to_flow(model_id, saved_model_id=self.saved_model_id)
         logger.info(f"Model {model_id} deployed successfully.")
 
