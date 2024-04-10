@@ -35,7 +35,6 @@ class ModelHandler:
         self.compute_base_values()
         self.compute_relativities()
     
-
     
     def get_model_versions(self):
         versions = self.model.list_versions()
