@@ -2,7 +2,6 @@ from flask import Blueprint, jsonify, request, send_file
 import pandas as pd
 
 from glm_handler.dku_model_trainer import DataikuMLTask
-from glm_handler 
 from io import BytesIO
 from glm_handler.dku_model_handler import ModelHandler
 
