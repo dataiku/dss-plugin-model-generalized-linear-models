@@ -41,10 +41,7 @@ class ModelHandler:
         fmi_name = {version['snippet']['fullModelId']: version['snippet']['userMeta']['name'] for version in versions}
         return fmi_name
     
-    def get_features(self):
-        return [{'variable': feature, 
-          'isInModel': self.features[feature]['role']=='INPUT', 
-          'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} for feature in self.non_excluded_features]
+
 
     def compute_features(self):
         self.exposure = None

@@ -26,3 +26,21 @@ class ModelInformationManager:
     
     def get_link_function(self):
         return self.predictor._model.clf.get_link_function()
+    
+    def compute_features(self):
+        self.exposure = None
+        self.features = self.model_info_handler.get_per_feature()
+        modeling_params = self.model_info_handler.get_modeling_params()
+        self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
+        self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
+        if len(self.exposure_columns) > 0:
+            self.exposure = self.exposure_columns[0] # assumes there is only one
+        important_columns = self.offset_columns + self.exposure_columns + [self.target]
+        self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
+        self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='INPUT']
+        self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='REJECT']
+        
+    def get_features(self):
+        return [{'variable': feature, 
+          'isInModel': self.features[feature]['role']=='INPUT', 
+          'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} for feature in self.non_excluded_features]
