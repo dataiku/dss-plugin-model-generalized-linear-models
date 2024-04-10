@@ -18,7 +18,7 @@ class ModelHandler:
         model_info_handler (PredictionModelInformationHandler): Handler for model information.
     """
 
-    def __init__(self, model_id, full_model_id):
+    def __init__(self, model_id):
         """
         Initializes the ModelHandler with a specific model ID.
 
@@ -27,7 +27,7 @@ class ModelHandler:
         """
         self.model_id = model_id
         self.model = dataiku.Model(model_id)
-        self.full_model_id = full_model_id
+        self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
@@ -35,13 +35,26 @@ class ModelHandler:
         self.compute_base_values()
         self.compute_relativities()
     
+    def switch_model(self, full_model_id):
+        if full_model_id != self.full_model_id:
+            self.full_model_id = full_model_id
+            self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+            self.predictor = self.model_info_handler.get_predictor()
+            self.target = self.model_info_handler.get_target_variable()
+            self.weight = self.model_info_handler.get_sample_weight_variable()
+            self.compute_features()
+            self.compute_base_values()
+            self.compute_relativities()
     
     def get_model_versions(self):
         versions = self.model.list_versions()
         fmi_name = {version['snippet']['fullModelId']: version['snippet']['userMeta']['name'] for version in versions}
         return fmi_name
     
-
+    def get_features(self):
+        return [{'variable': feature, 
+          'isInModel': self.features[feature]['role']=='INPUT', 
+          'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} for feature in self.non_excluded_features]
 
     def compute_features(self):
         self.exposure = None
