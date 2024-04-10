@@ -32,16 +32,9 @@ def get_models():
     # Ensure that global_dku_mltask is accessible and has been initialized
     if global_dku_mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
-
     try:
         # Assuming global_dku_mltask has a method to return trained model IDs
-        list_ml_id = global_dku_mltask.get_trained_models_ids()
-
-        models = []
-        for ml_id in list_ml_id:
-            model_details = global_dku_mltask.get_trained_model_details(ml_id)
-            model_name = model_details.get_user_meta()['name']
-            models.append({"id": ml_id, "name": model_name})
+        models = get_formated_models_ids(global_dku_mltask)
 
         return jsonify(models)
     except Exception as e:
@@ -80,9 +73,6 @@ def get_variables():
         variables = model_handler.get_features()
         if variables is None:
             raise ValueError("variables returned None.")
-
-        # Assuming you want to proceed with further processing if all above are successful
-        # Process predicted_base, relativities, and variables...
 
     except ValueError as e:
         logging.error(f"Validation Error: {e}")
