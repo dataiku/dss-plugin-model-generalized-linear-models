@@ -62,7 +62,7 @@ def get_variables():
     web_app_config = get_webapp_config()
 
     
-    model_deployer.deploy_to_flow(full_model_id)
+    model_deployer.set_new_active_version(full_model_id)
     
     
     global predicted_base
