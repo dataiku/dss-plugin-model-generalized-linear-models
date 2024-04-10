@@ -337,27 +337,71 @@ class DataikuMLTask:
         logger.info(f"set code env settings to {self.mltask.get_settings().mltask_settings.get('envSelection')} ")
         
     def get_latest_model(self):
+        """
+        Retrieves the ID of the latest trained model.
+
+        This function iterates through all the model IDs obtained from the ML task,
+        comparing their start times to find the most recently trained model. It returns
+        the ID of this model.
+
+        Returns:
+            str: The ID of the latest trained model.
+        """
+        logger.info("Retrieving the latest model ID.")
         latest_model_id = None
         latest_start_time = 0
         ids = self.mltask.get_trained_models_ids()
+        if not ids:
+            logger.warning("No trained models found.")
+            return None
+
         for model_id in ids:
             details = self.mltask.get_trained_model_details(model_id).get_raw()
             start_time = details['trainInfo']['startTime']
             if start_time > latest_start_time:
                 latest_start_time = start_time
                 latest_model_id = model_id
+                logger.debug(f"New latest model found: {model_id} with start time {start_time}")
 
+        if latest_model_id is None:
+            logger.warning("Failed to find the latest model.")
+        else:
+            logger.info(f"Latest model ID: {latest_model_id}")
         return latest_model_id
     
     def deploy_model(self):
-        model_id = self.get_latest_model()
-        oml.deploy_to_flow(model_id, self.model.name, self.input_dataset)
+        """
+        Deploys the latest model to the flow.
 
-    def train_model(self,code_env_string,session_name=None):
+        This function first retrieves the ID of the latest model by calling
+        `get_latest_model`. It then deploys this model to the flow using the specified
+        model name and input dataset.
         """
-        Trains the model with the current configuration.
+        logger.info("Deploying the latest model to the flow.")
+        model_id = self.get_latest_model()
+        if model_id is None:
+            logging.error("No model to deploy. Exiting deployment process.")
+            return
+        self.mltask.deploy_to_flow(model_id, self.model.name, self.input_dataset)
+        logger.info(f"Model {model_id} deployed successfully.")
+
+    def train_model(self, code_env_string, session_name=None):
         """
+        Trains the model with the current configuration and then deploys it.
+
+        Args:
+            code_env_string (str): A string specifying the code environment settings.
+            session_name (str, optional): The name of the training session. Defaults to None.
+
+        Trains the model by setting the code environment, starting the training process,
+        waiting for it to complete, and then deploying the trained model.
+        """
+        logging.info("Starting model training.")
         self.set_code_env_settings(code_env_string)
         self.mltask.start_train(session_name=session_name)
         self.mltask.wait_train_complete()
-        self.deploy_model() 
+        logging.info("Model training completed. Deploying the model.")
+        try:
+            self.deploy_model()
+        except:
+            logging.info("Failed to deploy model to the flow.")
