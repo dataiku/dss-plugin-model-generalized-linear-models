@@ -19,105 +19,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-@fetch_api.route("/train_model", methods=["POST"])
-def train_model():
-    # Log the receipt of a new training request
-    global global_dku_mltask
-    
-    request_json = request.get_json()
-    logging.info(f"Received a model training request: {request_json}")
-    
-    try: 
-        web_app_config = get_webapp_config()
-        input_dataset = web_app_config.get("training_dataset_string")
-        code_env_string = web_app_config.get("code_env_string")
-        saved_model_id = web_app_config.get("saved_model_id")
-        
-    except:
-        input_dataset = "claim_train"
-        code_env_string="py39_sol"
-        
-    logging.info(f"Training Dataset name selected is: {input_dataset}") 
-    
-    distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
-    link_function = request_json.get('model_parameters', {}).get('link_function')
-    model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
-    variables = request_json.get('variables')
 
-    logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
-    params = {
-        "input_dataset": input_dataset,
-        "distribution_function": distribution_function,
-        "link_function": link_function,
-        "variables": variables,
-        "saved_model_id":saved_model_id
-    }
-    missing_params = [key for key, value in params.items() if not value]
-    if missing_params:
-        missing_str = ", ".join(missing_params)
-        logging.error(f"Missing parameters in the request: {missing_str}")
-        return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
-
-    try:
-        if global_dku_mltask:
-            logger.info("Utilising an existing ML Task at the API")
-            
-            DkuMLTask = global_dku_mltask
-
-        else: #First initialisation 
-            logger.info("Initalising an new ML Task at the API")
-            DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
-            global_dku_mltask = DkuMLTask
-            
-        DkuMLTask.update_parameters(distribution_function, link_function, variables)
-        DkuMLTask.create_visual_ml_task()
-        logging.debug("Visual ML task created successfully")
-
-        DkuMLTask.enable_glm_algorithm()
-        logging.debug("GLM algorithm enabled successfully")
-
-        settings = DkuMLTask.test_settings()
-        settings_new = DkuMLTask.configure_variables()
-        logging.debug("Model settings configured successfully")
-
-        DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
-        
-        
-        logging.info("Model training initiated successfully")
-        
-        return jsonify({'message': 'Model training initiated successfully.'}), 200
-    except Exception as e:
-        logging.exception("An error occurred during model training")
-        return jsonify({'error': str(e)}), 500
-
-@fetch_api.route("/get_dataset_columns", methods=["GET"])
-def get_dataset_columns():
-    
-    try:
-        # This try statement is just for local development remove the except 
-        # which explicitly assins the dataset name
-        try: 
-            web_app_config = get_webapp_config()
-            dataset_name = web_app_config.get("training_dataset_string")
-        except:
-            dataset_name = "claim_train"
-            
-        logging.info(f"Training Dataset name selected is: {dataset_name}")
-
-        cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
-        column_names = [column['name'] for column in cols_dict]
-
-        logging.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
-
-        return jsonify(column_names)
-    
-    except KeyError as e:
-        logging.error(f"Missing key in request: {e}")
-        return jsonify({'error': f'Missing key in request: {e}'}), 400
-    
-    except Exception as e:
-        logging.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
-        return jsonify({'error': str(e)}), 500
 
 # @fetch_api.route("/models", methods=["GET"])
 # def get_models():
@@ -423,3 +325,103 @@ def get_dataset_columns():
 #     )
 
 
+
+@fetch_api.route("/train_model", methods=["POST"])
+def train_model():
+    # Log the receipt of a new training request
+    global global_dku_mltask
+    
+    request_json = request.get_json()
+    logging.info(f"Received a model training request: {request_json}")
+    
+    try: 
+        web_app_config = get_webapp_config()
+        input_dataset = web_app_config.get("training_dataset_string")
+        code_env_string = web_app_config.get("code_env_string")
+        saved_model_id = web_app_config.get("saved_model_id")
+        
+    except:
+        input_dataset = "claim_train"
+        code_env_string="py39_sol"
+        
+    logging.info(f"Training Dataset name selected is: {input_dataset}") 
+    
+    distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
+    link_function = request_json.get('model_parameters', {}).get('link_function')
+    model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
+    variables = request_json.get('variables')
+
+    logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
+    params = {
+        "input_dataset": input_dataset,
+        "distribution_function": distribution_function,
+        "link_function": link_function,
+        "variables": variables,
+        "saved_model_id":saved_model_id
+    }
+    missing_params = [key for key, value in params.items() if not value]
+    if missing_params:
+        missing_str = ", ".join(missing_params)
+        logging.error(f"Missing parameters in the request: {missing_str}")
+        return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
+
+    try:
+        if global_dku_mltask:
+            logger.info("Utilising an existing ML Task at the API")
+            
+            DkuMLTask = global_dku_mltask
+
+        else: #First initialisation 
+            logger.info("Initalising an new ML Task at the API")
+            DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
+            global_dku_mltask = DkuMLTask
+            
+        DkuMLTask.update_parameters(distribution_function, link_function, variables)
+        DkuMLTask.create_visual_ml_task()
+        logging.debug("Visual ML task created successfully")
+
+        DkuMLTask.enable_glm_algorithm()
+        logging.debug("GLM algorithm enabled successfully")
+
+        settings = DkuMLTask.test_settings()
+        settings_new = DkuMLTask.configure_variables()
+        logging.debug("Model settings configured successfully")
+
+        DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
+        
+        
+        logging.info("Model training initiated successfully")
+        
+        return jsonify({'message': 'Model training initiated successfully.'}), 200
+    except Exception as e:
+        logging.exception("An error occurred during model training")
+        return jsonify({'error': str(e)}), 500
+
+@fetch_api.route("/get_dataset_columns", methods=["GET"])
+def get_dataset_columns():
+    
+    try:
+        # This try statement is just for local development remove the except 
+        # which explicitly assins the dataset name
+        try: 
+            web_app_config = get_webapp_config()
+            dataset_name = web_app_config.get("training_dataset_string")
+        except:
+            dataset_name = "claim_train"
+            
+        logging.info(f"Training Dataset name selected is: {dataset_name}")
+
+        cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
+        column_names = [column['name'] for column in cols_dict]
+
+        logging.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
+
+        return jsonify(column_names)
+    
+    except KeyError as e:
+        logging.error(f"Missing key in request: {e}")
+        return jsonify({'error': f'Missing key in request: {e}'}), 400
+    
+    except Exception as e:
+        logging.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
+        return jsonify({'error': str(e)}), 500
