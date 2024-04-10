@@ -4,7 +4,7 @@ import pandas as pd
 from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
-
+from backend.api_utils import format_models
 from io import BytesIO
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
@@ -34,8 +34,7 @@ def get_models():
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
         # Assuming global_dku_mltask has a method to return trained model IDs
-        models = get_formated_models_ids(global_dku_mltask)
-
+        models = format_models(global_dku_mltask)
         return jsonify(models)
     except Exception as e:
         logging.exception("An error occurred while retrieving models")
