@@ -2,9 +2,10 @@ from flask import Blueprint, jsonify, request, send_file
 import pandas as pd
 
 from glm_handler.dku_model_trainer import DataikuMLTask
-from io import BytesIO
 from glm_handler.dku_model_handler import ModelHandler
+from glm_handler.dku_model_deployer import ModelDeployer
 
+from io import BytesIO
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 import dataiku
@@ -17,7 +18,7 @@ web_app_config = get_webapp_config()
 saved_model_id = web_app_config.get("saved_model_id")
 saved_model = project.get_saved_model('FKR4pOc8')
 global_dku_mltask = saved_model.get_origin_ml_task()
-
+model_deployer = ModelDeployer(global_dku_mltask, saved_model_id)
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -58,9 +59,9 @@ def get_variables():
     request_json = request.get_json()
     full_model_id = request_json["id"]
     web_app_config = get_webapp_config()
-    saved_model_id = web_app_config.get("saved_model_id")
+
     
-    glm_model = ModelHandler(saved_model_id, full_model_id)
+    model_deployer.deploy_to_flow(full_model_id)
     
     global predicted_base
     global relativities
