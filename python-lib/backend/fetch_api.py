@@ -11,7 +11,11 @@ import dataiku
 from dataiku.customwebapp import get_webapp_config
 import numpy as np
 
-global_dku_mltask = None
+saved_model_id = web_app_config.get("saved_model_id")
+
+model = dataiku.Model(saved_model_id)
+saved_model = model.get_saved_model('FKR4pOc8')
+global_dku_mltask = sm.get_origin_ml_task()
 
 
 import logging
