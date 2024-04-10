@@ -29,6 +29,7 @@ class DataikuMLTask:
     def __init__(self, input_dataset, saved_model_id):
         logger.info("Initializing DataikuMLTask")
         self.client = dataiku.api_client()
+        self.saved_model_id = saved_model_id
         self.project = self.client.get_default_project()
         self.project_key = self.project.project_key 
         self.dku_model_obj = dataiku.Model(saved_model_id)
@@ -383,6 +384,7 @@ class DataikuMLTask:
             logging.error("No model to deploy. Exiting deployment process.")
             return
         self.mltask.deploy_to_flow(model_id, self.dku_model_obj.get_name(), self.input_dataset)
+        self.mltask.redeploy_to_flow(model_id, saved_model_id=self.saved_model_id)
         logger.info(f"Model {model_id} deployed successfully.")
 
     def train_model(self, code_env_string, session_name=None):
