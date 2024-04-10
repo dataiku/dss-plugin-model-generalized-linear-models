@@ -335,6 +335,23 @@ class DataikuMLTask:
         settings.mltask_settings['envSelection']['envName'] = code_env_string
         settings.save()
         logger.info(f"set code env settings to {self.mltask.get_settings().mltask_settings.get('envSelection')} ")
+        
+    def get_latest_model(self):
+        latest_model_id = None
+        latest_start_time = 0
+        ids = self.mltask.get_trained_models_ids()
+        for model_id in ids:
+            details = self.mltask.get_trained_model_details(model_id).get_raw()
+            start_time = details['trainInfo']['startTime']
+            if start_time > latest_start_time:
+                latest_start_time = start_time
+                latest_model_id = model_id
+
+        return latest_model_id
+    
+    def deploy_model(self):
+        model_id = self.get_latest_model()
+        oml.deploy_to_flow(model_id, self.model.name, self.input_dataset)
 
     def train_model(self,code_env_string,session_name=None):
         """
@@ -343,3 +360,4 @@ class DataikuMLTask:
         self.set_code_env_settings(code_env_string)
         self.mltask.start_train(session_name=session_name)
         self.mltask.wait_train_complete()
+        self.deploy_model() 
