@@ -2,6 +2,8 @@ from dku_utils import extract_active_fullModelId
 from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
 import dataiku
 
+
+
 class ModelHandler:
     def __init__(self, model_id):
         self.model_id = model_id
