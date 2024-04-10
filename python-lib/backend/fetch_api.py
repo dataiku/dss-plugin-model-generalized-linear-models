@@ -63,6 +63,7 @@ def get_variables():
     
     model_deployer.deploy_to_flow(full_model_id)
     
+    
     global predicted_base
     global relativities
     predicted_base = glm_model.get_predicted_and_base()
