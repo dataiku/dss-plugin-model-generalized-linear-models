@@ -35,8 +35,6 @@ class ModelHandler:
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
         self.compute_features()
-        self.compute_base_values()
-        self.compute_relativities()
         
     def get_model_versions(self):
         versions = self.model.list_versions()
@@ -84,7 +82,7 @@ class ModelHandler:
                 else:
                     raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
 
-    def compute_relativities(self):
+    def get_relativities(self):
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
         self.relativities = {}
         for feature in self.base_values.keys():
@@ -116,8 +114,13 @@ class ModelHandler:
             for value, relativity in values.items():
                 self.relativities_df = self.relativities_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
         self.relativities_df = self.relativities_df.append({'feature': 'base', 'value': 'base', 'relativity': baseline_prediction}, ignore_index=True)
+        
+        return self.relativities_df
 
     def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
+        
+        self.compute_base_values()
+        
         test_set = self.model_info_handler.get_test_df()[0].copy()
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted

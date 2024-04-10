@@ -67,10 +67,32 @@ def get_variables():
     
     global predicted_base
     global relativities
-    predicted_base = model_handler.get_predicted_and_base()
-    relativities = model_handler.relativities_df
-    variables = model_handler.get_features()
+    
+    try:
+        predicted_base = model_handler.get_predicted_and_base()
+        if predicted_base is None:
+            raise ValueError("predicted_base returned None.")
+
+        relativities = model_handler.get_relativities_df()
+        if relativities is None:
+            raise ValueError("relativities returned None.")
+
+        variables = model_handler.get_features()
+        if variables is None:
+            raise ValueError("variables returned None.")
+
+        # Assuming you want to proceed with further processing if all above are successful
+        # Process predicted_base, relativities, and variables...
+
+    except ValueError as e:
+        logging.error(f"Validation Error: {e}")
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+
+    
     return jsonify(variables)
+
+
 #     model = 'model_1'
 #     if model == 'model_1':
 #         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
