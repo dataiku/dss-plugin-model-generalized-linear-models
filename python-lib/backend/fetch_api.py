@@ -63,7 +63,7 @@ def get_variables():
 
     
     model_deployer.set_new_active_version(full_model_id)
-    
+    model_handler.update_active_version()
     
     global predicted_base
     global relativities

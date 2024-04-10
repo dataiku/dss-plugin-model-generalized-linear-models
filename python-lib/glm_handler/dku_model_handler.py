@@ -29,7 +29,7 @@ class ModelHandler:
         self.model = dataiku.Model(model_id)
         
 
-    def set_active_version():
+    def update_active_version():
         self.full_model_id = self.extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.predictor = self.model_info_handler.get_predictor()
