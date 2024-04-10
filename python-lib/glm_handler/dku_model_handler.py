@@ -34,7 +34,8 @@ class ModelHandler:
         self.compute_base_values()
         self.compute_relativities()
     
-    
+        
+        
     def get_model_versions(self):
         versions = self.model.list_versions()
         fmi_name = {version['snippet']['fullModelId']: version['snippet']['userMeta']['name'] for version in versions}

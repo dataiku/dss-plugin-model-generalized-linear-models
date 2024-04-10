@@ -64,8 +64,8 @@ def get_variables():
     
     global predicted_base
     global relativities
-    predicted_base = glm_modelget_predicted_and_base()
-    relativities = glm_modelrelativities_df
+    predicted_base = glm_model.get_predicted_and_base()
+    relativities = glm_model.relativities_df
     variables = glm_model.get_features()
     return jsonify(variables)
 #     model = 'model_1'
