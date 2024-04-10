@@ -2,7 +2,7 @@
 class ModelDeployer():
     
     def __init__(self, ml_task, saved_model_id):
-        self.saved_model_id
+        self.saved_model_id = saved_model_id
         self.mltask = mltask
         
     def set_new_active_version(self, model_id):
