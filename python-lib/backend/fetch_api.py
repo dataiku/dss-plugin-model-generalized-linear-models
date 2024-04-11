@@ -101,12 +101,13 @@ def get_data():
         logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
+    #     return jsonify(dummy_df_data.to_dict('records'))
     
     except Exception as e:
         logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
         return jsonify({"error": "An error occurred during data processing."}), 500
 
-#     return jsonify(dummy_df_data.to_dict('records'))
+
 
 # @fetch_api.route("/lift_data", methods=["POST"])
 # def get_lift_data():
