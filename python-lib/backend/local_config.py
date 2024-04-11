@@ -85,3 +85,12 @@ dummy_get_updated_data  = pd.DataFrame({
 dummy_relativites= pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
                         'relativity': [1.0, 1.087324, 0.98091882, 0.7929717, 1.0, 0.992374, 1.19274, 1.052333]})
+
+def get_dummy_model_comparison_data():
+    df = pd.DataFrame()
+    df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]
+    df['model_1_claim_frequency'] =  np.random.uniform(50, 60, size=11)
+    df['model_2_claim_frequency'] =  np.random.uniform(45, 55, size=11)
+    df['observed_average'] =  np.random.uniform(15, 30, size=11)
+    df['exposure'] = np.random.uniform(0, 100, size=11)
+    return df

@@ -4,7 +4,8 @@ from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
 from backend.api_utils import format_models
-from backend.local_config import dummy_models, dummy_variables, dummy_df_data, dummy_lift_data,dummy_get_updated_data, dummy_relativites
+from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
+dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data)
 from backend.logging_settings import logger
 from io import BytesIO
 import traceback
@@ -204,13 +205,11 @@ def get_relativities():
 #     # df = relativities
 #     # df.columns = ['variable', 'category', 'relativity']
 #     # return jsonify(df.to_dict('records'))
-# #     df = pd.DataFrame()
-# #     df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]
-# #     df['model_1_claim_frequency'] =  np.random.uniform(50, 60, size=11)
-# #     df['model_2_claim_frequency'] =  np.random.uniform(45, 55, size=11)
-# #     df['observed_average'] =  np.random.uniform(15, 30, size=11)
-# #     df['exposure'] = np.random.uniform(0, 100, size=11)
-# #     return jsonify(df.to_dict('records'))
+
+
+# local dev
+#     df =get_dummy_model_comparison_data
+#     return jsonify(df.to_dict('records'))
 
 # @fetch_api.route("/get_model_metrics", methods=["POST"])
 # def get_model_metrics():
