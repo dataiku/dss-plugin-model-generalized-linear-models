@@ -94,7 +94,7 @@ def get_data():
 
         model_deployer.set_new_active_version(full_model_id)
         model_handler.update_active_version()
-        logger.info(f"Model {model_id} is now the active version.")
+        logger.info(f"Model {full_model_id} is now the active version.")
 
         predicted_base = model_handler.get_predicted_and_base()
         predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
