@@ -22,14 +22,16 @@
             </BsHeader>
             <BsDrawer>
               <div class="variable-select-container">
-              <VariableSelect
-                  :modelValue="selectedModelString"
-                  :options="modelsString"
-                  @update:modelValue="updateModelString"
+              <BsLabel
                   label="Select a model"
-                  helpMessage="Charts will be generated with respect to this model"
+                  info-text="Charts will be generated with respect to this model">
+              </BsLabel>
+              <BsSelect
+                  :modelValue="selectedModelString"
+                  :all-options="modelsString"
+                  @update:modelValue="updateModelString"
                   style="min-width: 250px">
-              </VariableSelect>
+              </BsSelect>
                   <BsButton class="bs-btn dku-text" unelevated @click="onClick">Export</BsButton>
                 </div>
                 <BsButton
@@ -62,7 +64,6 @@
     </template>
 
 <script lang="ts">
-import VariableSelect from './VariableSelect.vue'
 import EmptyState from './EmptyState.vue';
 import * as echarts from "echarts";
 import type { ModelPoint, VariableLevelStatsPoint } from '../models';
@@ -139,7 +140,6 @@ const rows = [
 
 export default defineComponent({
     components: {
-        VariableSelect,
         BsButton,
         BsLayoutDefault,
         EmptyState,

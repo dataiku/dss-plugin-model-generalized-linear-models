@@ -14,33 +14,39 @@
     <BsDrawer>
         <h5 class="h5-spacing">Model Selection</h5>
         <div class="variable-select-container">
-            <VariableSelect
+            <BsLabel
+                label="Select a Model for Comparison"
+                info-text="Model 1">
+            </BsLabel>
+            <BsSelect
                 :modelValue="selectedModelString"
-                :options="modelsString"
+                :all-options="modelsString"
                 @update:modelValue="updateModelString"
-                label="Select a Model for Comaprison"
-                helpMessage="Model 1"
                 style="min-width: 250px">
-            </VariableSelect>
-            <VariableSelect
-                label="Select a Second Model for Comaprison"
+            </BsSelect>
+            <BsLabel
+                label="Select a Second Model for Comparison"
+                info-text="Model 2">
+            </BsLabel>
+            <BsSelect
                 :modelValue="selectedModelTwoString"
-                :options="modelsString"
+                :all-options="modelsString"
                 @update:modelValue="updateModelTwoString"
-                helpMessage="Model 2"
                 style="min-width: 250px">
-            </VariableSelect>
+            </BsSelect>
         </div>
         <h5 class="h5-spacing">Variable Analysis</h5>
         <div v-if="isVariableSelectEnabled" class="variable-select-container">
-            <VariableSelect
+            <BsLabel
                 label="Select a Variable For Investigation"
+                info-text="Variable to Investigate">
+            </BsLabel>
+            <BsSelect
                 :modelValue="selectedVariable"
-                :options="datasetColumns"
+                :all-options="datasetColumns"
                 @update:modelValue="updateVariableString"
-                helpMessage="Target Variable for GLM "
                 style="min-width: 150px">
-            </VariableSelect>
+            </BsSelect>
         </div>
     </BsDrawer>
     <BsContent>
@@ -79,7 +85,6 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import VariableSelect from './VariableSelect.vue';
 import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip ,BsTable,} from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
@@ -88,14 +93,8 @@ import { API } from '../Api';
 import ModelComparisonChart from './ModelComparisonChart.vue'
 import type { QTableColumn } from 'quasar';
 
-// const columns: QTableColumn[] = [
-//     { name: 'class', align: 'center', label: 'Class', field: 'class',sortable: true},
-//     { name: 'relativity', align: 'center', label: 'Relativity', field: 'relativity', sortable: true},
-// ]
-
 export default defineComponent({
 components: {
-    VariableSelect,
     ModelComparisonChart,
     EmptyState,
     BsTab,

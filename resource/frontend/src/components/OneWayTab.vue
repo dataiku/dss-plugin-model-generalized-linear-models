@@ -22,23 +22,30 @@
             </BsHeader>
             <BsDrawer>
               <div class="variable-select-container">
-              <VariableSelect
-                  :modelValue="selectedModelString"
-                  :options="modelsString"
-                  @update:modelValue="updateModelString"
+               <BsLabel
                   label="Select a model"
-                  helpMessage="Charts will be generated with respect to this model"
-                  style="min-width: 250px">
-              </VariableSelect>
+                  info-text="Charts will be generated with respect to this model">
+               </BsLabel>
+              <BsSelect
+                  :modelValue="selectedModelString"
+                  :all-options="modelsString"
+                  @update:modelValue="updateModelString"
+                  >
+              </BsSelect>
               <BsCheckbox v-model="includeSuspectVariables" label="Include Suspect Variables">
               </BsCheckbox>
                 <BsSelect
                   v-if="selectedModel"
                       v-model="selectedVariable"
-                      :options="variablePoints"
+                      :all-options="variablePoints"
                       @update:modelValue="updateVariable"
                       bsLabel="Select a Variable">
-                      <template v-slot:selected>{{ selectedVariable.variable }}</template>
+                      <!-- <template v-slot:selected>{{ selectedVariable.variable }}</template> -->
+                      <template v-slot:selected-item="scope">
+                        <q-item v-if="scope.opt">
+                          {{ selectedVariable.variable }}
+                        </q-item>
+                    </template>
                           <template #option="props">
                               <q-item v-if="props.opt.isInModel || includeSuspectVariables" v-bind="props.itemProps" clickable>
                                   <q-item-section side>
@@ -51,7 +58,14 @@
                               </q-item>
                         </template>
                   </BsSelect>
-                  <BsButton class="bs-btn dku-text" unelevated @click="onClick">Export</BsButton>
+                  <div class="button-container">
+                  <BsButton class="bs-primary-button" 
+                  unelevated
+                  dense
+                  no-caps
+                  padding="4"
+                  @click="onClick">Export</BsButton>
+                </div>
                 </div>
                 <BsButton
                     flat
@@ -94,7 +108,6 @@
 
 <script lang="ts">
 import BarChart from './BarChart.vue'
-import VariableSelect from './VariableSelect.vue'
 import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import * as echarts from "echarts";
@@ -140,7 +153,6 @@ const rows = [
 export default defineComponent({
     components: {
         BarChart,
-        VariableSelect,
         DocumentationContent,
         BsButton,
         BsLayoutDefault,
@@ -178,11 +190,9 @@ export default defineComponent({
       selectedVariable(newValue: VariablePoint) {
         this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
         this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
-        console.log("Relativites Table is ",this.relativitiesTable );
         this.relativitiesColumns = columns;
         this.relativities = this.relativitiesTable.map( (point) => {
           const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
-          console.log("Relativity input  is ",relativity );
           return relativity
         })
       },
@@ -275,6 +285,10 @@ header {
 
 .bs-btn {
   margin-top: 12px;
+}
+
+.button-container {
+  margin-top: 12px
 }
 
 @media (min-width: 1024px) {

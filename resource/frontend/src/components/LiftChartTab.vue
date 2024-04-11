@@ -21,14 +21,16 @@
                 </BsButton>
             </BsHeader>
             <BsDrawer>
-              <VariableSelect
-                  :modelValue="selectedModelString"
-                  :options="modelsString"
-                  @update:modelValue="updateModelString"
+              <BsLabel
                   label="Select a model"
-                  helpMessage="Charts will be generated with respect to this model"
+                  info-text="Charts will be generated with respect to this model">
+              </BsLabel>
+              <BsSelect
+                  :modelValue="selectedModelString"
+                  :all-options="modelsString"
+                  @update:modelValue="updateModelString"
                   style="min-width: 250px">
-              </VariableSelect>
+              </BsSelect>
                 <BsButton
                     flat
                     round
@@ -61,7 +63,6 @@
 
 <script lang="ts">
 import LiftChart from './LiftChart.vue'
-import VariableSelect from './VariableSelect.vue'
 import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import * as echarts from "echarts";
@@ -76,7 +77,6 @@ import firstTabIcon from "../assets/images/first-tab-icon.svg";
 export default defineComponent({
     components: {
         LiftChart,
-        VariableSelect,
         DocumentationContent,
         BsButton,
         BsLayoutDefault,

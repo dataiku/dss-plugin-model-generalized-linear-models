@@ -13,41 +13,50 @@
     <BsDrawer>
         <h5 class="h5-spacing">Model Parameters</h5>
         <div class="variable-select-container">
-            <VariableSelect
-                label="Select a Distribution Function"
+            <BsLabel
+                    label="Select a Distribution Function"
+                    info-text="Distribution function for GLM"
+            ></BsLabel>
+            <BsSelect
                 :modelValue="selectedDistributionFunctionString"
-                :options="distributionOptions"
+                :all-options="distributionOptions"
                 @update:modelValue="value => updateModelProperty('selectedDistributionFunctionString', value)"
-                helpMessage="Distribution function for GLM "
                 style="min-width: 150px">
-            </VariableSelect>
-            <VariableSelect
-                label="Select a Link Function"
+            </BsSelect>
+            <BsLabel
+                    label="Select a Link Function"
+                    info-text="Link function for GLM"
+            ></BsLabel>
+            <BsSelect
                 :modelValue="selectedLinkFunctionString"
-                :options="linkOptions"
+                :all-options="linkOptions"
                 @update:modelValue="value => updateModelProperty('selectedLinkFunctionString', value)"
-                helpMessage="Link function for GLM "
                 style="min-width: 150px">
-            </VariableSelect>
+            </BsSelect>
         </div>
         <h5 class="h5-spacing">Custom Variables</h5>
         <div class="variable-select-container">
-        <VariableSelect
-            label="Select a Target Variable"
+        <BsLabel
+                label="Select a Target Variable"
+                info-text="Target Variable for GLM"
+        ></BsLabel>
+        <BsSelect
             :modelValue="selectedTargetVariable"
-            :options="targetVariablesOptions"
-            @update:modelValue="value => selectedTargetVariable = value.value"
-            helpMessage="Target Variable for GLM "
+            :all-options="targetVariablesOptions"
+            @update:modelValue="value => selectedTargetVariable = value"
             style="min-width: 150px">
-        </VariableSelect>
-        <VariableSelect
-            label="Select an Exposure Variable"
+        </BsSelect>
+        <BsLabel
+                label="Select an Exposure Variable"
+                info-text="Exposure Variable for GLM"
+        ></BsLabel>
+        <BsSelect
             :modelValue="selectedExposureVariable"
-            :options="exposureVariableOptions"
-            @update:modelValue="value => selectedExposureVariable = value.value"
-            helpMessage="Exposure Variable for GLM "
+            :all-options="exposureVariableOptions"
+            @update:modelValue="value => selectedExposureVariable = value"
             style="min-width: 150px">
-        </VariableSelect>
+        </BsSelect>
+
         </div>
         <div class="model-name-input-container">
             <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -80,27 +89,27 @@
         <q-card class="q-pa-xl">
             <div v-for="(column, index) in filteredColumns" class="column-management row-spacing">
                     <span class="column-name">{{ abbreviateColumnName(column.name) }}</span>
-                    <q-checkbox 
-                        label="Include?" 
-                        v-model="column.isIncluded" 
-                        @update:modelValue="newValue => updateColumnProperty(index, 'isIncluded', newValue)"
-                    ></q-checkbox>
-                    <VariableSelect
-                        label="Column Type"
+                    <BsCheckbox v-model="column.isIncluded" label="Include?"></BsCheckbox>
+                    <BsLabel
+                            label="Column Type"
+                            info-text="Does the column contain categorical or numerical data?"
+                    ></BsLabel>
+                    <BsSelect
                         :modelValue="column.type"
-                        :options="typeOptions"
-                        @update:modelValue="newValue => updateColumnProperty(index, 'type', newValue)"
-                        helpMessage="Does the column contain categorical or numerical data?"
+                        :all-options="typeOptions"
+                        @update:modelValue="newValue => updateType(index, newValue)"
                         style="min-width: 150px">
-                    </VariableSelect>
-                    <VariableSelect
-                        label="Preprocessing"
+                    </BsSelect>
+                    <BsLabel
+                            label="Preprocessing"
+                            info-text="Preprocessing Method"
+                    ></BsLabel>
+                    <BsSelect
                         :modelValue="column.preprocessing"
-                        :options="preprocessingOptions"
+                        :all-options="preprocessingOptions"
                         @update:modelValue="newValue => updatePreprocessing(index, newValue)"
-                        helpMessage="Preprocessing Method"
                         style="min-width: 150px">
-                    </VariableSelect>
+                    </BsSelect>
             </div>
         </q-card>
     </BsContent>
@@ -114,10 +123,10 @@ type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing';
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
 interface Column {
         name: string;
-        isIncluded: boolean | { label: string; value: boolean };
-        role: string | { label: string; value: string };
-        type: string | { label: string; value: string };
-        preprocessing: string | { label: string; value: string };
+        isIncluded: boolean;
+        role: string;
+        type: string;
+        preprocessing: string;
         }
 interface SelectionOption {
 label: string;
@@ -132,7 +141,6 @@ included: boolean;
 };
 }
 import { defineComponent } from "vue";
-import VariableSelect from './VariableSelect.vue';
 import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
@@ -141,7 +149,6 @@ import { API } from '../Api';
 
 export default defineComponent({
 components: {
-    VariableSelect,
     EmptyState,
     BsTab,
     BsTabIcon,
@@ -159,43 +166,38 @@ data() {
         selectedDatasetString: "",
         selectedTargetVariable: "",
         selectedExposureVariable: "",
-        selectedDistributionFunctionString: { label: 'Gaussian', value: 'Gaussian' } as SelectionOption,
-        selectedLinkFunctionString:{ label: 'Log', value: 'Log' }  as SelectionOption,
+        selectedDistributionFunctionString: 'Gaussian' as string,
+        selectedLinkFunctionString: 'Log' as string,
         datasetsString: [] as string[],
         chartData: [],  
         layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
         firstTabIcon,
         docLogo,
-        distributionOptions: [
-            { label: 'Binomial', value: 'Binomial' },
-            { label: 'Gamma', value: 'Gamma' },
-            { label: 'Gaussian', value: 'Gaussian' },
-            { label: 'Inverse Gaussian', value: 'Inverse Gaussian' },
-            { label: 'Poisson', value: 'Poisson' },
-            { label: 'Negative Binomial', value: 'Negative Binomial' },
-            { label: 'Tweedie', value: 'Tweedie' },
+        distributionOptions: ['Binomial',
+            'Gamma',
+            'Gaussian',
+            'Inverse Gaussian',
+            'Poisson',
+            'Negative Binomial', 
+            'Tweedie',
         ],
         linkOptions: [
-            { label: 'CLogLog', value: 'CLogLog' },
-            { label: 'Log', value: 'Log' },
-            { label: 'Logit', value: 'Logit' },
-            { label: 'Cauchy', value: 'Cauchy' },
-            { label: 'Identity', value: 'Identity' },
-            { label: 'Power', value: 'Power' },
-            { label: 'Inverse Power', value: 'Inverse Power' },
-            { label: 'Inverse Squared', value: 'Inverse Squared' },
+            'CLogLog',
+            'Log',
+            'Logit',
+            'Cauchy',
+            'Identity',
+            'Power',
+            'Inverse Power',
+            'Inverse Squared'
         ],
         typeOptions: [
-            { label: 'Categorical', value: 'categorical' },
-            { label: 'Numerical', value: 'numerical' },
+            'Categorical',
+            'Numerical'
         ],
         preprocessingOptions: [
-            { label: 'Dummy Encode', value: 'CUSTOM' },
-            { label: 'Standard Rescaling', value: 'REGULAR' },
-        ],
-        roleOptions: [
-            {label: 'Exposure', value: 'Exposure'},
-            {label: 'Variable', value: 'Variable'},
+            'Dummy Encode',
+            'Standard Rescaling',
         ],
         datasetColumns: [] as Column[], // Populate this based on your actual data
     };
@@ -203,25 +205,25 @@ data() {
 computed:{
     targetVariablesOptions(){
         return this.datasetColumns.map(column=>{
-            return {label:column.name,value:column.name};
+            return column.name;//{label:column.name,value:column.name};
         });
         },
     exposureVariableOptions(){
+        console.log(this.datasetColumns);
         return this.datasetColumns
         .filter(column => {
-            return ((column.role as { label: string; value: string }).value !== 'Target');
+            return (column.role !== 'Target');
             })
             
             .map(column=>{
-            return {label:column.name, value:column.name};
+            return column.name;
             });
         },
-filteredColumns() {
-    return this.datasetColumns.filter(column =>
-        (typeof column.role === 'object' ? column.role.value : column.role) !== 'Target' &&
-        (typeof column.role === 'object' ? column.role.value : column.role) !== 'Exposure');
-
-}
+        filteredColumns() {
+            return this.datasetColumns.filter(column =>
+                column.role !== 'Target' &&
+                column.role !== 'Exposure')
+        }
 },
 watch: {
 
@@ -230,10 +232,10 @@ watch: {
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
                 // Set the role of the selected target variable to 'Target'
-                column.role = { label: 'Target', value: 'Target' };
+                column.role = 'Target';
             } else {
                 // Reset role for non-target columns if necessary
-                column.role = { label: 'Variable', value: 'Variable' }; // Or any default value you prefer
+                column.role = 'Variable'; // Or any default value you prefer
             }
         });
     },
@@ -242,10 +244,10 @@ watch: {
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
                 // Set the role of the selected target variable to 'Target'
-                column.role = { label: 'Exposure', value: 'Exposure' };
-            } else if ((column.role as { value: string }).value !== 'Target') {
+                column.role = 'Exposure';
+            } else if (column.role !== 'Target') {
                 // Reset role for non-target columns if necessary
-                column.role = { label: 'Variable', value: 'Variable' }; // Or any default value you prefer
+                column.role = 'Variable'; // Or any default value you prefer
             }
         });
     },
@@ -296,13 +298,13 @@ methods: {
             this.datasetColumns[index] = column;
         }
     },
-    updateColumnProperty(columnIndex:number, property: ColumnPropertyKeys, value: any) {
-        const column = this.datasetColumns[columnIndex];
+    updateType(index:number, value: any) {
+        const column = this.datasetColumns[index];
         if (column) {
-                column[property] = value;
+                column.type = value;
             }
             // Trigger a Vue reactivity update
-            this.datasetColumns.splice(columnIndex, 1, column);
+            this.datasetColumns[index] = column;
         },
     async submitVariables() {
         if (!this.validateSubmission()) {
@@ -312,17 +314,17 @@ methods: {
         // Define modelParameters outside of the reduce call to ensure it's accessible later
         const modelParameters = {
             model_name: this.modelName,
-            distribution_function: this.selectedDistributionFunctionString.value,
-            link_function: this.selectedLinkFunctionString.value,
+            distribution_function: this.selectedDistributionFunctionString,
+            link_function: this.selectedLinkFunctionString,
         };
 
         // Reduce function to construct Variables object    
         const variableParameters = this.datasetColumns.reduce<AccType>((acc, { name, role, type, preprocessing, isIncluded }) => {
         acc[name] = {
-            role: typeof role === 'object' ? role.value : role,
-            type: typeof type === 'object' ? type.value : type,
-            processing: typeof preprocessing === 'object' ? preprocessing.value : preprocessing,
-            included: typeof isIncluded === 'object' ? isIncluded.value : isIncluded,
+            role: role,
+            type: type.toLowerCase(),
+            processing: preprocessing == 'Dummy Encode' ? 'CUSTOM' : 'REGULAR',
+            included: isIncluded,
         };
         return acc;
         }, {});
@@ -348,10 +350,10 @@ methods: {
         console.log("Datasets:", response.data);
         this.datasetColumns = response.data.map((columnName: string) => ({
             name: columnName,
-            isIncluded: {label: 'Include', value: true},
-            role: {label: 'Variable', value: 'Variable'},
-            type: { label: 'Categorical', value: 'categorical' },
-            preprocessing: { label: 'Dummy Encode', value: 'CUSTOM' }
+            isIncluded: false,
+            role: 'Variable',
+            type: 'Categorical',
+            preprocessing: 'Dummy Encode'
         }));
         console.log("First assignment:", this.datasetColumns);
         } catch (error) {
