@@ -33,7 +33,7 @@ def get_models():
         models = format_models(global_dku_mltask)
         return jsonify(models)
     except Exception as e:
-        logging.exception("An error occurred while retrieving models")
+        logger.exception("An error occurred while retrieving models")
         return jsonify({'error': str(e)}), 500
     return jsonify(models)
 # For local dev
@@ -357,7 +357,7 @@ def train_model():
     missing_params = [key for key, value in params.items() if not value]
     if missing_params:
         missing_str = ", ".join(missing_params)
-        logging.error(f"Missing parameters in the request: {missing_str}")
+        logger.error(f"Missing parameters in the request: {missing_str}")
         return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
 
     try:
@@ -373,23 +373,23 @@ def train_model():
             
         DkuMLTask.update_parameters(distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
-        logging.debug("Visual ML task created successfully")
+        logger.debug("Visual ML task created successfully")
 
         DkuMLTask.enable_glm_algorithm()
-        logging.debug("GLM algorithm enabled successfully")
+        logger.debug("GLM algorithm enabled successfully")
 
         settings = DkuMLTask.test_settings()
         settings_new = DkuMLTask.configure_variables()
-        logging.debug("Model settings configured successfully")
+        logger.debug("Model settings configured successfully")
 
         DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
         
         
-        logging.info("Model training initiated successfully")
+        logger.info("Model training initiated successfully")
         
         return jsonify({'message': 'Model training initiated successfully.'}), 200
     except Exception as e:
-        logging.exception("An error occurred during model training")
+        logger.exception("An error occurred during model training")
         return jsonify({'error': str(e)}), 500
 
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
@@ -404,19 +404,19 @@ def get_dataset_columns():
         except:
             dataset_name = "claim_train"
             
-        logging.info(f"Training Dataset name selected is: {dataset_name}")
+        logger.info(f"Training Dataset name selected is: {dataset_name}")
 
         cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
         column_names = [column['name'] for column in cols_dict]
 
-        logging.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
+        logger.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
 
         return jsonify(column_names)
     
     except KeyError as e:
-        logging.error(f"Missing key in request: {e}")
+        logger.error(f"Missing key in request: {e}")
         return jsonify({'error': f'Missing key in request: {e}'}), 400
     
     except Exception as e:
-        logging.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
+        logger.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
         return jsonify({'error': str(e)}), 500
