@@ -94,12 +94,12 @@
                             label="Column Type"
                             info-text="Does the column contain categorical or numerical data?"
                     ></BsLabel>
-                    <BsSelect
-                        :modelValue="column.type"
-                        :all-options="typeOptions"
-                        @update:modelValue="newValue => updateType(index, newValue)"
-                        style="min-width: 150px">
-                    </BsSelect>
+                    <div class="q-gutter-sm row items-center">
+                        <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
+                    </div>
+                    <div class="q-gutter-sm row items-center">
+                        <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
+                    </div>
                     <BsLabel
                             label="Preprocessing"
                             info-text="Preprocessing Method"
@@ -121,6 +121,9 @@
 <script lang="ts">
 type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing';
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
+interface TypeWithValue {
+  value: string;
+}
 interface Column {
         name: string;
         isIncluded: boolean;
@@ -146,6 +149,7 @@ import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsCont
 import docLogo from "../assets/images/doc-logo-example.svg";
 import firstTabIcon from "../assets/images/first-tab-icon.svg";
 import { API } from '../Api';
+import { QRadio } from 'quasar';
 
 export default defineComponent({
 components: {
@@ -156,7 +160,9 @@ components: {
     BsButton,
     BsDrawer,
     BsContent,
-    BsTooltip
+    BsTooltip,
+    QRadio
+
 },
 props: [],
 data() {
@@ -254,9 +260,11 @@ watch: {
     datasetColumns: {
     handler(newVal, oldVal) {
         console.log('datasetColumns changed:', newVal);
+        this.updateDatasetColumnsPreprocessing();
     },
     deep: true
-}
+    }   
+    
 },
 methods: {
     validateSubmission() {
@@ -272,6 +280,31 @@ methods: {
         return false;
         }
         return true; // Validation passed
+    },
+    updateDatasetColumnsPreprocessing() {
+        const updatedColumns = this.datasetColumns.map(column => {
+            let preprocessing;
+            if (column.type === "categorical") {
+                preprocessing = 'Dummy Encode';
+            } else if (column.type === "numerical") {
+                preprocessing = 'Standard Rescaling';
+            } else {
+                // Preserve the existing preprocessing if the type doesn't match
+                preprocessing = column.preprocessing;
+            }
+
+            // Only update preprocessing if it's different to avoid infinite loops
+            if (JSON.stringify(column.preprocessing) !== JSON.stringify(preprocessing)) {
+                return { ...column, preprocessing };
+            } else {
+                return column;
+            }
+        });
+
+        // Check if the update is necessary to avoid unnecessary reactivity triggering
+        if (JSON.stringify(this.datasetColumns) !== JSON.stringify(updatedColumns)) {
+            this.datasetColumns = updatedColumns;
+        }
     },
     abbreviateColumnName(name:string) {
         const maxLength = 15; // Maximum length of column name

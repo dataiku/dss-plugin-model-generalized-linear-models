@@ -28,7 +28,7 @@
                 label="Select a Second Model for Comparison"
                 info-text="Model 2">
             </BsLabel>
-            <BsSelect
+            <BsSelect 
                 :modelValue="selectedModelTwoString"
                 :all-options="modelsString"
                 @update:modelValue="updateModelTwoString"
@@ -123,7 +123,7 @@ data() {
         comparisonChartTitle: "Model Metrics",
         modelMetrics: {} as ModelMetrics,
         modelComparisonData: [] as chartDataItem[],
-        tableColumns: columns,
+        tableColumns: columns
     };
 },
 computed:{
@@ -149,6 +149,16 @@ computed:{
 
     return modelsArray;
         
+
+    },
+    tableColumns() {
+        return [
+
+            { name: 'model', label: 'Model', field: 'model', align: 'center' },
+            { name: 'AIC', label: 'AIC', field: 'AIC', align: 'center' },
+            { name: 'BIC', label: 'BIC', field: 'BIC', align: 'center' },
+            { name: 'Deviance', label: 'Deviance', field: 'Deviance', align: 'center' },
+        ];
 
     }
 },
@@ -222,7 +232,7 @@ interface ModelMetricsDataPoint {
 interface ModelMetrics {
     models: {
         [models: string]: ModelMetricsDataPoint; // Use an index signature for dynamic keys
-    }
+    },
 }
 
 const columns: QTableColumn[] = [
@@ -233,7 +243,7 @@ const columns: QTableColumn[] = [
 ];
 
 </script>   
-<style scoped>
+<style scoped>s
 .row-spacing {
 margin-bottom: 20px; /* Adjust this value as needed */
 }
