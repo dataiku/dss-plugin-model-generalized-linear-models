@@ -109,33 +109,33 @@ def get_data():
 
 
 
-# @fetch_api.route("/lift_data", methods=["POST"])
-# def get_lift_data():
-#     request_json = request.get_json()
-#     print(request_json)
-#     model = request_json["id"]
-#     glm_handler.model_handler.switch_model(model)
-#     lift_chart = glm_handler.model_handler.get_lift_chart(8)
-#     df = lift_chart.copy()
-#     print(df)
-#     df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+@fetch_api.route("/lift_data", methods=["POST"])
+def get_lift_data():
+    request_json = request.get_json()
+    print(request_json)
+    model = request_json["id"]
+    glm_handler.model_handler.switch_model(model)
+    lift_chart = glm_handler.model_handler.get_lift_chart(8)
+    df = lift_chart.copy()
+    print(df)
+    df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    return jsonify(df.to_dict('records'))
+#     model = "model_1"
+#     if model == 'model_1':
+#         df = pd.DataFrame({
+#             'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
+#             'Value': [100, 103, 101, 98, 100, 100, 101, 102],
+#             'observedAverage': [0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1],
+#             'fittedAverage': [0.12, 0.16, 0.19, 0.32, 0.37, 0.55, 0.83, 1.02]
+#         })
+#     else:
+#         df = pd.DataFrame({
+#             'Category': ['0.1', '0.15', '0.22', '0.3', '0.45', '0.6', '0.8', '1'],
+#             'Value': [100, 103, 101, 100, 101, 100, 101, 102],
+#             'observedAverage': [0.1, 0.15, 0.22, 0.3, 0.45, 0.6, 0.8, 1],
+#             'fittedAverage': [0.12, 0.16, 0.23, 0.32, 0.37, 0.62, 0.83, 1.02]
+#         })
 #     return jsonify(df.to_dict('records'))
-# #     model = "model_1"
-# #     if model == 'model_1':
-# #         df = pd.DataFrame({
-# #             'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
-# #             'Value': [100, 103, 101, 98, 100, 100, 101, 102],
-# #             'observedAverage': [0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1],
-# #             'fittedAverage': [0.12, 0.16, 0.19, 0.32, 0.37, 0.55, 0.83, 1.02]
-# #         })
-# #     else:
-# #         df = pd.DataFrame({
-# #             'Category': ['0.1', '0.15', '0.22', '0.3', '0.45', '0.6', '0.8', '1'],
-# #             'Value': [100, 103, 101, 100, 101, 100, 101, 102],
-# #             'observedAverage': [0.1, 0.15, 0.22, 0.3, 0.45, 0.6, 0.8, 1],
-# #             'fittedAverage': [0.12, 0.16, 0.23, 0.32, 0.37, 0.62, 0.83, 1.02]
-# #         })
-# #     return jsonify(df.to_dict('records'))
 
 
 # @fetch_api.route("/update_bins", methods=["POST"])
