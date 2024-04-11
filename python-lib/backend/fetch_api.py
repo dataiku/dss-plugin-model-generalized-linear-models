@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, request, send_file
 import pandas as pd
-
 from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
 from backend.api_utils import format_models
+from backend.local_config import dummy_models
+
 from io import BytesIO
 import traceback
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
@@ -39,11 +40,10 @@ def get_models():
     except Exception as e:
         logging.exception("An error occurred while retrieving models")
         return jsonify({'error': str(e)}), 500
-
-#     versions = glm_handler.model_handler.get_model_versions()
-#     models = [{'id': k, 'name': v} for k,v in versions.items()]
-#     return jsonify(models)
-#     models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
+    return jsonify(models)
+# For local dev
+#     return jsonify(dummy_models)
+     
 
 
 
@@ -100,33 +100,33 @@ def get_variables():
 #     return jsonify(variables)
 
 
-# @fetch_api.route("/data", methods=["POST"])
-# def get_data():
-#     request_json = request.get_json()
-#     model = request_json["id"]
-#     df = predicted_base.copy()
-#     df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-#     return jsonify(df.to_dict('records'))
-#     model = 'model_1'
-#     if model == 'model_1':
-#         df = pd.DataFrame({
-#             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
-#             'Category': ['January', 'February', 'March', 'April', 10, 20, 30, 40],
-#             'Value': [0.2, 0.05, 0.3, 0.15, 0.4, 0.5, 0.6, 0.4],
-#             'observedAverage': [0.4, 0.5, 0.6, 0.4, 0.2, 0.05, 0.3, 0.15],
-#             'fittedAverage': [0.4, 0.7, 0.9, 0.8, 0.4, 0.5, 0.6, 0.4],
-#             'baseLevelPrediction': [0.5, 0.55, 0.6, 0.7, 0.5, 0.5, 0.4, 0.45]
-#         })
-#     else:
-#         df = pd.DataFrame({
-#             'definingVariable': ['Variable3','Variable3','Variable3','Variable3', 'Variable4','Variable4','Variable4','Variable4'],
-#             'Category': ['January', 'February', 'March', 'April', 10, 20, 30, 40],
-#             'Value': [0.2, 0.5, 0.35, 0.15, 0.4, 0.5, 0.3, 0.4],
-#             'observedAverage': [0.4, 0.15, 0.6, 0.4, 0.22, 0.05, 0.23, 0.15],
-#             'fittedAverage': [0.4, 0.7, 0.39, 0.8, 0.4, 0.5, 0.86, 0.24],
-#             'baseLevelPrediction': [0.5, 0.5, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7]
-#         })
-#     return jsonify(df.to_dict('records'))
+@fetch_api.route("/data", methods=["POST"])
+def get_data():
+    request_json = request.get_json()
+    model = request_json["id"]
+    df = predicted_base.copy()
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(df.to_dict('records'))
+    model = 'model_1'
+    if model == 'model_1':
+        df = pd.DataFrame({
+            'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
+            'Category': ['January', 'February', 'March', 'April', 10, 20, 30, 40],
+            'Value': [0.2, 0.05, 0.3, 0.15, 0.4, 0.5, 0.6, 0.4],
+            'observedAverage': [0.4, 0.5, 0.6, 0.4, 0.2, 0.05, 0.3, 0.15],
+            'fittedAverage': [0.4, 0.7, 0.9, 0.8, 0.4, 0.5, 0.6, 0.4],
+            'baseLevelPrediction': [0.5, 0.55, 0.6, 0.7, 0.5, 0.5, 0.4, 0.45]
+        })
+    else:
+        df = pd.DataFrame({
+            'definingVariable': ['Variable3','Variable3','Variable3','Variable3', 'Variable4','Variable4','Variable4','Variable4'],
+            'Category': ['January', 'February', 'March', 'April', 10, 20, 30, 40],
+            'Value': [0.2, 0.5, 0.35, 0.15, 0.4, 0.5, 0.3, 0.4],
+            'observedAverage': [0.4, 0.15, 0.6, 0.4, 0.22, 0.05, 0.23, 0.15],
+            'fittedAverage': [0.4, 0.7, 0.39, 0.8, 0.4, 0.5, 0.86, 0.24],
+            'baseLevelPrediction': [0.5, 0.5, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7]
+        })
+    return jsonify(df.to_dict('records'))
 
 # @fetch_api.route("/lift_data", methods=["POST"])
 # def get_lift_data():

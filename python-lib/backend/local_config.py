@@ -49,3 +49,6 @@ dictConfig(
 def setup_dataiku_client():
     dataiku_setup = get_setup_for_dataiku_client()
     dataiku_api.setup(**dataiku_setup)
+
+    
+dummy_models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
