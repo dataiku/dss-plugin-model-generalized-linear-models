@@ -86,6 +86,21 @@ dummy_relativites= pd.DataFrame({'variable': ['Variable1','Variable1','Variable1
                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
                         'relativity': [1.0, 1.087324, 0.98091882, 0.7929717, 1.0, 0.992374, 1.19274, 1.052333]})
 
+dummy_model_metrics ={
+        "models": {
+            "Model_1": {
+            "AIC": 100,
+            "BIC": 120,
+            "Deviance": 5.5
+            },
+            "Model_2": {
+            "AIC": 95,
+            "BIC": 110,
+            "Deviance": 5.0
+            }
+        }
+        }
+
 def get_dummy_model_comparison_data():
     df = pd.DataFrame()
     df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]

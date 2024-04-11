@@ -5,7 +5,7 @@ from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
-dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data)
+dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
 from backend.logging_settings import logger
 from io import BytesIO
 import traceback
@@ -201,29 +201,15 @@ def get_model_comparison_data():
 #     df =get_dummy_model_comparison_data
 #     return jsonify(df.to_dict('records'))
 
-# @fetch_api.route("/get_model_metrics", methods=["POST"])
-# def get_model_metrics():
-#     # request_json = request.get_json()
-#     # model = request_json["id"]
-#     # df = relativities
-#     # df.columns = ['variable', 'category', 'relativity']
-#     # return jsonify(df.to_dict('records'))
-#     json_data = {
-#         "models": {
-#             "Model_1": {
-#             "AIC": 100,
-#             "BIC": 120,
-#             "Deviance": 5.5
-#             },
-#             "Model_2": {
-#             "AIC": 95,
-#             "BIC": 110,
-#             "Deviance": 5.0
-#             }
-#         }
-#         }
+@fetch_api.route("/get_model_metrics", methods=["POST"])
+def get_model_metrics():
+    # request_json = request.get_json()
+    # model = request_json["id"]
+    # df = relativities
+    # df.columns = ['variable', 'category', 'relativity']
+    # return jsonify(df.to_dict('records'))
 
-#     return jsonify(json_data)
+    return jsonify(dummy_model_metrics)
 
 # @fetch_api.route('/export_model', methods=['GET'])
 # def export_model():
