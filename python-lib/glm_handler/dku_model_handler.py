@@ -5,9 +5,7 @@ import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+from backend.logging_settings import logger
 
 class ModelHandler:
     """
