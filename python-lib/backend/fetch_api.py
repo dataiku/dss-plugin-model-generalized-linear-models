@@ -86,6 +86,7 @@ def get_variables():
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
     try:
+
         logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         model = request_json["id"]
@@ -102,6 +103,7 @@ def get_data():
         
         return jsonify(predicted_base.to_dict('records'))
     #     return jsonify(dummy_df_data.to_dict('records'))
+    
     except Exception as e:
         logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
         return jsonify({"error": "An error occurred during data processing."}), 500
