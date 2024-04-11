@@ -344,7 +344,7 @@ class ModelHandler:
         
         logger.info(f"Train set is of type {type(train_set)}")
         
-        tempdata = self.sort_and_cumsum_exposure(train_set)
+        tempdata = pd.DataFrame(self.sort_and_cumsum_exposure(train_set))
         binned_data = self.bin_data(tempdata, nb_bins)
         
         new_data = train_set.join(binned_data[['bin']], how='inner')
