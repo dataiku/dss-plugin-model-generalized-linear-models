@@ -4,7 +4,7 @@ from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
 from backend.api_utils import format_models
-from backend.local_config import dummy_models, dummy_variables, dummy_df_data
+from backend.local_config import dummy_models, dummy_variables, dummy_df_data, dummy_lift_data
 
 from io import BytesIO
 import traceback
@@ -120,22 +120,9 @@ def get_lift_data():
     print(df)
     df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
     return jsonify(df.to_dict('records'))
-#     model = "model_1"
-#     if model == 'model_1':
-#         df = pd.DataFrame({
-#             'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
-#             'Value': [100, 103, 101, 98, 100, 100, 101, 102],
-#             'observedAverage': [0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1],
-#             'fittedAverage': [0.12, 0.16, 0.19, 0.32, 0.37, 0.55, 0.83, 1.02]
-#         })
-#     else:
-#         df = pd.DataFrame({
-#             'Category': ['0.1', '0.15', '0.22', '0.3', '0.45', '0.6', '0.8', '1'],
-#             'Value': [100, 103, 101, 100, 101, 100, 101, 102],
-#             'observedAverage': [0.1, 0.15, 0.22, 0.3, 0.45, 0.6, 0.8, 1],
-#             'fittedAverage': [0.12, 0.16, 0.23, 0.32, 0.37, 0.62, 0.83, 1.02]
-#         })
-#     return jsonify(df.to_dict('records'))
+#     return jsonify(dummy_lift_data.to_dict('records'))
+     
+
 
 
 # @fetch_api.route("/update_bins", methods=["POST"])
