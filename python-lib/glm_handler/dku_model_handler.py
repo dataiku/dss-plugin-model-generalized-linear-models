@@ -256,18 +256,7 @@ class ModelHandler:
         variable_names = self.predictor._model.clf.column_labels
         return dict(zip(variable_names, coefficients))
 
-    def get_model_predictions_on_train(self):
-        """
-        Generates model predictions on the training dataset.
 
-        Returns:
-            pd.DataFrame: A DataFrame of the training dataset with an additional column for predictions.
-        """
-        train_set = self.model_info_handler.get_train_df()[0].copy()
-        predicted = self.predictor.predict(train_set)
-        train_set['prediction'] = predicted
-        
-        return train_set['prediction']
     
     def sort_and_cumsum_exposure(self, data):
         """
@@ -328,7 +317,19 @@ class ModelHandler:
         grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
         return grouped
 
+    def get_model_predictions_on_train(self):
+        """
+        Generates model predictions on the training dataset.
 
+        Returns:
+            pd.DataFrame: A DataFrame of the training dataset with an additional column for predictions.
+        """
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+        predicted = self.predictor.predict(train_set)
+        train_set['prediction'] = predicted
+        
+        return train_set['prediction']
+    
     def get_lift_chart(self, nb_bins):
         """
         Calculates and returns the lift chart data for the model on the training set,
@@ -340,7 +341,7 @@ class ModelHandler:
         Returns:
             pd.DataFrame: The aggregated lift chart data with observed and predicted metrics.
         """
-#         train_set = self.get_model_predictions_on_train()
+
 #         train_set_df = pd.DataFrame(train_set)
 #         print(train_set_df.head())
         
@@ -350,11 +351,10 @@ class ModelHandler:
 #         new_data = train_set.join(binned_data[['bin']], how='inner')
 #         lift_chart_data = self.aggregate_metrics_by_bin(new_data)
 #         return lift_chart_data
-        train_set = self.model_info_handler.get_train_df()[0].copy()
-        predicted = self.predictor.predict(train_set)
-        train_set['prediction'] = predicted
+
+        train_set = self.get_model_predictions_on_train()
         tempdata = train_set.sort_values(by='prediction', ascending=True)
-        print(tempdata)
+
         
 
         tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
