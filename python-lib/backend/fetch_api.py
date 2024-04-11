@@ -90,7 +90,7 @@ def get_data():
         request_json = request.get_json()
         full_model_id = request_json["id"]
         
-        logger.info(f"Model ID received: {model_id}")
+        logger.info(f"Model ID received: {full_model_id}")
 
         model_deployer.set_new_active_version(full_model_id)
         model_handler.update_active_version()
