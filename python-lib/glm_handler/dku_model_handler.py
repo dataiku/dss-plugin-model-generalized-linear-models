@@ -340,18 +340,36 @@ class ModelHandler:
         Returns:
             pd.DataFrame: The aggregated lift chart data with observed and predicted metrics.
         """
-        train_set = self.get_model_predictions_on_train()
-        train_set_df = pd.DataFrame(train_set)
-        print(train_set_df.head())
+#         train_set = self.get_model_predictions_on_train()
+#         train_set_df = pd.DataFrame(train_set)
+#         print(train_set_df.head())
         
-        tempdata = self.sort_and_cumsum_exposure(train_set_df)
-        binned_data = self.bin_data(tempdata, nb_bins)
+#         tempdata = self.sort_and_cumsum_exposure(train_set_df)
+#         binned_data = self.bin_data(tempdata, nb_bins)
         
-        new_data = train_set.join(binned_data[['bin']], how='inner')
-        lift_chart_data = self.aggregate_metrics_by_bin(new_data)
-        return lift_chart_data
+#         new_data = train_set.join(binned_data[['bin']], how='inner')
+#         lift_chart_data = self.aggregate_metrics_by_bin(new_data)
+#         return lift_chart_data
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+        predicted = self.predictor.predict(train_set)
+        train_set['prediction'] = predicted
+        tempdata = train_set.sort_values(by='prediction', ascending=True)
+        print(tempdata)
+        
 
-
+        tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
+        tempdata['bin'] = pd.cut(tempdata['exposure_cumsum'].round(16), bins=[round(x / nb_bins, 8) for x in range(nb_bins+1)][:-1] + [float("inf")], labels=[x + 1 for x in range(nb_bins)])
+        tempdata['bin'] = tempdata['bin'].astype(int)
+        new_data = train_set.join(tempdata[['bin']]).copy(deep=True)
+        new_data['weighted_prediction'] = new_data.prediction * new_data[self.exposure]
+        new_data['weighted_target'] = new_data[self.target] * new_data[self.exposure]
+        grouped = new_data.groupby(["bin"]).aggregate({self.exposure: 'sum', 'weighted_target': 'sum', 'weighted_prediction':'sum'})
+        grouped['observedData'] = grouped['weighted_target'] / grouped[self.exposure]
+        grouped['predictedData'] = grouped['weighted_prediction'] / grouped[self.exposure]
+        grouped.reset_index(inplace=True)
+        grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
+        
+        return grouped
     def get_link_function(self):
         """
         Retrieves the link function of the original model as a statsmodel object
