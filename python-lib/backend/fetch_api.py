@@ -213,6 +213,7 @@ def get_model_metrics():
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
+    
     relativities_dict = glm_handler.model_handler.relativities
     
     nb_col = (len(relativities_dict.keys()) - 1) * 3
