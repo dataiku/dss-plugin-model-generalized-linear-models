@@ -343,6 +343,8 @@ class ModelHandler:
         """
         train_set = self.get_model_predictions_on_train()
         
+        logger.info(f"Train set is of type {type(train_set)}")
+        
         tempdata = self.sort_and_cumsum_exposure(train_set)
         binned_data = self.bin_data(tempdata, nb_bins)
         
