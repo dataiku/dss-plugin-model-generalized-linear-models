@@ -1,7 +1,7 @@
 from backend.dataiku_api import dataiku_api
 from logging.config import dictConfig
 import os
-
+import padnas as pd
 # Replace by your default project key that you are working on in dev
 DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING"
 
@@ -52,3 +52,15 @@ def setup_dataiku_client():
 
     
 dummy_models = [{"id": "model_1", "name": "GLM 1"}, {"id": "model_2", "name": "GLM 2"}]
+
+dummy_variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
+                    {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
+
+dummy_df_data = pd.DataFrame({
+            'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
+            'Category': ['January', 'February', 'March', 'April', 10, 20, 30, 40],
+            'Value': [0.2, 0.05, 0.3, 0.15, 0.4, 0.5, 0.6, 0.4],
+            'observedAverage': [0.4, 0.5, 0.6, 0.4, 0.2, 0.05, 0.3, 0.15],
+            'fittedAverage': [0.4, 0.7, 0.9, 0.8, 0.4, 0.5, 0.6, 0.4],
+            'baseLevelPrediction': [0.5, 0.55, 0.6, 0.7, 0.5, 0.5, 0.4, 0.45]
+        })

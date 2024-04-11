@@ -4,7 +4,7 @@ from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
 from backend.api_utils import format_models
-from backend.local_config import dummy_models
+from backend.local_config import dummy_models, dummy_variables, dummy_df_data
 
 from io import BytesIO
 import traceback
@@ -56,9 +56,7 @@ def get_variables():
     
     model_deployer.set_new_active_version(full_model_id)
     model_handler.update_active_version()
-    
-    global predicted_base
-    global relativities
+   
     
 #     try:
     predicted_base = model_handler.get_predicted_and_base()
@@ -73,60 +71,31 @@ def get_variables():
     if variables is None:
         raise ValueError("variables returned None.")
 
-#     except ValueError as e:
-#         logging.error(f"Validation Error: {e}")
-#     except Exception as e:
-#         logging.error(f"An error occurred: {e}")
+    except ValueError as e:
+        logging.error(f"Validation Error: {e}")
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
 
     
     return jsonify(variables)
+# local config
+#     return jsonify(dummy_variables)
 
-
-#     model = 'model_1'
-#     if model == 'model_1':
-#         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
-#                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
-#     else:
-#         variables = [{'variable': 'Variable3', 'isInModel': False, 'variableType': 'categorical'},
-#                     {'variable': 'Variable4', 'isInModel': True, 'variableType': 'numeric'}]
-#     return jsonify(variables)
-#     model = 'model_1'
-#     if model == 'model_1':
-#         variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
-#                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
-#     else:
-#         variables = [{'variable': 'Variable3', 'isInModel': False, 'variableType': 'categorical'},
-#                     {'variable': 'Variable4', 'isInModel': True, 'variableType': 'numeric'}]
-#     return jsonify(variables)
 
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
     request_json = request.get_json()
     model = request_json["id"]
-    df = predicted_base.copy()
-    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    return jsonify(df.to_dict('records'))
-    model = 'model_1'
-    if model == 'model_1':
-        df = pd.DataFrame({
-            'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
-            'Category': ['January', 'February', 'March', 'April', 10, 20, 30, 40],
-            'Value': [0.2, 0.05, 0.3, 0.15, 0.4, 0.5, 0.6, 0.4],
-            'observedAverage': [0.4, 0.5, 0.6, 0.4, 0.2, 0.05, 0.3, 0.15],
-            'fittedAverage': [0.4, 0.7, 0.9, 0.8, 0.4, 0.5, 0.6, 0.4],
-            'baseLevelPrediction': [0.5, 0.55, 0.6, 0.7, 0.5, 0.5, 0.4, 0.45]
-        })
-    else:
-        df = pd.DataFrame({
-            'definingVariable': ['Variable3','Variable3','Variable3','Variable3', 'Variable4','Variable4','Variable4','Variable4'],
-            'Category': ['January', 'February', 'March', 'April', 10, 20, 30, 40],
-            'Value': [0.2, 0.5, 0.35, 0.15, 0.4, 0.5, 0.3, 0.4],
-            'observedAverage': [0.4, 0.15, 0.6, 0.4, 0.22, 0.05, 0.23, 0.15],
-            'fittedAverage': [0.4, 0.7, 0.39, 0.8, 0.4, 0.5, 0.86, 0.24],
-            'baseLevelPrediction': [0.5, 0.5, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7]
-        })
-    return jsonify(df.to_dict('records'))
+    
+    model_deployer.set_new_active_version(full_model_id)
+    model_handler.update_active_version()
+    
+    predicted_base = model_handler.get_predicted_and_base()
+    predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    return jsonify(predicted_base.to_dict('records'))
+#  local config
+#     return jsonify(dummy_df_data.to_dict('records'))
 
 # @fetch_api.route("/lift_data", methods=["POST"])
 # def get_lift_data():
