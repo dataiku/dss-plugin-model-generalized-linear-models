@@ -22,13 +22,16 @@
             </BsHeader>
             <BsDrawer>
               <div class="variable-select-container">
-              <VariableSelect
+               <BsLabel
+                  label="Select a model"
+                  info-text="Charts will be generated with respect to this model">
+               </BsLabel>
+              <BsSelect
                   :modelValue="selectedModelString"
                   :all-options="modelsString"
                   @update:modelValue="updateModelString"
-                  label="Select a model"
-                  helpMessage="Charts will be generated with respect to this model">
-              </VariableSelect>
+                  >
+              </BsSelect>
               <BsCheckbox v-model="includeSuspectVariables" label="Include Suspect Variables">
               </BsCheckbox>
                 <BsSelect
@@ -105,7 +108,6 @@
 
 <script lang="ts">
 import BarChart from './BarChart.vue'
-import VariableSelect from './VariableSelect.vue'
 import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import * as echarts from "echarts";
@@ -151,7 +153,6 @@ const rows = [
 export default defineComponent({
     components: {
         BarChart,
-        VariableSelect,
         DocumentationContent,
         BsButton,
         BsLayoutDefault,

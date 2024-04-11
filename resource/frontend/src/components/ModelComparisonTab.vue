@@ -85,7 +85,6 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import VariableSelect from './VariableSelect.vue';
 import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip ,BsTable,} from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
@@ -94,14 +93,8 @@ import { API } from '../Api';
 import ModelComparisonChart from './ModelComparisonChart.vue'
 import type { QTableColumn } from 'quasar';
 
-// const columns: QTableColumn[] = [
-//     { name: 'class', align: 'center', label: 'Class', field: 'class',sortable: true},
-//     { name: 'relativity', align: 'center', label: 'Relativity', field: 'relativity', sortable: true},
-// ]
-
 export default defineComponent({
 components: {
-    VariableSelect,
     ModelComparisonChart,
     EmptyState,
     BsTab,

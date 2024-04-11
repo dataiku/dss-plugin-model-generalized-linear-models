@@ -97,7 +97,7 @@
                     <BsSelect
                         :modelValue="column.type"
                         :all-options="typeOptions"
-                        @update:modelValue="newValue => updateColumnProperty(index, 'type', newValue)"
+                        @update:modelValue="newValue => updateType(index, newValue)"
                         style="min-width: 150px">
                     </BsSelect>
                     <BsLabel
@@ -110,14 +110,6 @@
                         @update:modelValue="newValue => updatePreprocessing(index, newValue)"
                         style="min-width: 150px">
                     </BsSelect>
-                    <!-- <VariableSelect
-                        label="Preprocessing"
-                        :modelValue="column.preprocessing"
-                        :options="preprocessingOptions"
-                        @update:modelValue="newValue => updatePreprocessing(index, newValue)"
-                        helpMessage="Preprocessing Method"
-                        style="min-width: 150px">
-                    </VariableSelect> -->
             </div>
         </q-card>
     </BsContent>
@@ -131,7 +123,7 @@ type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing';
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
 interface Column {
         name: string;
-        isIncluded: Boolean;
+        isIncluded: boolean;
         role: string;
         type: string;
         preprocessing: string;
@@ -149,7 +141,6 @@ included: boolean;
 };
 }
 import { defineComponent } from "vue";
-import VariableSelect from './VariableSelect.vue';
 import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
@@ -158,7 +149,6 @@ import { API } from '../Api';
 
 export default defineComponent({
 components: {
-    VariableSelect,
     EmptyState,
     BsTab,
     BsTabIcon,
@@ -222,7 +212,7 @@ computed:{
         console.log(this.datasetColumns);
         return this.datasetColumns
         .filter(column => {
-            return ((column.role as { label: string; value: string }).value !== 'Target');
+            return (column.role !== 'Target');
             })
             
             .map(column=>{
@@ -230,10 +220,9 @@ computed:{
             });
         },
         filteredColumns() {
-            console.log(this.datasetColumns);
             return this.datasetColumns.filter(column =>
-                (typeof column.role === 'object' ? column.role.value : column.role) !== 'Target' &&
-                (typeof column.role === 'object' ? column.role.value : column.role) !== 'Exposure')
+                column.role !== 'Target' &&
+                column.role !== 'Exposure')
         }
 },
 watch: {
@@ -243,10 +232,10 @@ watch: {
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
                 // Set the role of the selected target variable to 'Target'
-                column.role = { label: 'Target', value: 'Target' };
+                column.role = 'Target';
             } else {
                 // Reset role for non-target columns if necessary
-                column.role = { label: 'Variable', value: 'Variable' }; // Or any default value you prefer
+                column.role = 'Variable'; // Or any default value you prefer
             }
         });
     },
@@ -255,10 +244,10 @@ watch: {
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
                 // Set the role of the selected target variable to 'Target'
-                column.role = { label: 'Exposure', value: 'Exposure' };
-            } else if ((column.role as { value: string }).value !== 'Target') {
+                column.role = 'Exposure';
+            } else if (column.role !== 'Target') {
                 // Reset role for non-target columns if necessary
-                column.role = { label: 'Variable', value: 'Variable' }; // Or any default value you prefer
+                column.role = 'Variable'; // Or any default value you prefer
             }
         });
     },
@@ -309,13 +298,13 @@ methods: {
             this.datasetColumns[index] = column;
         }
     },
-    updateColumnProperty(columnIndex:number, property: ColumnPropertyKeys, value: any) {
-        const column = this.datasetColumns[columnIndex];
+    updateType(index:number, value: any) {
+        const column = this.datasetColumns[index];
         if (column) {
-                column[property] = value;
+                column.type = value;
             }
             // Trigger a Vue reactivity update
-            this.datasetColumns.splice(columnIndex, 1, column);
+            this.datasetColumns[index] = column;
         },
     async submitVariables() {
         if (!this.validateSubmission()) {
@@ -335,7 +324,7 @@ methods: {
             role: role,
             type: type.toLowerCase(),
             processing: preprocessing == 'Dummy Encode' ? 'CUSTOM' : 'REGULAR',
-            included: typeof isIncluded === 'object' ? isIncluded.value : isIncluded,
+            included: isIncluded,
         };
         return acc;
         }, {});
