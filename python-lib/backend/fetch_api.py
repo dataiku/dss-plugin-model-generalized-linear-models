@@ -213,7 +213,11 @@ def get_model_metrics():
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
+#     you should provide a model ID to this and export a specific model, it doesnt make sense to store it in memory
+#     model_deployer.set_new_active_version(full_model_id)
+#     model_handler.update_active_version()
     
+#     df = model_handler.get_relativities_df()
     relativities_dict = glm_handler.model_handler.relativities
     
     nb_col = (len(relativities_dict.keys()) - 1) * 3
