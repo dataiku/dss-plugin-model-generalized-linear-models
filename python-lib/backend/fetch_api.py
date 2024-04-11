@@ -85,6 +85,7 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
+    
     try:
 
         logger.info("Received a new request for data prediction.")
