@@ -4,7 +4,9 @@ import pandas as pd
 import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
-
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class ModelHandler:
     """
@@ -280,6 +282,8 @@ class ModelHandler:
             pd.DataFrame: The input DataFrame with additional columns for the cumulative sum
                           and binning information based on exposure.
         """
+        logger.info(f"Pandas version is {pd.__version__}")
+        logger.info(f"data is type{type(data)}")
         tempdata = data.sort_values(by='prediction', ascending=True)
         tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
         return tempdata
