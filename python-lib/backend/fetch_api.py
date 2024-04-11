@@ -5,14 +5,14 @@ from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
 from backend.api_utils import format_models
 from backend.local_config import dummy_models, dummy_variables, dummy_df_data, dummy_lift_data,dummy_get_updated_data, dummy_relativites
-
+from backend.logging_settings import logger
 from io import BytesIO
 import traceback
-fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 import dataiku
 from dataiku.customwebapp import get_webapp_config
 import numpy as np
 
+fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 client = dataiku.api_client()
 project = client.get_default_project()
 web_app_config = get_webapp_config()
@@ -22,7 +22,7 @@ global_dku_mltask = saved_model.get_origin_ml_task()
 model_deployer = ModelDeployer(global_dku_mltask, saved_model_id)
 model_handler = ModelHandler(saved_model_id)
 
-from backend.logging_settings import logger
+
 
 
 @fetch_api.route("/models", methods=["GET"])
@@ -163,27 +163,6 @@ def get_relativities():
 #     local dev
 #     return jsonify(dummy_relativites.to_dict('records'))
 
-
-
-# @fetch_api.route("/get_project_dataset", methods=["GET"])
-# def get_project_dataset():
-#     try: 
-#         web_app_config = get_webapp_config()
-#         dataset_name = web_app_config.get("training_dataset_string")
-#     except:
-#         dataset_name = "claim_train"
-#     logging.info(f"Training Dataset name selected is: {dataset_name}")
-#     return jsonify(dataset_name)
-
-#     # client = dataiku.api_client()
-#     # project = client.get_default_project()
-#     # datasets = []
-#     # for i in project.list_datasets():
-#     #     datasets.append(i.name)
-#     # return jsonify(datasets)
-    
-# #     datasets = ['Dataset1', 'Dataset2', 'Dataset3']
-# #     return jsonify(datasets)
 
 
 
