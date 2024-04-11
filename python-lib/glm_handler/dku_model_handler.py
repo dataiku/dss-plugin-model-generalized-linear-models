@@ -341,10 +341,10 @@ class ModelHandler:
             pd.DataFrame: The aggregated lift chart data with observed and predicted metrics.
         """
         train_set = self.get_model_predictions_on_train()
-        
+        train_set_df = pd.DataFrame(train_set)
         logger.info(f"Train set is of type {type(train_set)}")
         
-        tempdata = pd.DataFrame(self.sort_and_cumsum_exposure(train_set))
+        tempdata = self.sort_and_cumsum_exposure(train_set_df)
         binned_data = self.bin_data(tempdata, nb_bins)
         
         new_data = train_set.join(binned_data[['bin']], how='inner')
