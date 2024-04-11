@@ -58,7 +58,7 @@ def get_variables():
     model_handler.update_active_version()
    
     
-#     try:
+    try:
     predicted_base = model_handler.get_predicted_and_base()
     if predicted_base is None:
         raise ValueError("predicted_base returned None.")
@@ -85,7 +85,7 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
-#     try:
+    try:
         logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         model = request_json["id"]
@@ -103,9 +103,9 @@ def get_data():
         return jsonify(predicted_base.to_dict('records'))
     #     return jsonify(dummy_df_data.to_dict('records'))
     
-#     except Exception as e:
-#         logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
-#         return jsonify({"error": "An error occurred during data processing."}), 500
+    except Exception as e:
+        logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
+        return jsonify({"error": "An error occurred during data processing."}), 500
 
 
 
