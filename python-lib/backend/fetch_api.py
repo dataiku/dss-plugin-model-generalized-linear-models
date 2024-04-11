@@ -4,7 +4,7 @@ from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
 from backend.api_utils import format_models
-from backend.local_config import dummy_models, dummy_variables, dummy_df_data, dummy_lift_data
+from backend.local_config import dummy_models, dummy_variables, dummy_df_data, dummy_lift_data,dummy_get_updated_data, dummy_relativites
 
 from io import BytesIO
 import traceback
@@ -130,56 +130,39 @@ def get_lift_data():
 
 
 
-# @fetch_api.route("/update_bins", methods=["POST"])
-# def get_updated_data():
-#     request_json = request.get_json()
-#     print(request_json)
-#     feature = request_json["feature"]
-#     nb_bins = request_json["nbBin"]
-#     predicted_base = glm_handler.model_handler.get_predicted_and_base_feature(feature, nb_bins)
-#     df = predicted_base.copy()
-#     df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-#     return jsonify(df.to_dict('records'))
-#     if True:
-#         df = pd.DataFrame({
-#             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
-#             'Category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
-#             'inModel': [True, True, True, True, False, False, False, False],
-#             'Value': [0.2, 0.05, 0.3, 0.15, 0.4, 0.5, 0.6, 0.4],
-#             'observedAverage': [0.4, 0.5, 0.6, 0.4, 0.2, 0.05, 0.3, 0.15],
-#             'fittedAverage': [0.4, 0.7, 0.9, 0.8, 0.4, 0.5, 0.6, 0.4],
-#             'baseLevelPrediction': [0.5, 0.55, 0.6, 0.7, 0.5, 0.5, 0.4, 0.45]
-#         })
-#     else:
-#         df = pd.DataFrame({
-#             'definingVariable': ['Variable3','Variable3','Variable3','Variable3', 'Variable4','Variable4','Variable4','Variable4'],
-#             'Category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
-#             'inModel': [False, False, False, False, True, True, True, True],
-#             'Value': [0.2, 0.5, 0.35, 0.15, 0.4, 0.5, 0.3, 0.4],
-#             'observedAverage': [0.4, 0.15, 0.6, 0.4, 0.22, 0.05, 0.23, 0.15],
-#             'fittedAverage': [0.4, 0.7, 0.39, 0.8, 0.4, 0.5, 0.86, 0.24],
-#             'baseLevelPrediction': [0.5, 0.5, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7]
-#         })
-#     return jsonify(df.to_dict('records'))
+@fetch_api.route("/update_bins", methods=["POST"])
+def get_updated_data():
+    
+    request_json = request.get_json()
+
+    feature = request_json["feature"]
+    nb_bins = request_json["nbBin"]
+    predicted_base = model_handler.get_predicted_and_base_feature(feature, nb_bins)
+    df = predicted_base.copy()
+    df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    
+    
+    return jsonify(df.to_dict('records'))
+#     local dev
+#     return jsonify(dummy_get_updated_data.to_dict('records'))
 
 
-# @fetch_api.route("/relativities", methods=["POST"])
-# def get_relativities():
-#     request_json = request.get_json()
-#     model = request_json["id"]
-#     df = relativities
-#     df.columns = ['variable', 'category', 'relativity']
-#     return jsonify(df.to_dict('records'))
-#     model="model_1"
-#     if model == 'model_1':
-#         df = pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
-#                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
-#                         'relativity': [1.0, 1.087324, 0.98091882, 0.7929717, 1.0, 0.992374, 1.19274, 1.052333]})
-#     else:
-#         df = pd.DataFrame({'variable': ['Variable3','Variable3','Variable3','Variable3', 'Variable4','Variable4','Variable4','Variable4'],
-#                         'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
-#                         'relativity': [1.0, 1.08723155, 0.9844522, 0.79251098, 1.0, 0.9951252, 1.10971, 1.0542428]})
-#     return jsonify(df.to_dict('records'))
+@fetch_api.route("/relativities", methods=["POST"])
+def get_relativities():
+    request_json = request.get_json()
+    full_model_id = request_json["id"]
+    
+    logger.info(f"Model ID received: {full_model_id}")
+
+    model_deployer.set_new_active_version(full_model_id)
+    model_handler.update_active_version()
+    
+    df = model_handler.get_relativities_df()
+    df.columns = ['variable', 'category', 'relativity']
+    return jsonify(df.to_dict('records'))
+#     local dev
+#     return jsonify(dummy_relativites.to_dict('records'))
+
 
 
 # @fetch_api.route("/get_project_dataset", methods=["GET"])
