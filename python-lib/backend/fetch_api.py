@@ -85,17 +85,17 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
-    request_json = request.get_json()
-    model = request_json["id"]
+#     request_json = request.get_json()
+#     model = request_json["id"]
     
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
+#     model_deployer.set_new_active_version(full_model_id)
+#     model_handler.update_active_version()
     
-    predicted_base = model_handler.get_predicted_and_base()
-    predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-    return jsonify(predicted_base.to_dict('records'))
-#  local config
-#     return jsonify(dummy_df_data.to_dict('records'))
+#     predicted_base = model_handler.get_predicted_and_base()
+#     predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+#     return jsonify(predicted_base.to_dict('records'))
+ local config
+    return jsonify(dummy_df_data.to_dict('records'))
 
 # @fetch_api.route("/lift_data", methods=["POST"])
 # def get_lift_data():
