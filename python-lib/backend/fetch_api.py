@@ -211,50 +211,50 @@ def get_model_metrics():
 
     return jsonify(dummy_model_metrics)
 
-# @fetch_api.route('/export_model', methods=['GET'])
-# def export_model():
-#     relativities_dict = glm_handler.model_handler.relativities
+@fetch_api.route('/export_model', methods=['GET'])
+def export_model():
+    relativities_dict = glm_handler.model_handler.relativities
     
-#     nb_col = (len(relativities_dict.keys()) - 1) * 3
-#     variables = [col for col in relativities_dict.keys() if col != "base"]
-#     variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
-#     max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
+    nb_col = (len(relativities_dict.keys()) - 1) * 3
+    variables = [col for col in relativities_dict.keys() if col != "base"]
+    variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
+    max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
     
-#     csv_output = ",,\n"
-#     csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
-#     csv_output += ",,\n"
-#     csv_output += ",,\n"
-#     csv_output += ",,,".join(variables) + ",,\n"
-#     csv_output += ",,\n"
-#     csv_output += ",,,".join(variables) + ",,\n"
+    csv_output = ",,\n"
+    csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
+    csv_output += ",,\n"
+    csv_output += ",,\n"
+    csv_output += ",,,".join(variables) + ",,\n"
+    csv_output += ",,\n"
+    csv_output += ",,,".join(variables) + ",,\n"
     
-#     for i in range(max_len):
-#         for variable in variables:
-#             if i < len(variable_keys[variable]):
-#                 value = variable_keys[variable][i]
-#                 csv_output += "{},{},,".format(value, relativities_dict[variable][value])
-#             else:
-#                 csv_output += ",,,"
-#         csv_output += "\n"
+    for i in range(max_len):
+        for variable in variables:
+            if i < len(variable_keys[variable]):
+                value = variable_keys[variable][i]
+                csv_output += "{},{},,".format(value, relativities_dict[variable][value])
+            else:
+                csv_output += ",,,"
+        csv_output += "\n"
     
-#     csv_data = csv_output.encode('utf-8')
+    csv_data = csv_output.encode('utf-8')
     
-#     #data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
-#     #df = pd.DataFrame(data)
+    #data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+    #df = pd.DataFrame(data)
 
-#     # Convert DataFrame to CSV format
-#     #csv_data = df.to_csv(index=False).encode('utf-8')
+    # Convert DataFrame to CSV format
+    #csv_data = df.to_csv(index=False).encode('utf-8')
 
-#     # Create an in-memory file-like object for CSV data
-#     csv_io = BytesIO(csv_data)
+    # Create an in-memory file-like object for CSV data
+    csv_io = BytesIO(csv_data)
 
-#     # Serve the CSV file for download
-#     return send_file(
-#         csv_io,
-#         mimetype='text/csv',
-#         as_attachment=True,
-#         download_name='model.csv'
-#     )
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='model.csv'
+    )
 
 
 
