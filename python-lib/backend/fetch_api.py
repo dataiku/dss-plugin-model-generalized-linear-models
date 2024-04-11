@@ -88,7 +88,7 @@ def get_data():
     try:
         logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
-        model = request_json["id"]
+        full_model_id = request_json["id"]
         
         logger.info(f"Model ID received: {model_id}")
 
