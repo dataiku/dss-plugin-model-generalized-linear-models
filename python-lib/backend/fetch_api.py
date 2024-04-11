@@ -22,10 +22,7 @@ global_dku_mltask = saved_model.get_origin_ml_task()
 model_deployer = ModelDeployer(global_dku_mltask, saved_model_id)
 model_handler = ModelHandler(saved_model_id)
 
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
+from backend.logging_settings import logger
 
 
 @fetch_api.route("/models", methods=["GET"])
