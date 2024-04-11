@@ -281,8 +281,8 @@ class ModelHandler:
             pd.DataFrame: The input DataFrame with additional columns for the cumulative sum
                           and binning information based on exposure.
         """
-        print.info(f"Pandas version is {pd.__version__}")
-        print.info(f"data is type {type(data)}")
+        print(f"Pandas version is {pd.__version__}")
+        print(f"data is type {type(data)}")
         tempdata = data.sort_values(by='prediction', ascending=True)
         tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
         return tempdata
