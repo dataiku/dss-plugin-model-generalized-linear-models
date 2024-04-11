@@ -30,11 +30,9 @@ logger = logging.getLogger(__name__)
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
-    # Ensure that global_dku_mltask is accessible and has been initialized
     if global_dku_mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
-        # Assuming global_dku_mltask has a method to return trained model IDs
         models = format_models(global_dku_mltask)
         return jsonify(models)
     except Exception as e:
@@ -78,7 +76,7 @@ def get_variables():
 
     
     return jsonify(variables)
-# local config
+# local dev
 #     return jsonify(dummy_variables)
 
 
@@ -101,6 +99,7 @@ def get_data():
         logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
+#     local dev
     #     return jsonify(dummy_df_data.to_dict('records'))
     
     except Exception as e:
@@ -111,15 +110,24 @@ def get_data():
 
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
+    logger.info("Received a new request for lift chart data.")
     request_json = request.get_json()
     print(request_json)
     model = request_json["id"]
-    glm_handler.model_handler.switch_model(model)
-    lift_chart = glm_handler.model_handler.get_lift_chart(8)
-    df = lift_chart.copy()
-    print(df)
-    df.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
-    return jsonify(df.to_dict('records'))
+    
+    logger.info(f"Model ID received: {full_model_id}")
+
+    model_deployer.set_new_active_version(full_model_id)
+    model_handler.update_active_version()
+    logger.info(f"Model {full_model_id} is now the active version.")
+    
+    
+    lift_chart = model_handler.get_lift_chart(8)
+    lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
+    
+    return jsonify(lift_chart.to_dict('records'))
+#     local dev
 #     return jsonify(dummy_lift_data.to_dict('records'))
      
 
