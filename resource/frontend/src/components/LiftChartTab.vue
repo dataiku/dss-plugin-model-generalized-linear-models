@@ -23,7 +23,7 @@
             <BsDrawer>
               <VariableSelect
                   :modelValue="selectedModelString"
-                  :options="modelsString"
+                  :all-options="modelsString"
                   @update:modelValue="updateModelString"
                   label="Select a model"
                   helpMessage="Charts will be generated with respect to this model"

@@ -1,5 +1,5 @@
 <template>
-    <BsLayoutDefault ref="layout">
+    <BsLayoutDefault ref="layout" :left-panel-width="350">
       <ModelTrainingTab>
       </ModelTrainingTab>
       <OneWayTab>
