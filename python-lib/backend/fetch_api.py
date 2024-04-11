@@ -113,7 +113,7 @@ def get_lift_data():
     logger.info("Received a new request for lift chart data.")
     request_json = request.get_json()
     print(request_json)
-    model = request_json["id"]
+    full_model_id = request_json["id"]
     
     logger.info(f"Model ID received: {full_model_id}")
 
