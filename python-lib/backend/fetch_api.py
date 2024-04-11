@@ -85,17 +85,28 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
-#     request_json = request.get_json()
-#     model = request_json["id"]
+    try:
+        logger.info("Received a new request for data prediction.")
+        request_json = request.get_json()
+        model = request_json["id"]
+        
+        logger.info(f"Model ID received: {model_id}")
+
+        model_deployer.set_new_active_version(full_model_id)
+        model_handler.update_active_version()
+        logger.info(f"Model {model_id} is now the active version.")
+
+        predicted_base = model_handler.get_predicted_and_base()
+        predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+        logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
+        
+        return jsonify(predicted_base.to_dict('records'))
     
-#     model_deployer.set_new_active_version(full_model_id)
-#     model_handler.update_active_version()
-    
-#     predicted_base = model_handler.get_predicted_and_base()
-#     predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-#     return jsonify(predicted_base.to_dict('records'))
- local config
-    return jsonify(dummy_df_data.to_dict('records'))
+    except Exception as e:
+        logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
+        return jsonify({"error": "An error occurred during data processing."}), 500
+
+#     return jsonify(dummy_df_data.to_dict('records'))
 
 # @fetch_api.route("/lift_data", methods=["POST"])
 # def get_lift_data():
