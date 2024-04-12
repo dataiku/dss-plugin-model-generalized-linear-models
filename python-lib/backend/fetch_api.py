@@ -240,7 +240,7 @@ def export_model():
 #     model_handler.update_active_version()
     
 #     df = model_handler.get_relativities_df()
-    relativities_dict = glm_handler.model_handler.relativities
+    relativities_dict = model_handler.relativities
     
     nb_col = (len(relativities_dict.keys()) - 1) * 3
     variables = [col for col in relativities_dict.keys() if col != "base"]
