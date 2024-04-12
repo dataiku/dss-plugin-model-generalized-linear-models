@@ -170,6 +170,7 @@ def get_variable_level_stats():
     
     model_handler.update_active_version()
     df = model_handler.get_variable_level_stats()
+    print(df)
     df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
     print(df)
     return jsonify(df.to_dict('records'))
