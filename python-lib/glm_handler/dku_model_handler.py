@@ -253,7 +253,7 @@ class ModelHandler:
         coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
         
-        variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
+        variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
         variable_stats.drop('variable', axis=1, inplace=True)
         
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
