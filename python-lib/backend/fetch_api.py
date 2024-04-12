@@ -164,8 +164,13 @@ def get_relativities():
 @fetch_api.route("/get_variable_level_stats", methods=["POST"])
 def get_variable_level_stats():
     print("variable level stats")
-    # request_json = request.get_json()
-    # model = request_json["id"]
+    request_json = request.get_json()
+    model = request_json["id"]
+    
+    df = model_handler.get_variable_level_stats()
+    df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
+    print(df)
+    return jsonify(df.to_dict('records'))
     # df = relativities
     # df.columns = ['variable', 'category', 'relativity']
     # return jsonify(df.to_dict('records'))
