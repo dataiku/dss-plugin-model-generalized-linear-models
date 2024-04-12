@@ -252,6 +252,7 @@ class ModelHandler:
         coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
         
         variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
+        variable_stats.drop('variable', axis=1, inplace=True)
         
         return variable_stats
 
