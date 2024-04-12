@@ -362,7 +362,6 @@ class ModelHandler:
         """
         train_set = self.get_model_predictions_on_train()
         train_set_df = pd.DataFrame(train_set)
-        print(train_set_df.head())
         
         tempdata = self.sort_and_cumsum_exposure(train_set_df)
         binned_data = self.bin_data(tempdata, nb_bins)
