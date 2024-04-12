@@ -245,7 +245,8 @@ class ModelHandler:
         return predicted_base_df
 
     def get_variable_level_stats(self):
-        predicted = self.get_predicted_and_base()['feature', 'category', 'exposure']
+        predicted = self.get_predicted_and_base()
+        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
         
         coef_table = self.predictor._clf.coef_table.reset_index()
