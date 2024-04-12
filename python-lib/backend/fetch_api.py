@@ -163,6 +163,7 @@ def get_relativities():
 
 @fetch_api.route("/get_variable_level_stats", methods=["POST"])
 def get_variable_level_stats():
+    print("variable level stats")
     # request_json = request.get_json()
     # model = request_json["id"]
     # df = relativities
