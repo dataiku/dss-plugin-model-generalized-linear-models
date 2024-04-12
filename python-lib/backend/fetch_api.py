@@ -30,6 +30,7 @@ model_handler = ModelHandler(saved_model_id)
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
+    print(saved_model_id)
     if global_dku_mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
