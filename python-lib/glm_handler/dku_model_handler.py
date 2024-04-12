@@ -245,7 +245,7 @@ class ModelHandler:
         return predicted_base_df
 
     def get_variable_level_stats(self):
-        self.get_predicted_and_base()
+        predicted = self.get_predicted_and_base()['feature', 'category', 'exposure']
         relativities = self.get_relativities_df()
         
         coef_table = self.predictor._clf.coef_table.reset_index()
@@ -254,7 +254,12 @@ class ModelHandler:
         variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
         variable_stats.drop('variable', axis=1, inplace=True)
         
-        return variable_stats
+        predicted
+        
+        variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
+        variable_level_stats.drop('category', axis=1, inplace=True)
+        
+        return variable_level_stats
 
     def get_coefficients(self):
         """
