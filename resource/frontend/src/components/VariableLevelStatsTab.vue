@@ -32,7 +32,14 @@
                   @update:modelValue="updateModelString"
                   style="min-width: 250px">
               </BsSelect>
-                  <BsButton class="bs-btn dku-text" unelevated @click="onClick">Export</BsButton>
+              <div v-if="selectedModelString" class="button-container">
+                  <BsButton class="bs-primary-button" 
+                  unelevated
+                  dense
+                  no-caps
+                  padding="4"
+                  @click="onClick">Export</BsButton>
+                </div>
                 </div>
                 <BsButton
                     flat
@@ -228,8 +235,8 @@ header {
   margin: 0 auto 2rem;
 }
 
-.bs-btn {
-  margin-top: 12px;
+.button-container {
+  margin-top: 12px
 }
 
 @media (min-width: 1024px) {

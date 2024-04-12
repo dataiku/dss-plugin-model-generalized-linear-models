@@ -21,6 +21,7 @@
                 </BsButton>
             </BsHeader>
             <BsDrawer>
+              <div class="variable-select-container">
               <BsLabel
                   label="Select a model"
                   info-text="Charts will be generated with respect to this model">
@@ -31,6 +32,7 @@
                   @update:modelValue="updateModelString"
                   style="min-width: 250px">
               </BsSelect>
+            </div>
                 <BsButton
                     flat
                     round
@@ -174,4 +176,9 @@ header {
     position: relative;
     top: 4px;
 }
+
+.variable-select-container {
+    padding: 20px;
+}
+
 </style>

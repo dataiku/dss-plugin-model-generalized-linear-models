@@ -11,7 +11,9 @@
         </BsButton>
     </BsHeader>
     <BsDrawer>
-        <h5 class="h5-spacing">Model Parameters</h5>
+        <BsCollapsiblePanel
+        title="Model Parameters">
+        <!-- <h5 class="h5-spacing">Model Parameters</h5> -->
         <div class="variable-select-container">
             <BsLabel
                     label="Select a Distribution Function"
@@ -34,7 +36,9 @@
                 style="min-width: 150px">
             </BsSelect>
         </div>
-        <h5 class="h5-spacing">Custom Variables</h5>
+         </BsCollapsiblePanel>
+         <BsCollapsiblePanel
+        title="Custom Variables">
         <div class="variable-select-container">
         <BsLabel
                 label="Select a Target Variable"
@@ -58,6 +62,10 @@
         </BsSelect>
 
         </div>
+        </BsCollapsiblePanel>
+        <BsCollapsiblePanel
+        title="Model Training"
+        >
         <div class="model-name-input-container">
             <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
             <input
@@ -70,7 +78,7 @@
         <q-btn color="primary" class="q-mt-md" label="Train Model" @click="submitVariables"></q-btn>
         
         </div>
-        
+        </BsCollapsiblePanel>
 
         <BsButton
             flat

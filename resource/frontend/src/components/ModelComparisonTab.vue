@@ -12,7 +12,8 @@
         </BsButton>
     </BsHeader>
     <BsDrawer>
-        <h5 class="h5-spacing">Model Selection</h5>
+        <BsCollapsiblePanel
+        title="Model Selection">
         <div class="variable-select-container">
             <BsLabel
                 label="Select a Model for Comparison"
@@ -35,8 +36,11 @@
                 style="min-width: 250px">
             </BsSelect>
         </div>
-        <h5 class="h5-spacing">Variable Analysis</h5>
-        <div v-if="isVariableSelectEnabled" class="variable-select-container">
+        </BsCollapsiblePanel>
+        <BsCollapsiblePanel
+        title="Variable Analysis"
+        v-if="isVariableSelectEnabled">
+        <div class="variable-select-container">
             <BsLabel
                 label="Select a Variable For Investigation"
                 info-text="Variable to Investigate">
@@ -48,6 +52,7 @@
                 style="min-width: 150px">
             </BsSelect>
         </div>
+        </BsCollapsiblePanel>
     </BsDrawer>
     <BsContent>
         <EmptyState

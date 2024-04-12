@@ -32,14 +32,17 @@
                   @update:modelValue="updateModelString"
                   >
               </BsSelect>
-              <BsCheckbox v-model="includeSuspectVariables" label="Include Suspect Variables">
+              <BsCheckbox v-if="selectedModelString" v-model="includeSuspectVariables" label="Include Suspect Variables">
               </BsCheckbox>
+              <BsLabel v-if="selectedModelString"
+                  label="Select a Variable"
+                  info-text="Charts will be generated with respect to this variable">
+               </BsLabel>
                 <BsSelect
-                  v-if="selectedModel"
+                  v-if="selectedModelString"
                       v-model="selectedVariable"
                       :all-options="variablePoints"
-                      @update:modelValue="updateVariable"
-                      bsLabel="Select a Variable">
+                      @update:modelValue="updateVariable">
                       <!-- <template v-slot:selected>{{ selectedVariable.variable }}</template> -->
                       <template v-slot:selected-item="scope">
                         <q-item v-if="scope.opt">
@@ -58,7 +61,7 @@
                               </q-item>
                         </template>
                   </BsSelect>
-                  <div class="button-container">
+                  <div v-if="selectedModelString" class="button-container">
                   <BsButton class="bs-primary-button" 
                   unelevated
                   dense
@@ -181,9 +184,7 @@ export default defineComponent({
             relativities: rows,
             relativitiesColumns: columns,
             inModelOnly: true,
-            // nbBins: 20,
             includeSuspectVariables: true,
-            // binVariable: false,
         };
     },
     watch: {
