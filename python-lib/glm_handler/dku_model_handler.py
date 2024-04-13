@@ -177,131 +177,63 @@ class ModelHandler:
         rel_df = rel_df.append({'feature': 'base', 'value': 'base', 'relativity': self.relativities['base']['base']}, ignore_index=True)
         return rel_df
 
-    def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
-
-        
-        test_set = self.model_info_handler.get_test_df()[0].copy()
-        predicted = self.predictor.predict(test_set)
-        test_set['predicted'] = predicted
-        used_features = list(self.base_values.keys())
-
-        if self.exposure is None:
-            test_set['weight'] = 1
-        else:
-            test_set['weight'] = test_set[self.exposure]
-        
-        test_set['weighted_target'] = test_set[self.target] * test_set['weight']
-        test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
-        
-        # Compute base predictions
-        base_data = dict()
-        copy_test_df = test_set.copy()
-        for other_feature in [col for col in used_features if col != feature]:
-            copy_test_df[other_feature] = self.base_values[other_feature]
-        predictions = self.predictor.predict(copy_test_df)
-        if class_map is not None:  # classification
-            base_data[feature] = pd.Series([class_map[prediction] for prediction in predictions['prediction']])
-        else:
-            base_data[feature] = predictions
-
-        # compile predictions
-        base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
-        base_predictions.columns = ['base_' + feature]
-        
-        test_set = pd.concat([test_set, base_predictions], axis=1)
-
-        test_set['base_' + feature] = test_set['base_' + feature] * test_set['weight']
-        
-        test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
-        
-        predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
-                        {'weighted_target': 'sum',
-                        'weighted_predicted': 'sum',
-                        'weight': 'sum',
-                        'weighted_base': 'sum'}).reset_index()}
-        
-        predicted_base[feature]['weighted_target'] = predicted_base[feature]['weighted_target'] / predicted_base[feature][
-            'weight']
-        predicted_base[feature]['weighted_predicted'] = predicted_base[feature]['weighted_predicted'] / \
-                                                    predicted_base[feature]['weight']
-        predicted_base[feature]['weighted_base'] = predicted_base[feature]['weighted_base'] / predicted_base[feature]['weight']
-
-        predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
-        
-        predicted_base_df = predicted_base[feature]
-        predicted_base_df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
-        predicted_base_df['feature'] = feature
-        self.predicted_base_df = self.predicted_base_df[self.predicted_base_df['feature']!=feature]
-        self.predicted_base_df = self.predicted_base_df.append(predicted_base_df)
-        
-        return self.predicted_base_df
-    
     def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
         self.compute_base_values()
+        test_set = self.prepare_test_dataset()
+        self.predict_test_data(test_set)
+        base_predictions = self.compute_base_predictions(test_set, class_map)
+        self.bin_numeric_features(test_set, nb_bins_numerical)
+        return self.aggregate_predictions(test_set, base_predictions)
+    
+    def prepare_test_dataset(self):
         test_set = self.model_info_handler.get_test_df()[0].copy()
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted
-        used_features = list(self.base_values.keys())
-        
         if self.exposure is None:
             test_set['weight'] = 1
         else:
             test_set['weight'] = test_set[self.exposure]
-        
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
-        
-        # Compute base predictions
-        base_data = dict()
+        return test_set
+
+    def compute_base_predictions(self, test_set, class_map):
+        base_data = {}
         for feature in self.non_excluded_features:
             copy_test_df = test_set.copy()
-            for other_feature in [col for col in used_features if col != feature]:
+            for other_feature in [col for col in self.used_features if col != feature]:
                 copy_test_df[other_feature] = self.base_values[other_feature]
             predictions = self.predictor.predict(copy_test_df)
             if class_map is not None:  # classification
-                base_data[feature] = pd.Series([class_map[prediction] for prediction in predictions['prediction']])
+                base_data[feature] = pd.Series([class_map[pred] for pred in predictions['prediction']])
             else:
                 base_data[feature] = predictions
+        return pd.concat([base_data[f] for f in base_data], axis=1, keys=['base_' + f for f in base_data])
 
-        # compile predictions
-        base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
-        base_predictions.columns = ['base_' + feature for feature in self.non_excluded_features]
+    def bin_numeric_features(self, test_set, nb_bins_numerical):
+        for feature in self.non_excluded_features:
+            if self.features[feature]['type'] == 'NUMERIC' and len(test_set[feature].unique()) > nb_bins_numerical:
+                test_set[feature] = pd.cut(test_set[feature], bins=nb_bins_numerical, labels=[(x.left + x.right) / 2 for x in pd.cut(test_set[feature], bins=nb_bins_numerical).categories])
 
+    def aggregate_predictions(self, test_set, base_predictions):
         test_set = pd.concat([test_set, base_predictions], axis=1)
-
-        # Bin columns considered as numeric
         for feature in self.non_excluded_features:
-            if self.features[feature]['type'] == 'NUMERIC':
-                if len(test_set[feature].unique()) > nb_bins_numerical:
-                    test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
-
+            test_set['base_' + feature] *= test_set['weight']
+        result_df = pd.DataFrame()
         for feature in self.non_excluded_features:
-            test_set['base_' + feature] = test_set['base_' + feature] * test_set['weight']
-
-        predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
-                        {'weighted_target': 'sum',
-                        'weighted_predicted': 'sum',
-                        'weight': 'sum',
-                        'weighted_base': 'sum'}).reset_index()
-                                for feature in self.non_excluded_features}
-        
-        for feature in self.non_excluded_features:
-            predicted_base[feature]['weighted_target'] = predicted_base[feature]['weighted_target'] / predicted_base[feature][
-                'weight']
-            predicted_base[feature]['weighted_predicted'] = predicted_base[feature]['weighted_predicted'] / \
-                                                        predicted_base[feature]['weight']
-            predicted_base[feature]['weighted_base'] = predicted_base[feature]['weighted_base'] / predicted_base[feature]['weight']
-        
-        predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
-
-        for feature, df in predicted_base.items():
-            df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
-            df['feature'] = feature
-            predicted_base_df = predicted_base_df.append(df)
-        
-        self.predicted_base_df = predicted_base_df
-        
-        return predicted_base_df
+            grouped = test_set.groupby(feature).agg({
+                'weighted_target': 'sum',
+                'weighted_predicted': 'sum',
+                'weight': 'sum',
+                'base_' + feature: 'sum'
+            }).reset_index()
+            grouped['weighted_target'] /= grouped['weight']
+            grouped['weighted_predicted'] /= grouped['weight']
+            grouped['base_' + feature] /= grouped['weight']
+            grouped.rename(columns={feature: 'category', 'base_' + feature: 'base'}, inplace=True)
+            grouped['feature'] = feature
+            result_df = pd.concat([result_df, grouped], ignore_index=True)
+        return result_df
 
 
    
