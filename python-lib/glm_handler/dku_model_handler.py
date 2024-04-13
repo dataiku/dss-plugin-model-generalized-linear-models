@@ -338,7 +338,7 @@ class ModelHandler:
         binned_data = self.data_handler.bin_data(tempdata, nb_bins)
         
         new_data = train_set.join(binned_data[['bin']], how='inner')
-        lift_chart_data = self.data_processor.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
+        lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
         return lift_chart_data
 
 
