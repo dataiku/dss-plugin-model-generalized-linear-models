@@ -277,22 +277,6 @@ class ModelHandler:
         tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
         return tempdata
 
-
-    def bin_data(self, data, nb_bins):
-        """
-        Bins the data into specified number of bins based on the cumulative sum of exposure.
-
-        Args:
-            data (pd.DataFrame): The DataFrame containing cumulative sum of exposures.
-            nb_bins (int): The number of bins to divide the data into.
-
-        Returns:
-            pd.DataFrame: The input DataFrame with a new column indicating the bin for each row.
-        """
-        bins = [round(x / nb_bins, 8) for x in range(nb_bins + 1)][:-1] + [float("inf")]
-        data['bin'] = pd.cut(data['exposure_cumsum'].round(16), bins=bins, labels=[x + 1 for x in range(nb_bins)])
-        data['bin'] = data['bin'].astype(int)
-        return data
     
     def aggregate_metrics_by_bin(self, data):
         """
