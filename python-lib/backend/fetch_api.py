@@ -187,35 +187,35 @@ def get_variable_level_stats():
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
   
-#     request_json = request.get_json()
-#     print(request_json)
-#     model1, model2 = request_json["model1"], request_json["model2"]
+    request_json = request.get_json()
+    print(request_json)
+    model1, model2 = request_json["model1"], request_json["model2"]
     
-#     model_deployer.set_new_active_version(model1)
-#     model_handler.update_active_version()
-#     logger.info(f"Model {model1} is now the active version.")
-#     model_1_lift_chart = model_handler.get_lift_chart(8)
+    model_deployer.set_new_active_version(model1)
+    model_handler.update_active_version()
+    logger.info(f"Model {model1} is now the active version.")
+    model_1_lift_chart = model_handler.get_lift_chart(8)
     
-#     model_deployer.set_new_active_version(model2)
-#     model_handler.update_active_version()
-#     logger.info(f"Model {model2} is now the active version.")
+    model_deployer.set_new_active_version(model2)
+    model_handler.update_active_version()
+    logger.info(f"Model {model2} is now the active version.")
 
-#     model_2_lift_chart = model_handler.get_lift_chart(8)
+    model_2_lift_chart = model_handler.get_lift_chart(8)
 
     
-#     model_1_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_1_fittedAverage']
-#     model_2_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_2_fittedAverage']
+    model_1_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_1_fittedAverage']
+    model_2_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_2_fittedAverage']
     
-#     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
-#                              on=['observedAverage','Category', 'variable_values'], 
-#                              how='outer')
+    merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
+                             on=['observedAverage','Category', 'variable_values'], 
+                             how='outer')
     
-#     merged_model_stats['exposure'] = 1
+    merged_model_stats['exposure'] = 1
     
-#     return jsonify(merged_model_stats.to_dict('records'))
-# local dev
-    df =get_dummy_model_comparison_data()
-    return jsonify(df.to_dict('records'))
+    return jsonify(merged_model_stats.to_dict('records'))
+# # local dev
+#     df =get_dummy_model_comparison_data()
+#     return jsonify(df.to_dict('records'))
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
