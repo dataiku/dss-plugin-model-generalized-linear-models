@@ -313,7 +313,7 @@ class ModelHandler:
         train_set_df = pd.DataFrame(train_set)
         print(train_set_df.head())
         
-        tempdata = self.data_handler.sort_and_cumsum_exposure(train_set_df)
+        tempdata = self.data_handler.sort_and_cumsum_exposure(train_set_df, self.exposure)
         binned_data = self.data_handler.bin_data(tempdata, nb_bins)
         
         new_data = train_set.join(binned_data[['bin']], how='inner')

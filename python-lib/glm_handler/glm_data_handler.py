@@ -28,7 +28,7 @@ class GlmDataHandler():
         data['bin'] = data['bin'].astype(int)
         return data
 
-    def sort_and_cumsum_exposure(self, data):
+    def sort_and_cumsum_exposure(self, data, exposure):
         """
         Sorts the data by prediction values in ascending order and calculates
         the cumulative sum of exposure, normalized by the total exposure.
@@ -43,5 +43,5 @@ class GlmDataHandler():
         print(f"Pandas version is {pd.__version__}")
         print(f"data is type {type(data)}")
         tempdata = data.sort_values(by='prediction', ascending=True)
-        tempdata['exposure_cumsum'] = tempdata[self.exposure].cumsum() / tempdata[self.exposure].sum()
+        tempdata['exposure_cumsum'] = tempdata[exposure].cumsum() / tempdata[exposure].sum()
         return tempdata
