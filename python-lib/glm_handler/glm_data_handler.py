@@ -91,6 +91,11 @@ class GlmDataHandler():
             predicted_base_df = predicted_base_df.append(df)
         return predicted_base_df
     
+    def bin_numeric_columns(self, test_set, nb_bins_numerical, features, non_excluded_features):
+        for feature in non_excluded_features:
+            if features[feature]['type'] == 'NUMERIC' and len(test_set[feature].unique()) > nb_bins_numerical:
+                test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
+        return test_set
     
     def preprocess_dataframe(self, df, predictor):
         """

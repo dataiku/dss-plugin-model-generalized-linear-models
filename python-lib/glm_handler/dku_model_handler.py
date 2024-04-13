@@ -268,13 +268,6 @@ class ModelHandler:
         base_predictions.columns = ['base_' + feature for feature in self.non_excluded_features]
         return pd.concat([test_set, base_predictions], axis=1)
 
-    def bin_numeric_columns(self, test_set, nb_bins_numerical):
-        for feature in self.non_excluded_features:
-            if self.features[feature]['type'] == 'NUMERIC' and len(test_set[feature].unique()) > nb_bins_numerical:
-                test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
-        return test_set
-
-
 
     def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
         self.compute_base_values()
@@ -282,7 +275,7 @@ class ModelHandler:
         used_features = list(self.base_values.keys())
         base_data = self.compute_base_predictions(test_set, used_features, class_map)
         test_set = self.merge_predictions(test_set, base_data)
-        test_set = self.bin_numeric_columns(test_set, nb_bins_numerical)
+        test_set = self.data_handler.bin_numeric_columns(test_set, nb_bins_numerical,self.features, self.non_excluded_features)
         predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.non_excluded_features)
         predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
         self.predicted_base_df = predicted_base_df
