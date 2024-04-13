@@ -257,33 +257,7 @@ class ModelHandler:
         variable_names = self.predictor._model.clf.column_labels
         return dict(zip(variable_names, coefficients))
 
-
-    
-
-    
-    def aggregate_metrics_by_bin(self, data):
-        """
-        Aggregates and calculates metrics within each bin, including sum of exposures,
-        weighted predictions, and targets, and calculates observed and predicted data metrics.
-
-        Args:
-            data (pd.DataFrame): The DataFrame with predictions, targets, and bin information.
-
-        Returns:
-            pd.DataFrame: A summarized DataFrame with metrics calculated for each bin.
-        """
-        data['weighted_prediction'] = data.prediction * data[self.exposure]
-        data['weighted_target'] = data[self.target] * data[self.exposure]
-        grouped = data.groupby(["bin"]).aggregate({
-            self.exposure: 'sum',
-            'weighted_target': 'sum',
-            'weighted_prediction': 'sum'
-        })
-        grouped['observedData'] = grouped['weighted_target'] / grouped[self.exposure]
-        grouped['predictedData'] = grouped['weighted_prediction'] / grouped[self.exposure]
-        grouped.reset_index(inplace=True)
-        grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
-        return grouped
+   
 
     def get_model_predictions_on_train(self):
         """

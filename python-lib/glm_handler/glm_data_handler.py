@@ -45,3 +45,27 @@ class GlmDataHandler():
         tempdata = data.sort_values(by='prediction', ascending=True)
         tempdata['exposure_cumsum'] = tempdata[exposure].cumsum() / tempdata[exposure].sum()
         return tempdata
+    
+    def aggregate_metrics_by_bin(self, data, exposure, target):
+        """
+        Aggregates and calculates metrics within each bin, including sum of exposures,
+        weighted predictions, and targets, and calculates observed and predicted data metrics.
+
+        Args:
+            data (pd.DataFrame): The DataFrame with predictions, targets, and bin information.
+
+        Returns:
+            pd.DataFrame: A summarized DataFrame with metrics calculated for each bin.
+        """
+        data['weighted_prediction'] = data.prediction * data[self.exposure]
+        data['weighted_target'] = data[target] * data[exposure]
+        grouped = data.groupby(["bin"]).aggregate({
+            exposure: 'sum',
+            'weighted_target': 'sum',
+            'weighted_prediction': 'sum'
+        })
+        grouped['observedData'] = grouped['weighted_target'] / grouped[exposure]
+        grouped['predictedData'] = grouped['weighted_prediction'] / grouped[exposure]
+        grouped.reset_index(inplace=True)
+        grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
+        return grouped
