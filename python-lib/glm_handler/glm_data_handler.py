@@ -69,3 +69,17 @@ class GlmDataHandler():
         grouped.reset_index(inplace=True)
         grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
         return grouped
+    
+    def preprocess_dataframe(self, df, predictor):
+        """
+        Preprocesses a DataFrame using the model's preprocessing steps.
+
+        Args:
+            df (pd.DataFrame): The DataFrame to preprocess.
+
+        Returns:
+            pd.DataFrame: The preprocessed DataFrame.
+        """
+        column_names = predictor.get_features()
+        preprocessed_values = predictor.preprocess(df)[0]
+        return pd.DataFrame(preprocessed_values, columns=column_names)

@@ -307,8 +307,6 @@ class ModelHandler:
         return predicted_base_df
 
 
-   
-
     def get_model_predictions_on_train(self):
         """
         Generates model predictions on the training dataset.
@@ -373,16 +371,3 @@ class ModelHandler:
         else:
             raise ValueError("Invalid dataset type")
 
-    def preprocess_dataframe(self, df):
-        """
-        Preprocesses a DataFrame using the model's preprocessing steps.
-
-        Args:
-            df (pd.DataFrame): The DataFrame to preprocess.
-
-        Returns:
-            pd.DataFrame: The preprocessed DataFrame.
-        """
-        column_names = self.predictor.get_features()
-        preprocessed_values = self.predictor.preprocess(df)[0]
-        return pd.DataFrame(preprocessed_values, columns=column_names)
