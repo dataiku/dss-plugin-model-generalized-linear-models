@@ -187,15 +187,18 @@ class ModelHandler:
     
     def prepare_test_dataset(self):
         test_set = self.model_info_handler.get_test_df()[0].copy()
-        predicted = self.predictor.predict(test_set)
-        test_set['predicted'] = predicted
         if self.exposure is None:
             test_set['weight'] = 1
         else:
             test_set['weight'] = test_set[self.exposure]
+        return test_set
+
+    def predict_test_data(self, test_set):
+        # Predict the outcomes on the test set and assign them to the 'predicted' column
+        predicted = self.predictor.predict(test_set)
+        test_set['predicted'] = predicted
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
-        return test_set
 
     def compute_base_predictions(self, test_set, class_map):
         base_data = {}
