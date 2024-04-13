@@ -14,7 +14,6 @@ class ModelHandler:
     Attributes:
         model_id (str): The ID of the model.
         model (dataiku.Model): The Dataiku model object.
-        predictor (Predictor): The predictor object of the model.
         full_model_id (str): The full model ID of the active model version.
         model_info_handler (PredictionModelInformationHandler): Handler for model information.
     """
@@ -43,9 +42,8 @@ class ModelHandler:
         return dict(zip(variable_names, coefficients))
 
     
-    def update_active_version(self):
-        self.full_model_id = extract_active_fullModelId(self.model.list_versions())
-        self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+    def set_new_active_version(self, full_model_id):
+        self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(full_model_id)
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
         self.compute_features()
@@ -336,7 +334,7 @@ class ModelHandler:
         """
         train_set = self.get_model_predictions_on_train()
         train_set_df = pd.DataFrame(train_set)
-        print(train_set_df.head())
+
         
         tempdata = self.data_handler.sort_and_cumsum_exposure(train_set_df, self.exposure)
         binned_data = self.data_handler.bin_data(tempdata, nb_bins)
