@@ -9,6 +9,6 @@ from backend.logging_settings import logger
 
 
 class GlmDataHandler():
-    def __init__():
+    def __init__(self):
         pass
     
