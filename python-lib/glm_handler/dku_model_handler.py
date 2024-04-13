@@ -61,19 +61,31 @@ class ModelHandler:
           'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} for feature in self.non_excluded_features]
 
     
-    
     def compute_features(self):
+        """ Main method to compute feature configurations. """
+        self.initialize_feature_variables()
+        self.compute_column_roles()
+        self.filter_features()
+
+    def initialize_feature_variables(self):
+        """ Initializes basic variables related to features. """
         self.exposure = None
         self.features = self.model_info_handler.get_per_feature()
+
+    def compute_column_roles(self):
+        """ Computes special columns like exposure and offset columns from modeling params. """
         modeling_params = self.model_info_handler.get_modeling_params()
         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
         if len(self.exposure_columns) > 0:
-            self.exposure = self.exposure_columns[0] # assumes there is only one
+            self.exposure = self.exposure_columns[0]  # assumes there is only one exposure column
+
+    def filter_features(self):
+        """ Filters features based on their importance and role in the model. """
         important_columns = self.offset_columns + self.exposure_columns + [self.target]
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
-        self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='INPUT']
-        self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='REJECT']
+        self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'INPUT']
+        self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
 
     def compute_base_values(self):
         """ Main method to initialize and compute base values. """
@@ -123,13 +135,24 @@ class ModelHandler:
         self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
 
     def get_relativities_df(self):
-        sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
-        self.relativities = {}
+        sample_train_row = self.initialize_baseline()
+        baseline_prediction = self.calculate_baseline_prediction(sample_train_row)
+        self.calculate_relative_predictions(sample_train_row, baseline_prediction)
+        return self.construct_relativities_df()
+
+    def initialize_baseline(self):
+        train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
         for feature in self.base_values.keys():
-            sample_train_row[feature] = self.base_values[feature]
+            train_row[feature] = self.base_values[feature]
         if self.exposure is not None:
-            sample_train_row[self.exposure] = 1
-        baseline_prediction = self.predictor.predict(sample_train_row).iloc[0][0]
+            train_row[self.exposure] = 1
+        return train_row
+
+    def calculate_baseline_prediction(self, sample_train_row):
+        return self.predictor.predict(sample_train_row).iloc[0][0]
+
+    def calculate_relative_predictions(self, sample_train_row, baseline_prediction):
+        self.relativities = {'base': {'base': baseline_prediction}}
         for feature in self.base_values.keys():
             self.relativities[feature] = {self.base_values[feature]: 1.0}
             if self.features[feature]['type'] == 'CATEGORY':    
@@ -137,25 +160,22 @@ class ModelHandler:
                     train_row_copy = sample_train_row.copy()
                     train_row_copy[feature] = modality
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                    self.relativities[feature][modality] = prediction/baseline_prediction
+                    self.relativities[feature][modality] = prediction / baseline_prediction
             else:
                 train_row_copy = sample_train_row.copy()
-                min_value = self.modalities[feature]['min']
-                max_value = self.modalities[feature]['max']
+                min_value, max_value = self.modalities[feature]['min'], self.modalities[feature]['max']
                 for value in np.linspace(min_value, max_value, 10):
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                    self.relativities[feature][value] = prediction/baseline_prediction
-        
-        self.relativities['base'] = {'base': baseline_prediction}
-        self.relativities_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
+                    self.relativities[feature][value] = prediction / baseline_prediction
 
+    def construct_relativities_df(self):
+        rel_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
-                self.relativities_df = self.relativities_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
-        self.relativities_df = self.relativities_df.append({'feature': 'base', 'value': 'base', 'relativity': baseline_prediction}, ignore_index=True)
-        
-        return self.relativities_df
+                rel_df = rel_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
+        rel_df = rel_df.append({'feature': 'base', 'value': 'base', 'relativity': self.relativities['base']['base']}, ignore_index=True)
+        return rel_df
 
     def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
 
