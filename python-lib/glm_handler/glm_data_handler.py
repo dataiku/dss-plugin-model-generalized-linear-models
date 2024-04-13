@@ -83,6 +83,15 @@ class GlmDataHandler():
             predicted_base[feature]['weighted_base'] /= predicted_base[feature]['weight']
         return predicted_base
     
+    def construct_final_dataframe(self, predicted_base):
+        predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
+        for feature, df in predicted_base.items():
+            df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
+            df['feature'] = feature
+            predicted_base_df = predicted_base_df.append(df)
+        return predicted_base_df
+    
+    
     def preprocess_dataframe(self, df, predictor):
         """
         Preprocesses a DataFrame using the model's preprocessing steps.

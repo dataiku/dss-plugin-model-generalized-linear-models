@@ -276,14 +276,6 @@ class ModelHandler:
 
 
 
-    def construct_final_dataframe(self, predicted_base):
-        predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
-        for feature, df in predicted_base.items():
-            df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
-            df['feature'] = feature
-            predicted_base_df = predicted_base_df.append(df)
-        return predicted_base_df
-
     def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
         self.compute_base_values()
         test_set = self.prepare_test_set()
@@ -291,8 +283,8 @@ class ModelHandler:
         base_data = self.compute_base_predictions(test_set, used_features, class_map)
         test_set = self.merge_predictions(test_set, base_data)
         test_set = self.bin_numeric_columns(test_set, nb_bins_numerical)
-        predicted_base = self.calculate_weighted_aggregations(test_set, self.non_excluded_features)
-        predicted_base_df = self.construct_final_dataframe(predicted_base)
+        predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.non_excluded_features)
+        predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
         self.predicted_base_df = predicted_base_df
         return predicted_base_df
 
