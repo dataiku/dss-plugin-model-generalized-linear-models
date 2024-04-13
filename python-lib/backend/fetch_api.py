@@ -190,6 +190,8 @@ def get_model_comparison_data():
     request_json = request.get_json()
     print(request_json)
     model1, model2 = request_json["model1"], request_json["model2"]
+    model1 ="A-SOL_CLAIM_MODELING_1-dba5M0pX-36k7GraX-s1-pp1-m1"
+    model2="A-SOL_CLAIM_MODELING_1-dba5M0pX-36k7GraX-s4-pp1-m1"
     
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
