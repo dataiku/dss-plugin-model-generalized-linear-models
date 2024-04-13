@@ -57,7 +57,7 @@ class GlmDataHandler():
         Returns:
             pd.DataFrame: A summarized DataFrame with metrics calculated for each bin.
         """
-        data['weighted_prediction'] = data.prediction * data[self.exposure]
+        data['weighted_prediction'] = data.prediction * data[exposure]
         data['weighted_target'] = data[target] * data[exposure]
         grouped = data.groupby(["bin"]).aggregate({
             exposure: 'sum',
