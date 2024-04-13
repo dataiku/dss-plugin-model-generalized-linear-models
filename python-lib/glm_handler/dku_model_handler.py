@@ -31,6 +31,18 @@ class ModelHandler:
         self.data_handler = data_handler
         
 
+    def get_coefficients(self):
+        """
+        Retrieves the coefficients of the model predictor.
+
+        Returns:
+            dict: A dictionary mapping variable names to their coefficients.
+        """
+        coefficients = self.predictor._model.clf.coef_
+        variable_names = self.predictor._model.clf.column_labels
+        return dict(zip(variable_names, coefficients))
+
+    
     def update_active_version(self):
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
@@ -245,17 +257,6 @@ class ModelHandler:
         
         return predicted_base_df
 
-
-    def get_coefficients(self):
-        """
-        Retrieves the coefficients of the model predictor.
-
-        Returns:
-            dict: A dictionary mapping variable names to their coefficients.
-        """
-        coefficients = self.predictor._model.clf.coef_
-        variable_names = self.predictor._model.clf.column_labels
-        return dict(zip(variable_names, coefficients))
 
    
 
