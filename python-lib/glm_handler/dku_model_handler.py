@@ -87,11 +87,6 @@ class ModelHandler:
         self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'INPUT']
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
 
-    def compute_base_values(self):
-        """ Main method to initialize and compute base values. """
-        self.initialize_base_values()
-        self.handle_preprocessing()
-        self.compute_numerical_features()
 
     def initialize_base_values(self):
         """ Initializes dictionaries for base values and modalities. """
@@ -119,55 +114,12 @@ class ModelHandler:
             if feature not in self.base_values:
                 self.compute_base_for_feature(feature, train_set)
 
-    def compute_base_for_feature(self, feature, train_set):
-        """ Computes base value for a single feature based on its type and rescaling. """
-        if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
-            self.compute_base_for_numeric_feature(feature, train_set)
-        else:
-            raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
-
-    def compute_base_for_numeric_feature(self, feature, train_set):
-        """ Computes base values for numeric features without rescaling. """
-        if self.exposure is not None:
-            self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
-        else:
-            self.base_values[feature] = train_set[feature].mean()
-        self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
-
     def get_relativities_df(self):
         sample_train_row = self.initialize_baseline()
         baseline_prediction = self.calculate_baseline_prediction(sample_train_row)
         self.calculate_relative_predictions(sample_train_row, baseline_prediction)
         return self.construct_relativities_df()
 
-    def initialize_baseline(self):
-        train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
-        for feature in self.base_values.keys():
-            train_row[feature] = self.base_values[feature]
-        if self.exposure is not None:
-            train_row[self.exposure] = 1
-        return train_row
-
-    def calculate_baseline_prediction(self, sample_train_row):
-        return self.predictor.predict(sample_train_row).iloc[0][0]
-
-    def calculate_relative_predictions(self, sample_train_row, baseline_prediction):
-        self.relativities = {'base': {'base': baseline_prediction}}
-        for feature in self.base_values.keys():
-            self.relativities[feature] = {self.base_values[feature]: 1.0}
-            if self.features[feature]['type'] == 'CATEGORY':    
-                for modality in self.modalities[feature]:
-                    train_row_copy = sample_train_row.copy()
-                    train_row_copy[feature] = modality
-                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                    self.relativities[feature][modality] = prediction / baseline_prediction
-            else:
-                train_row_copy = sample_train_row.copy()
-                min_value, max_value = self.modalities[feature]['min'], self.modalities[feature]['max']
-                for value in np.linspace(min_value, max_value, 10):
-                    train_row_copy[feature] = value
-                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
-                    self.relativities[feature][value] = prediction / baseline_prediction
 
     def construct_relativities_df(self):
         rel_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
@@ -308,8 +260,6 @@ class ModelHandler:
         self.predicted_base_df = predicted_base_df
         return predicted_base_df
 
-
-   
 
     def get_model_predictions_on_train(self):
         """
