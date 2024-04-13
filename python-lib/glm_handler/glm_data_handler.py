@@ -70,6 +70,19 @@ class GlmDataHandler():
         grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
         return grouped
     
+    def calculate_weighted_aggregations(self, test_set, non_excluded_features):
+        predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
+            {'weighted_target': 'sum',
+             'weighted_predicted': 'sum',
+             'weight': 'sum',
+             'weighted_base': 'sum'}).reset_index()
+            for feature in non_excluded_features}
+        for feature in predicted_base:
+            predicted_base[feature]['weighted_target'] /= predicted_base[feature]['weight']
+            predicted_base[feature]['weighted_predicted'] /= predicted_base[feature]['weight']
+            predicted_base[feature]['weighted_base'] /= predicted_base[feature]['weight']
+        return predicted_base
+    
     def preprocess_dataframe(self, df, predictor):
         """
         Preprocesses a DataFrame using the model's preprocessing steps.

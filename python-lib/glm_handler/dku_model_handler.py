@@ -46,6 +46,7 @@ class ModelHandler:
 
     
     def update_active_version(self):
+        
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.predictor = self.model_info_handler.get_predictor()
@@ -273,18 +274,7 @@ class ModelHandler:
                 test_set[feature] = [(x.left + x.right) / 2 if isinstance(x, pd.Interval) else x for x in pd.cut(test_set[feature], bins=nb_bins_numerical)]
         return test_set
 
-    def calculate_weighted_aggregations(self, test_set):
-        predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
-            {'weighted_target': 'sum',
-             'weighted_predicted': 'sum',
-             'weight': 'sum',
-             'weighted_base': 'sum'}).reset_index()
-            for feature in self.non_excluded_features}
-        for feature in predicted_base:
-            predicted_base[feature]['weighted_target'] /= predicted_base[feature]['weight']
-            predicted_base[feature]['weighted_predicted'] /= predicted_base[feature]['weight']
-            predicted_base[feature]['weighted_base'] /= predicted_base[feature]['weight']
-        return predicted_base
+
 
     def construct_final_dataframe(self, predicted_base):
         predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
@@ -301,7 +291,7 @@ class ModelHandler:
         base_data = self.compute_base_predictions(test_set, used_features, class_map)
         test_set = self.merge_predictions(test_set, base_data)
         test_set = self.bin_numeric_columns(test_set, nb_bins_numerical)
-        predicted_base = self.calculate_weighted_aggregations(test_set)
+        predicted_base = self.calculate_weighted_aggregations(test_set, self.non_excluded_features)
         predicted_base_df = self.construct_final_dataframe(predicted_base)
         self.predicted_base_df = predicted_base_df
         return predicted_base_df
