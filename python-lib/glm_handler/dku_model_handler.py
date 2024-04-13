@@ -249,7 +249,7 @@ class ModelHandler:
         return predicted_base_df
 
     def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
-        self.compute_base_values()
+        self.relativities_handler.compute_base_values()
         test_set = self.prepare_test_set()
         used_features = list(self.base_values.keys())
         base_data = self.compute_base_predictions(test_set, used_features, class_map)
