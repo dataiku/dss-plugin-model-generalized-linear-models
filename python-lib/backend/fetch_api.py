@@ -93,7 +93,7 @@ def get_data():
         logger.info(f"Model ID received: {full_model_id}")
 
         model_deployer.set_new_active_version(full_model_id)
-        model_handler.set_new_active_version(full_model_id)
+        model_handler.update_active_version()
         logger.info(f"Model {full_model_id} is now the active version.")
 
         predicted_base = model_handler.get_predicted_and_base()
@@ -119,7 +119,7 @@ def get_lift_data():
     logger.info(f"Model ID received: {full_model_id}")
 
     model_deployer.set_new_active_version(full_model_id)
-    model_handler.set_new_active_version(full_model_id)
+    model_handler.update_active_version()
     logger.info(f"Model {full_model_id} is now the active version.")
     
     
