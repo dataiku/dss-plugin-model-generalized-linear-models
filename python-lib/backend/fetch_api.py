@@ -26,7 +26,7 @@ global_dku_mltask = saved_model.get_origin_ml_task()
 
 data_handler = GlmDataHandler()
 model_deployer = ModelDeployer(global_dku_mltask, saved_model_id)
-model_handler = ModelHandler(saved_model_id,data_handler)
+model_handler = ModelHandler(saved_model_id, data_handler)
 
 
 
@@ -119,7 +119,7 @@ def get_lift_data():
     logger.info(f"Model ID received: {full_model_id}")
 
     model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
+    model_handler.set_new_active_version(full_model_id)
     logger.info(f"Model {full_model_id} is now the active version.")
     
     
