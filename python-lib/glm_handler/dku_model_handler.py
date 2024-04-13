@@ -177,7 +177,7 @@ class ModelHandler:
         rel_df = rel_df.append({'feature': 'base', 'value': 'base', 'relativity': self.relativities['base']['base']}, ignore_index=True)
         return rel_df
 
-  def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
+    def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
 
         
         test_set = self.model_info_handler.get_test_df()[0].copy()
