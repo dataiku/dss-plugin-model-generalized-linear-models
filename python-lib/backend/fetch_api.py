@@ -195,24 +195,24 @@ def get_model_comparison_data():
     
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
-#     logger.info(f"Model {model1} is now the active version.")
-#     model_1_lift_chart = model_handler.get_lift_chart(8)
+    logger.info(f"Model {model1} is now the active version.")
+    model_1_lift_chart = model_handler.get_lift_chart(8)
     
-#     model_deployer.set_new_active_version(model2)
-#     model_handler.update_active_version()
-#     logger.info(f"Model {model2} is now the active version.")
+    model_deployer.set_new_active_version(model2)
+    model_handler.update_active_version()
+    logger.info(f"Model {model2} is now the active version.")
 
-#     model_2_lift_chart = model_handler.get_lift_chart(8)
+    model_2_lift_chart = model_handler.get_lift_chart(8)
 
     
-#     model_1_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_1_fittedAverage']
-#     model_2_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_2_fittedAverage']
+    model_1_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_1_fittedAverage']
+    model_2_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_2_fittedAverage']
     
-#     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
-#                              on=['observedAverage','Category', 'variable_values'], 
-#                              how='outer')
+    merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
+                             on=['observedAverage','Category', 'variable_values'], 
+                             how='outer')
     
-#     merged_model_stats['exposure'] = 1
+    merged_model_stats['exposure'] = 1
     
     return jsonify(merged_model_stats.to_dict('records'))
 # # local dev
