@@ -32,7 +32,40 @@ class ModelHandler:
         self.base_values = {}
         self.modalities = {}
         
+    def calculate_model_metrics():
+        clf = self.model_info_handler.get_clf()
+        predictor = self.model_info_handler.get_predictor()
+        logging.info("Model and predictor retrieved successfully.")
 
+        # Load training data and separate target
+        train_df = self.model_info_handler.get_train_df()[0]
+        y = train_df[self.target]
+        logging.debug("Training DataFrame shape: %s", train_df.shape)
+        logging.debug("Target variable 'ClaimAmount' extracted.")
+
+        # Preprocess features
+        preprocessor = predictor.get_preprocessing()
+        train_df_no_target_exposure = train_df.drop([self.target], axis=1)
+        logging.debug("Dropped 'ClaimAmount' from training DataFrame.")
+
+        X = preprocessor.preprocess(train_df)[0]
+        logging.debug("Features preprocessed. Processed features DataFrame shape: %s", X.shape)
+
+        # Log feature information
+        features = predictor.get_features()
+        logging.info("Features used by the predictor: %s", features)
+
+        # Calculate AIC (Akaike Information Criterion) to check model fit
+        try:
+            aic_value = clf.fitted_model.aic(X, y)
+            logging.info("Calculated AIC: %f", aic_value)
+        except Exception as e:
+            logging.error("Error calculating AIC: %s", str(e))
+            logging.error("Expected feature dimensions: %s, Actual dimensions: %s", clf.fitted_model.coef_.shape[0], X.shape[1])
+            
+        return aic_value
+
+        
     def get_coefficients(self):
         """
         Retrieves the coefficients of the model predictor.

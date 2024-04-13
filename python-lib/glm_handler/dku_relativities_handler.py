@@ -35,5 +35,11 @@ class RelativitiesHandler:
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
         if self.exposure_columns:
             self.exposure = self.exposure_columns[0]  # Assumes there is only one exposure column
-
- 
+            
+    def compute_column_roles(self):
+        """ Computes special columns like exposure and offset columns from modeling params. """
+        modeling_params = self.model_info_handler.get_modeling_params()
+        self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
+        self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
+        if len(self.exposure_columns) > 0:
+            self.exposure = self.exposure_columns[0]  # assumes there is only one exposure column
