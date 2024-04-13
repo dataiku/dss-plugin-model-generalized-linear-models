@@ -60,6 +60,8 @@ class ModelHandler:
           'isInModel': self.features[feature]['role']=='INPUT', 
           'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} for feature in self.non_excluded_features]
 
+    
+    
     def compute_features(self):
         self.exposure = None
         self.features = self.model_info_handler.get_per_feature()
@@ -74,27 +76,51 @@ class ModelHandler:
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role']=='REJECT']
 
     def compute_base_values(self):
-        self.base_values = dict()
-        self.modalities = dict()
+        """ Main method to initialize and compute base values. """
+        self.initialize_base_values()
+        self.handle_preprocessing()
+        self.compute_numerical_features()
+
+    def initialize_base_values(self):
+        """ Initializes dictionaries for base values and modalities. """
+        self.base_values = {}
+        self.modalities = {}
+
+    def handle_preprocessing(self):
+        """ Processes each step in the preprocessing pipeline. """
         preprocessing = self.predictor.get_preprocessing()
-        train_set = self.model_info_handler.get_train_df()[0].copy()
         for step in preprocessing.pipeline.steps:
-            try:
-                self.base_values[step.input_col] = step.processor.mode_column
-                self.modalities[step.input_col] = step.processor.modalities
-            except AttributeError:
-                pass
+            self.process_preprocessing_step(step)
+
+    def process_preprocessing_step(self, step):
+        """ Processes a single preprocessing step to extract base values and modalities. """
+        try:
+            self.base_values[step.input_col] = step.processor.mode_column
+            self.modalities[step.input_col] = step.processor.modalities
+        except AttributeError:
+            pass
+
+    def compute_numerical_features(self):
+        """ Computes base values for numerical features not handled in preprocessing. """
+        train_set = self.model_info_handler.get_train_df()[0].copy()
         for feature in self.used_features:
-            if feature not in self.base_values.keys():
-                # feature has to be numerical unscaled
-                if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
-                    if self.exposure is not None:
-                        self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
-                    else:
-                        self.base_values[feature] = train_set[feature].mean()
-                    self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
-                else:
-                    raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
+            if feature not in self.base_values:
+                self.compute_base_for_feature(feature, train_set)
+
+    def compute_base_for_feature(self, feature, train_set):
+        """ Computes base value for a single feature based on its type and rescaling. """
+        if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
+            self.compute_base_for_numeric_feature(feature, train_set)
+        else:
+            raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
+
+    def compute_base_for_numeric_feature(self, feature, train_set):
+        """ Computes base values for numeric features without rescaling. """
+        if self.exposure is not None:
+            self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
+        else:
+            self.base_values[feature] = train_set[feature].mean()
+        self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
 
     def get_relativities_df(self):
         sample_train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
