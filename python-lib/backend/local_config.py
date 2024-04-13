@@ -2,6 +2,7 @@ from backend.dataiku_api import dataiku_api
 from logging.config import dictConfig
 import os
 import pandas as pd
+import numpy as np
 # Replace by your default project key that you are working on in dev
 DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING"
 
