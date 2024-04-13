@@ -19,7 +19,7 @@ class ModelHandler:
         model_info_handler (PredictionModelInformationHandler): Handler for model information.
     """
 
-    def __init__(self, model_id):
+    def __init__(self, model_id, data_handler):
         """
         Initializes the ModelHandler with a specific model ID.
 
@@ -28,6 +28,7 @@ class ModelHandler:
         """
         self.model_id = model_id
         self.model = dataiku.Model(model_id)
+        self.data_handler = data_handler
         
 
     def update_active_version(self):
