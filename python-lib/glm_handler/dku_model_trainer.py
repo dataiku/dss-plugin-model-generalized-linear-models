@@ -382,7 +382,7 @@ class DataikuMLTask:
 #         self.mltask.deploy_to_flow(model_id, self.dku_model_obj.get_name(), self.input_dataset)
         self.mltask.redeploy_to_flow(model_id, saved_model_id=self.saved_model_id)
         logger.info(f"Model {model_id} deployed successfully.")
-
+    
     def train_model(self, code_env_string, session_name=None):
         """
         Trains the model with the current configuration and then deploys it.
