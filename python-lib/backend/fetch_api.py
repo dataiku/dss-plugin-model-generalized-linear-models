@@ -54,7 +54,7 @@ def get_variables():
     request_json = request.get_json()
     full_model_id = request_json["id"]
     web_app_config = get_webapp_config()
-
+    
     
     model_deployer.set_new_active_version(full_model_id)
     model_handler.update_active_version()
