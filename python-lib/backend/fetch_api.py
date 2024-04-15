@@ -215,9 +215,11 @@ def get_model_comparison_data():
     merged_model_stats['exposure'] = 1
     
     return jsonify(merged_model_stats.to_dict('records'))
+
 # # local dev
 #     df =get_dummy_model_comparison_data()
 #     return jsonify(df.to_dict('records'))
+
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():

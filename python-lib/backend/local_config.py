@@ -4,9 +4,10 @@ import os
 import pandas as pd
 import numpy as np
 # Replace by your default project key that you are working on in dev
-DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING"
+DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING_1"
 
 # TODO : Add dip_home to a .env file
+
 CONFIG = {
     # put your webapp desired config
     "webapp_config": {
@@ -15,6 +16,7 @@ CONFIG = {
     "default_project_key": DEFAULT_PROJECT_KEY,
     "training_dataset_string": "claim_train",
 }
+
 
 os.environ["DKU_CURRENT_PROJECT_KEY"] = CONFIG.get("default_project_key")
 
@@ -25,6 +27,8 @@ def get_setup_for_dataiku_client():
         "default_project_key": CONFIG.get("default_project_key"),
         "training_dataset_string": CONFIG.get("claim_train")
     }
+
+DKU_CUSTOM_WEBAPP_CONFIG='{"saved_model_id": "U4TLlapA","training_dataset_string": "claim_train","code_env_string": "anotherValue"}'
 
 
 dictConfig(
