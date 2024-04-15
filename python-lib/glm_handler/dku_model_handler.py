@@ -315,7 +315,26 @@ class ModelHandler:
         lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
         return lift_chart_data
 
-
+    def get_variable_level_stats(self):
+        predicted = self.get_predicted_and_base()
+        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+        relativities = self.get_relativities_df()
+        
+        coef_table = self.predictor._clf.coef_table.reset_index()
+        coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
+        coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
+        
+        variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
+        variable_stats.drop('variable', axis=1, inplace=True)
+        
+        predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
+        predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
+        
+        variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
+        variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
+        
+        return variable_level_stats
+        
     def get_link_function(self):
         """
         Retrieves the link function of the original model as a statsmodel object
