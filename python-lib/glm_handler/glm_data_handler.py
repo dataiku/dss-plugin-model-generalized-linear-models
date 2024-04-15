@@ -1,5 +1,4 @@
 import dataiku
-from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
 import pandas as pd
 import numpy as np
 from dataiku import pandasutils as pdu

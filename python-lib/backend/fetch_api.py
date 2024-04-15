@@ -186,6 +186,9 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
+    # local dev
+    df =get_dummy_model_comparison_data()
+    return jsonify(df.to_dict('records'))
   
     request_json = request.get_json()
     print(request_json)
@@ -215,9 +218,7 @@ def get_model_comparison_data():
     current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
     return jsonify(merged_model_stats.to_dict('records'))
 
-# # local dev
-#     df =get_dummy_model_comparison_data()
-#     return jsonify(df.to_dict('records'))
+
 
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])

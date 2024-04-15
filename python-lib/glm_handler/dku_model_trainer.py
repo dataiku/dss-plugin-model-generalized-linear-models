@@ -2,12 +2,10 @@ import dataiku
 from dataiku import pandasutils as pdu
 import pandas as pd
 import logging
-from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
+# from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
 from dataikuapi.dss.ml import DSSMLTask
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-
 logger = logging.getLogger(__name__)
 
 class DataikuMLTask:
@@ -17,7 +15,7 @@ class DataikuMLTask:
     Attributes:
         input_dataset (str): The name of the input dataset.
         distribution_function (str): The distribution function used for the ML task.
-        link_function (str): The link function used in conjunction with the distribution function.
+        link_function (str): The    link function used in conjunction with the distribution function.
         variables (list): A list of dictionaries, each representing a variable and its properties.
         client: Instance of the Dataiku API client.
         project: The default project from the Dataiku API client.
