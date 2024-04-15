@@ -92,7 +92,6 @@ class ModelHandler:
 
     def compute_base_values(self):
         """ Main method to initialize and compute base values. """
-        self.initialize_base_values()
         self.handle_preprocessing()
         self.compute_numerical_features()
 
