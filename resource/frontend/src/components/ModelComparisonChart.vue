@@ -71,20 +71,13 @@
                         nameGap: 30,
                         position: 'left',
                     },
-                    {
-                        type: "value",
-                        name: 'Exposure',
-                        nameLocation: 'center',
-                        nameGap: 30,
-                        position: 'right',
-                        // Optional: If you want to align the zero points of both y-axes
-                        axisLine: {
-                            show: true
-                        },
-                        axisLabel: {
-                            show: true
-                        }
-                    }
+                {
+                    type: "value",
+                    name: 'Exposure',
+                    nameLocation: 'center',
+                    nameGap: 30,
+                    position: 'right', // Use the right side for the exposure axis
+                }   
                 ],
 
 
@@ -114,6 +107,16 @@
                         color: "#FFD700",
                     },
                     
+                },
+                {
+                    name: "Exposure",
+                    type: "bar",
+                    yAxisIndex: 1, // This tells ECharts to use the second y-axis for this series
+                    data: this.exposures,
+                    itemStyle: {
+                        color: "#D9D8D6", // Choose a color that stands out but harmonizes with the chart
+                    },
+                    showInLegend: false
                 },
                 // Optionally, represent Exposure by bar size or color here
             ],

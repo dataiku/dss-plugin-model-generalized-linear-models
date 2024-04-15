@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
@@ -39,7 +39,7 @@ def get_models():
         models = format_models(global_dku_mltask)
         return jsonify(models)
     except Exception as e:
-        logger.exception("An error occurred while retrieving models")
+        current_app.logger.exception("An error occurred while retrieving models")
         return jsonify({'error': str(e)}), 500
     return jsonify(models)
 # For local dev
@@ -73,9 +73,9 @@ def get_variables():
             raise ValueError("variables returned None.")
 
     except ValueError as e:
-        logging.error(f"Validation Error: {e}")
+        current_app.logger.error(f"Validation Error: {e}")
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        current_app.logger.error(f"An error occurred: {e}")
     
     return jsonify(variables)
 # local dev
@@ -86,46 +86,46 @@ def get_variables():
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
     try:
-        logger.info("Received a new request for data prediction.")
+        current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         full_model_id = request_json["id"]
         
-        logger.info(f"Model ID received: {full_model_id}")
+        current_app.logger.info(f"Model ID received: {full_model_id}")
 
         model_deployer.set_new_active_version(full_model_id)
         model_handler.update_active_version()
-        logger.info(f"Model {full_model_id} is now the active version.")
+        current_app.logger.info(f"Model {full_model_id} is now the active version.")
 
         predicted_base = model_handler.get_predicted_and_base()
         predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-        logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
+        current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
 #     local dev
         return jsonify(dummy_df_data.to_dict('records'))
     
     except Exception as e:
-        logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
+        current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
         return jsonify({"error": "An error occurred during data processing."}), 500
 
 
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
-    logger.info("Received a new request for lift chart data.")
+    current_app.logger.info("Received a new request for lift chart data.")
     request_json = request.get_json()
     print(request_json)
     full_model_id = request_json["id"]
     
-    logger.info(f"Model ID received: {full_model_id}")
+    current_app.logger.info(f"Model ID received: {full_model_id}")
 
     model_deployer.set_new_active_version(full_model_id)
     model_handler.update_active_version()
-    logger.info(f"Model {full_model_id} is now the active version.")
+    current_app.logger.info(f"Model {full_model_id} is now the active version.")
     
     
     lift_chart = model_handler.get_lift_chart(8)
     lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
-    logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
+    current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
 #     local dev
@@ -153,7 +153,7 @@ def get_relativities():
     request_json = request.get_json()
     full_model_id = request_json["id"]
     
-    logger.info(f"Model ID received: {full_model_id}")
+    current_app.logger.info(f"Model ID received: {full_model_id}")
 
     model_deployer.set_new_active_version(full_model_id)
     model_handler.update_active_version()
@@ -186,39 +186,39 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
+    # local dev
+    df =get_dummy_model_comparison_data()
+    return jsonify(df.to_dict('records'))
   
     request_json = request.get_json()
     print(request_json)
     model1, model2 = request_json["model1"], request_json["model2"]
-    model1 ="A-SOL_CLAIM_MODELING_1-yifJ5kIw-RhJJw3L0-s10-pp1-m1"
-    model2="A-SOL_CLAIM_MODELING_1-yifJ5kIw-RhJJw3L0-s10-pp1-m1"
+
     
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
-    logger.info(f"Model {model1} is now the active version.")
+    current_app.logger.info(f"Model {model1} is now the active version.")
     model_1_lift_chart = model_handler.get_lift_chart(8)
+    current_app.logger.info(f"Model {model1} lift chart is {model_1_lift_chart.to_string()}")
     
     model_deployer.set_new_active_version(model2)
     model_handler.update_active_version()
-    logger.info(f"Model {model2} is now the active version.")
+    current_app.logger.info(f"Model {model2} is now the active version.")
 
     model_2_lift_chart = model_handler.get_lift_chart(8)
-
+    current_app.logger.info(f"Model {model2} lift chart is {model_2_lift_chart.to_string()}")
     
-    model_1_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_1_fittedAverage']
-    model_2_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_2_fittedAverage']
+    model_1_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_1_fittedAverage']
+    model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
     
     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
-                             on=['observedAverage','Category', 'variable_values'], 
+                             on=['observedAverage','Category', 'exposure'], 
                              how='outer')
     
-    merged_model_stats['exposure'] = 1
-    
+    current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
     return jsonify(merged_model_stats.to_dict('records'))
 
-# # local dev
-#     df =get_dummy_model_comparison_data()
-#     return jsonify(df.to_dict('records'))
+
 
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
@@ -291,7 +291,7 @@ def train_model():
     global global_dku_mltask
     
     request_json = request.get_json()
-    logging.info(f"Received a model training request: {request_json}")
+    current_app.logger.info(f"Received a model training request: {request_json}")
     
     try: 
         web_app_config = get_webapp_config()
@@ -303,14 +303,14 @@ def train_model():
         input_dataset = "claim_train"
         code_env_string="py39_sol"
         
-    logging.info(f"Training Dataset name selected is: {input_dataset}") 
+    current_app.logger.info(f"Training Dataset name selected is: {input_dataset}") 
     
     distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
     link_function = request_json.get('model_parameters', {}).get('link_function')
     model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
     variables = request_json.get('variables')
 
-    logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
+    current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
     params = {
         "input_dataset": input_dataset,
         "distribution_function": distribution_function,
@@ -321,39 +321,39 @@ def train_model():
     missing_params = [key for key, value in params.items() if not value]
     if missing_params:
         missing_str = ", ".join(missing_params)
-        logger.error(f"Missing parameters in the request: {missing_str}")
+        current_app.logger.error(f"Missing parameters in the request: {missing_str}")
         return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
 
     try:
         if global_dku_mltask:
-            logger.info("Utilising an existing ML Task at the API")
+            current_app.logger.info("Utilising an existing ML Task at the API")
             
             DkuMLTask = global_dku_mltask
 
         else: #First initialisation 
-            logger.info("Initalising an new ML Task at the API")
+            current_app.logger.info("Initalising an new ML Task at the API")
             DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
             global_dku_mltask = DkuMLTask
             
         DkuMLTask.update_parameters(distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
-        logger.debug("Visual ML task created successfully")
+        current_app.logger.debug("Visual ML task created successfully")
 
         DkuMLTask.enable_glm_algorithm()
-        logger.debug("GLM algorithm enabled successfully")
+        current_app.logger.debug("GLM algorithm enabled successfully")
 
         settings = DkuMLTask.test_settings()
         settings_new = DkuMLTask.configure_variables()
-        logger.debug("Model settings configured successfully")
+        current_app.logger.debug("Model settings configured successfully")
 
         DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
         
         
-        logger.info("Model training initiated successfully")
+        current_app.logger.info("Model training initiated successfully")
         
         return jsonify({'message': 'Model training initiated successfully.'}), 200
     except Exception as e:
-        logger.exception("An error occurred during model training")
+        current_app.logger.exception("An error occurred during model training")
         return jsonify({'error': str(e)}), 500
 
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
@@ -368,19 +368,19 @@ def get_dataset_columns():
         except:
             dataset_name = "claim_train"
             
-        logger.info(f"Training Dataset name selected is: {dataset_name}")
+        current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
 
         cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
         column_names = [column['name'] for column in cols_dict]
 
-        logger.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
+        current_app.logger.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
 
         return jsonify(column_names)
     
     except KeyError as e:
-        logger.error(f"Missing key in request: {e}")
+        current_app.logger.error(f"Missing key in request: {e}")
         return jsonify({'error': f'Missing key in request: {e}'}), 400
     
     except Exception as e:
-        logger.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
+        current_app.logger.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
         return jsonify({'error': str(e)}), 500

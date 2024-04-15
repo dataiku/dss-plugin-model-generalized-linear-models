@@ -108,9 +108,9 @@ dummy_model_metrics ={
 
 def get_dummy_model_comparison_data():
     df = pd.DataFrame()
-    df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]
-    df['model_1_claim_frequency'] =  np.random.uniform(50, 60, size=11)
-    df['model_2_claim_frequency'] =  np.random.uniform(45, 55, size=11)
-    df['observed_average'] =  np.random.uniform(15, 30, size=11)
-    df['exposure'] = np.random.uniform(0, 100, size=11)
+    df['Category'] = [0,1,2,3,4,5,6,7,8,9,10]
+    df['exposure'] = np.random.uniform(30, 45, size=11)
+    df['Model_1_fittedAverage'] =  np.random.uniform(50, 60, size=11)
+    df['Model_2_fittedAverage'] =  np.random.uniform(45, 55, size=11)
+    df['observedAverage'] =  np.random.uniform(15, 30, size=11)
     return df
