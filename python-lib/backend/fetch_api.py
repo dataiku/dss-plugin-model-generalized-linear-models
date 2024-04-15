@@ -205,14 +205,13 @@ def get_model_comparison_data():
     model_2_lift_chart = model_handler.get_lift_chart(8)
     current_app.logger.info(f"Model {model2} lift chart is {model_2_lift_chart.to_string()}")
     
-    model_1_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_1_fittedAverage']
-    model_2_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_2_fittedAverage']
+    model_1_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_1_fittedAverage']
+    model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
     
     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
-                             on=['observedAverage','Category', 'variable_values'], 
+                             on=['observedAverage','Category', 'exposure'], 
                              how='outer')
     
-    merged_model_stats['exposure'] = 1
     current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
     return jsonify(merged_model_stats.to_dict('records'))
 
