@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
+from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
 from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
