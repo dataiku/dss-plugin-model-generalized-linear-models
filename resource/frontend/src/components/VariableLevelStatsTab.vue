@@ -175,7 +175,10 @@ export default defineComponent({
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
           const variableLevelStatsResponse = await API.getVariableLevelStats(model);
+          console.log(variableLevelStatsResponse);
+          console.log(variableLevelStatsResponse?.data);
           this.variableLevelStatsData = variableLevelStatsResponse?.data.map( (point) => {
+              console.log(point);
               const variableLevelStats = {'variable': point.variable, 'value': point.value, 'coefficient': point.coefficient,
                                           'standard_error': point.standard_error, 'standard_error_pct': point.standard_error_pct,
                                           'weight': point.weight, 'weight_pct': point.weight_pct, 'relativity': point.relativity};
