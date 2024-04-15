@@ -169,10 +169,9 @@ def get_variable_level_stats():
     
     model_handler.update_active_version()
     df = model_handler.get_variable_level_stats()
-    print(df)
     df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
     print(df)
-    return jsonify(df.to_dict('records'))
+    #return jsonify(df.to_dict('records'))
     # df = relativities
     # df.columns = ['variable', 'category', 'relativity']
     # return jsonify(df.to_dict('records'))
@@ -184,6 +183,7 @@ def get_variable_level_stats():
                         'weight': [234, 87, 73, 122, 90], 
                         'weight_pct': [60, 20, 20, 65, 35], 
                         'relativity': [1, 1.23, 1.077, 1, 0.98]})
+    print(df)
     return jsonify(df.to_dict('records'))
 
 
