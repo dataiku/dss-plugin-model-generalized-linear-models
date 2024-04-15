@@ -2,7 +2,7 @@ import dataiku
 from dataiku import pandasutils as pdu
 import pandas as pd
 import logging
-from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
+# from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
 from dataikuapi.dss.ml import DSSMLTask
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

@@ -178,8 +178,8 @@ methods: {
     async updateVariableString(value: string) {
         this.selectedVariable = value;
         const payload = {
-        model1: this.selectedModelString,
-        model2: this.selectedModelTwoString,
+        model1: this.modelDictionary[this.selectedModelString],
+        model2: this.modelDictionary[this.selectedModelTwoString],
 
         }
         const dataResponse = await API.getModelComparisonData(payload);
@@ -213,7 +213,12 @@ methods: {
 mounted() {
     API.getModels().then((data: any) => {
     this.models = data.data;
+    console.log("Retrieved models are:", this.models);
     this.modelsString = this.models.map((item: { name: string }) => item.name);
+    this.modelDictionary = this.models.reduce((acc, model) => {
+                            acc[model.name] = model.id;
+                            return acc;
+                        }, {});
     
     });
     this.getDatasetColumns(); 
