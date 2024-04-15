@@ -3,6 +3,7 @@ import pandas as pd
 from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
+from glm_handler.glm_data_handler import GlmDataHandler
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
 dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
@@ -22,8 +23,10 @@ web_app_config = get_webapp_config()
 saved_model_id = web_app_config.get("saved_model_id")
 saved_model = project.get_saved_model(saved_model_id)
 global_dku_mltask = saved_model.get_origin_ml_task()
+
+data_handler = GlmDataHandler()
 model_deployer = ModelDeployer(global_dku_mltask, saved_model_id)
-model_handler = ModelHandler(saved_model_id)
+model_handler = ModelHandler(saved_model_id, data_handler)
 
 
 
@@ -187,6 +190,8 @@ def get_model_comparison_data():
     request_json = request.get_json()
     print(request_json)
     model1, model2 = request_json["model1"], request_json["model2"]
+    model1 ="A-SOL_CLAIM_MODELING_1-yifJ5kIw-RhJJw3L0-s10-pp1-m1"
+    model2="A-SOL_CLAIM_MODELING_1-yifJ5kIw-RhJJw3L0-s10-pp1-m1"
     
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
@@ -210,15 +215,19 @@ def get_model_comparison_data():
     merged_model_stats['exposure'] = 1
     
     return jsonify(merged_model_stats.to_dict('records'))
-# local dev
-    # df =get_dummy_model_comparison_data()
-    # return jsonify(df.to_dict('records'))
+
+# # local dev
+#     df =get_dummy_model_comparison_data()
+#     return jsonify(df.to_dict('records'))
+
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-    # request_json = request.get_json()
-    # model = request_json["id"]
-    # df = relativities
+#     request_json = request.get_json()
+#     print(request_json)
+#     model1, model2 = request_json["model1"], request_json["model2"]
+
+
     # df.columns = ['variable', 'category', 'relativity']
     # return jsonify(df.to_dict('records'))
 
