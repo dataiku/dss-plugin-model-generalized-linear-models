@@ -45,8 +45,7 @@ class DataikuMLTask:
         self.mltask_id = None
         
         logger.info("DataikuMLTask initialized successfully")
-
-
+    
     def extract_active_fullModelId(self, json_data):
         """
         Extracts the fullModelId of the active model version from the given JSON data.
@@ -69,7 +68,7 @@ class DataikuMLTask:
             if feature_name != self.target_variable:
                 settings.reject_feature(feature_name)
         settings.save()
-        
+    
     def set_target(self):
         """
         Identifies and sets the target variable from the list of variables.
@@ -80,8 +79,7 @@ class DataikuMLTask:
                 self.target_variable = variable['name']
                 return
         raise ValueError("No target variable provided")
-
-
+    
     def update_mltask_modelling_params(self):
         """
         Updates the modeling parameters based on the distribution function, link function,
