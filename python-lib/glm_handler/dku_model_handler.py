@@ -326,12 +326,14 @@ class ModelHandler:
         
         variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
         variable_stats.drop('variable', axis=1, inplace=True)
-        
+        print(variable_stats)
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
         predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
         
         variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
         variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
+        print(variable_level_stats)
+        print(predicted)
         
         return variable_level_stats
         
