@@ -119,6 +119,7 @@ class DataikuMLTask:
             algo_settings['params']["offset_mode"] = "BASIC"
         
         settings.save()
+    
     def update_parameters(self, distribution_function, link_function, variables):
         
         self.distribution_function = distribution_function.lower()
