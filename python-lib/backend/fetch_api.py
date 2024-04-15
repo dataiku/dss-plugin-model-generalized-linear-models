@@ -73,9 +73,9 @@ def get_variables():
             raise ValueError("variables returned None.")
 
     except ValueError as e:
-        logging.error(f"Validation Error: {e}")
+        logger.error(f"Validation Error: {e}")
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
     
     return jsonify(variables)
 # local dev
@@ -190,20 +190,20 @@ def get_model_comparison_data():
     request_json = request.get_json()
     print(request_json)
     model1, model2 = request_json["model1"], request_json["model2"]
-    model1 ="A-SOL_CLAIM_MODELING_1-yifJ5kIw-RhJJw3L0-s10-pp1-m1"
-    model2="A-SOL_CLAIM_MODELING_1-yifJ5kIw-RhJJw3L0-s10-pp1-m1"
+
     
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
     logger.info(f"Model {model1} is now the active version.")
     model_1_lift_chart = model_handler.get_lift_chart(8)
+    logger.info(f"Model {model1} lift chart is {model_1_lift_chart}")
     
     model_deployer.set_new_active_version(model2)
     model_handler.update_active_version()
     logger.info(f"Model {model2} is now the active version.")
 
     model_2_lift_chart = model_handler.get_lift_chart(8)
-
+    logger.info(f"Model {model2} lift chart is {model_2_lift_chart}")
     
     model_1_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_1_fittedAverage']
     model_2_lift_chart.columns = ['Category', 'variable_values', 'observedAverage', 'Model_2_fittedAverage']
@@ -213,7 +213,7 @@ def get_model_comparison_data():
                              how='outer')
     
     merged_model_stats['exposure'] = 1
-    
+    logger.info(f"merged_model_stats are {merged_model_stats}")
     return jsonify(merged_model_stats.to_dict('records'))
 
 # # local dev
@@ -291,7 +291,7 @@ def train_model():
     global global_dku_mltask
     
     request_json = request.get_json()
-    logging.info(f"Received a model training request: {request_json}")
+    logger.info(f"Received a model training request: {request_json}")
     
     try: 
         web_app_config = get_webapp_config()
@@ -303,14 +303,14 @@ def train_model():
         input_dataset = "claim_train"
         code_env_string="py39_sol"
         
-    logging.info(f"Training Dataset name selected is: {input_dataset}") 
+    logger.info(f"Training Dataset name selected is: {input_dataset}") 
     
     distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
     link_function = request_json.get('model_parameters', {}).get('link_function')
     model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
     variables = request_json.get('variables')
 
-    logging.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
+    logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
     params = {
         "input_dataset": input_dataset,
         "distribution_function": distribution_function,
