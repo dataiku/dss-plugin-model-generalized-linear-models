@@ -23,6 +23,8 @@ web_app_config = get_webapp_config()
 saved_model_id = web_app_config.get("saved_model_id")
 saved_model = project.get_saved_model(saved_model_id)
 #global_dku_mltask = saved_model.get_origin_ml_task()
+print(saved_model_id)
+print(web_app_config.get("training_dataset_string"))
 global_dku_mltask = DataikuMLTask(saved_model_id, web_app_config.get("training_dataset_string"))
 
 data_handler = GlmDataHandler()
