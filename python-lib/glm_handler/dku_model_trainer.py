@@ -182,7 +182,7 @@ class DataikuMLTask:
         
         
         self.disable_existing_variables()
-
+    
     def enable_glm_algorithm(self):
         """
         Enables the GLM algorithm for the ML task.
@@ -217,7 +217,7 @@ class DataikuMLTask:
         fs['customProcessorWantsMatrix'] = False
         fs['sendToInput'] = 'main'
         return fs
-
+    
     def update_to_categorical(self, fs, variable_preprocessing_method="CUSTOM"):
         
         fs['missing_impute_with']= 'MODE'
@@ -316,8 +316,7 @@ class DataikuMLTask:
             print(f"Feature {feature} {settings.get_raw().get('preprocessing').get('per_feature').get(feature).get('role')} ")
                             
         return settings
-
-
+    
     def set_target_variable(self):
         """
         Sets the target variable for the ML task.
@@ -333,7 +332,7 @@ class DataikuMLTask:
         settings.mltask_settings['envSelection']['envName'] = code_env_string
         settings.save()
         logger.info(f"set code env settings to {self.mltask.get_settings().mltask_settings.get('envSelection')} ")
-        
+    
     def get_latest_model(self):
         """
         Retrieves the ID of the latest trained model.
