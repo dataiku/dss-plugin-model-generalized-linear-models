@@ -119,10 +119,11 @@ data() {
         layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
         firstTabIcon,
         docLogo,
-        models: [] as { name: string }[],
+        models: [] as Model[],
         selectedModelString: "",
         selectedModelTwoString: "", 
         selectedVariable : "", 
+        modelDictionary: {} as { [key: string]: string }, 
         datasetColumns: columns,
         modelsString: [] as string[],
         comparisonChartTitle: "Model Metrics",
@@ -139,8 +140,6 @@ computed:{
         if (!this.modelMetrics || !this.modelMetrics.models) {
         return []; // Return an empty array if the data is not (yet) available
             }
-
-
         const modelsArray = Object.keys(this.modelMetrics.models).map(modelKey => {
         const modelMetrics = this.modelMetrics.models[modelKey];
         console.log("Model Metrics", modelMetrics);
@@ -215,7 +214,7 @@ mounted() {
     this.models = data.data;
     console.log("Retrieved models are:", this.models);
     this.modelsString = this.models.map((item: { name: string }) => item.name);
-    this.modelDictionary = this.models.reduce((acc, model) => {
+    this.modelDictionary = this.models.reduce((acc: { [key: string]: string }, model: Model) => {
                             acc[model.name] = model.id;
                             return acc;
                         }, {});
@@ -231,6 +230,10 @@ interface chartDataItem{
     model_2_claim_frequency: number;
     exposure: number;
     observed_average: number;
+}
+interface Model {
+    name: string;
+    id: string; // or number, depending on your id type
 }
 
 interface ModelMetricsDataPoint {
