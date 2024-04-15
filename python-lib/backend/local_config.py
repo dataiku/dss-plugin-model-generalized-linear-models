@@ -2,10 +2,12 @@ from backend.dataiku_api import dataiku_api
 from logging.config import dictConfig
 import os
 import pandas as pd
+import numpy as np
 # Replace by your default project key that you are working on in dev
-DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING"
+DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING_1"
 
 # TODO : Add dip_home to a .env file
+
 CONFIG = {
     # put your webapp desired config
     "webapp_config": {
@@ -14,6 +16,7 @@ CONFIG = {
     "default_project_key": DEFAULT_PROJECT_KEY,
     "training_dataset_string": "claim_train",
 }
+
 
 os.environ["DKU_CURRENT_PROJECT_KEY"] = CONFIG.get("default_project_key")
 
@@ -24,6 +27,8 @@ def get_setup_for_dataiku_client():
         "default_project_key": CONFIG.get("default_project_key"),
         "training_dataset_string": CONFIG.get("claim_train")
     }
+
+DKU_CUSTOM_WEBAPP_CONFIG='{"saved_model_id": "U4TLlapA","training_dataset_string": "claim_train","code_env_string": "anotherValue"}'
 
 
 dictConfig(
@@ -103,9 +108,9 @@ dummy_model_metrics ={
 
 def get_dummy_model_comparison_data():
     df = pd.DataFrame()
-    df['variable_values'] = [0,10,20,30,40,50,60,70,80,90,100]
-    df['model_1_claim_frequency'] =  np.random.uniform(50, 60, size=11)
-    df['model_2_claim_frequency'] =  np.random.uniform(45, 55, size=11)
-    df['observed_average'] =  np.random.uniform(15, 30, size=11)
-    df['exposure'] = np.random.uniform(0, 100, size=11)
+    df['Category'] = [0,1,2,3,4,5,6,7,8,9,10]
+    df['exposure'] = np.random.uniform(30, 45, size=11)
+    df['Model_1_fittedAverage'] =  np.random.uniform(50, 60, size=11)
+    df['Model_2_fittedAverage'] =  np.random.uniform(45, 55, size=11)
+    df['observedAverage'] =  np.random.uniform(15, 30, size=11)
     return df

@@ -64,11 +64,11 @@
                 <div>
                     <ModelComparisonChart
                     v-if="selectedVariable"
-                        :variableValues="modelComparisonData.map(item => item.variable_values)"
-                        :model1ClaimFrequency="modelComparisonData.map(item => item.model_1_claim_frequency)"
-                        :model2ClaimFrequency="modelComparisonData.map(item => item.model_2_claim_frequency)"
+                        :variableValues="modelComparisonData.map(item => item.Category)"
+                        :model1ClaimFrequency="modelComparisonData.map(item => item.Model_1_fittedAverage)"
+                        :model2ClaimFrequency="modelComparisonData.map(item => item.Model_2_fittedAverage)"
                         :exposures="modelComparisonData.map(item => item.exposure)"
-                        :observedAverage ="modelComparisonData.map(item => item.observed_average)" 
+                        :observedAverage ="modelComparisonData.map(item => item.observedAverage)" 
                         :chartTitle="selectedVariable"
                         />
                 </div>
@@ -119,10 +119,11 @@ data() {
         layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
         firstTabIcon,
         docLogo,
-        models: [] as { name: string }[],
+        models: [] as Model[],
         selectedModelString: "",
         selectedModelTwoString: "", 
         selectedVariable : "", 
+        modelDictionary: {} as { [key: string]: string }, 
         datasetColumns: columns,
         modelsString: [] as string[],
         comparisonChartTitle: "Model Metrics",
@@ -139,8 +140,6 @@ computed:{
         if (!this.modelMetrics || !this.modelMetrics.models) {
         return []; // Return an empty array if the data is not (yet) available
             }
-
-
         const modelsArray = Object.keys(this.modelMetrics.models).map(modelKey => {
         const modelMetrics = this.modelMetrics.models[modelKey];
         console.log("Model Metrics", modelMetrics);
@@ -178,8 +177,8 @@ methods: {
     async updateVariableString(value: string) {
         this.selectedVariable = value;
         const payload = {
-        model1: this.selectedModelString,
-        model2: this.selectedModelTwoString,
+        model1: this.modelDictionary[this.selectedModelString],
+        model2: this.modelDictionary[this.selectedModelTwoString],
 
         }
         const dataResponse = await API.getModelComparisonData(payload);
@@ -213,7 +212,12 @@ methods: {
 mounted() {
     API.getModels().then((data: any) => {
     this.models = data.data;
+    console.log("Retrieved models are:", this.models);
     this.modelsString = this.models.map((item: { name: string }) => item.name);
+    this.modelDictionary = this.models.reduce((acc: { [key: string]: string }, model: Model) => {
+                            acc[model.name] = model.id;
+                            return acc;
+                        }, {});
     
     });
     this.getDatasetColumns(); 
@@ -221,11 +225,15 @@ mounted() {
 emits: ['update:modelValue']
 })
 interface chartDataItem{
-    variable_values: any[];
-    model_1_claim_frequency: number;
-    model_2_claim_frequency: number;
+    Category: any[];
+    Model_1_fittedAverage: number;
+    Model_2_fittedAverage: number;
     exposure: number;
-    observed_average: number;
+    observedAverage: number;
+}
+interface Model {
+    name: string;
+    id: string; // or number, depending on your id type
 }
 
 interface ModelMetricsDataPoint {
