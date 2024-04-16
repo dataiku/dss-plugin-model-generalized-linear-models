@@ -55,6 +55,8 @@ class ModelHandler:
         self.target = self.model_info_handler.get_target_variable()
         self.compute_features()
         self.compute_base_values()
+        print(self.base_values)
+        print(self.modalities)
         self.relativities_handler = RelativitiesHandler(self.model_info_handler)
         
     def get_model_versions(self):
