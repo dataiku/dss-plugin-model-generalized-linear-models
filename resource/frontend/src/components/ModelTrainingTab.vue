@@ -75,7 +75,11 @@
             placeholder="Enter model name"
             class="model-name-input"
             />
-        <q-btn color="primary" class="q-mt-md" label="Train Model" @click="submitVariables"></q-btn>
+        <q-btn 
+        color="primary" 
+        class="q-mt-md" 
+        label="Train Model" 
+        @click="submitVariables"></q-btn>
         
         </div>
         </BsCollapsiblePanel>
@@ -156,6 +160,7 @@ import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import firstTabIcon from "../assets/images/first-tab-icon.svg";
+import { useLoader } from "../composables/use-loader";
 import { API } from '../Api';
 import { QRadio } from 'quasar';
 
@@ -214,6 +219,7 @@ data() {
             'Standard Rescaling',
         ],
         datasetColumns: [] as Column[], // Populate this based on your actual data
+        loading: false,
     };
 },
 computed:{
@@ -266,12 +272,19 @@ watch: {
         });
     },
     datasetColumns: {
-    handler(newVal, oldVal) {
-        console.log('datasetColumns changed:', newVal);
-        this.updateDatasetColumnsPreprocessing();
+        handler(newVal, oldVal) {
+            console.log('datasetColumns changed:', newVal);
+            this.updateDatasetColumnsPreprocessing();
+        },
+        deep: true
     },
-    deep: true
-    }   
+    loading(newVal) {
+        if (newVal) {
+            useLoader("Training model..").show();
+        } else {
+            useLoader().hide();
+        }
+    },
     
 },
 methods: {
@@ -348,6 +361,7 @@ methods: {
             this.datasetColumns[index] = column;
         },
     async submitVariables() {
+        this.loading = true;
         if (!this.validateSubmission()) {
       // If validation fails, stop execution
         return;
@@ -382,6 +396,7 @@ methods: {
             console.error('Error submitting variables:', error);
             // Handle errors here
         }
+        this.loading = false;
     },
 
     async getDatasetColumns() {
