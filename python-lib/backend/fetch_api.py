@@ -22,8 +22,7 @@ project = client.get_default_project()
 web_app_config = get_webapp_config()
 saved_model_id = web_app_config.get("saved_model_id")
 saved_model = project.get_saved_model(saved_model_id)
-dku_mltask = saved_model.get_origin_ml_task()
-
+global_dss_mltask = saved_model.get_origin_ml_task()
 global_dku_mltask = DataikuMLTask(web_app_config.get("training_dataset_string"), saved_model_id)
 
 data_handler = GlmDataHandler()
@@ -36,10 +35,10 @@ model_handler = ModelHandler(saved_model_id, data_handler)
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
     print(saved_model_id)
-    if global_dku_mltask is None:
+    if global_dss_mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
-        models = format_models(global_dku_mltask)
+        models = format_models(global_dss_mltask)
         return jsonify(models)
     except Exception as e:
         current_app.logger.exception("An error occurred while retrieving models")
@@ -334,7 +333,7 @@ def train_model():
 
     try:
         DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
-            
+        
         DkuMLTask.update_parameters(distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
         current_app.logger.debug("Visual ML task created successfully")
