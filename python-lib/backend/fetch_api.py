@@ -324,17 +324,11 @@ def train_model():
         current_app.logger.error(f"Missing parameters in the request: {missing_str}")
         return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
 
-    try:
-        if global_dku_mltask:
-            current_app.logger.info("Utilising an existing ML Task at the API")
-            
-            DkuMLTask = global_dku_mltask
 
-        else: #First initialisation 
-            current_app.logger.info("Initalising an new ML Task at the API")
-            DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
-            global_dku_mltask = DkuMLTask
-            
+        current_app.logger.info("Initalising an new ML Task at the API")
+        DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
+        global_dku_mltask = DkuMLTask
+
         DkuMLTask.update_parameters(distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
         current_app.logger.debug("Visual ML task created successfully")
