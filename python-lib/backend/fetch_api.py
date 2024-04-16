@@ -172,6 +172,7 @@ def get_variable_level_stats():
 
     model_deployer.set_new_active_version(full_model_id)
     model_handler.update_active_version()
+    
     df = model_handler.get_variable_level_stats()
     df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
     print(df)
