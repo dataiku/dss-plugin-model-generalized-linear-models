@@ -22,13 +22,12 @@ project = client.get_default_project()
 web_app_config = get_webapp_config()
 saved_model_id = web_app_config.get("saved_model_id")
 saved_model = project.get_saved_model(saved_model_id)
-#global_dku_mltask = saved_model.get_origin_ml_task()
-print(saved_model_id)
-print(web_app_config.get("training_dataset_string"))
+dku_mltask = saved_model.get_origin_ml_task()
+
 global_dku_mltask = DataikuMLTask(web_app_config.get("training_dataset_string"), saved_model_id)
 
 data_handler = GlmDataHandler()
-model_deployer = ModelDeployer(global_dku_mltask, saved_model_id)
+model_deployer = ModelDeployer(dku_mltask, saved_model_id)
 model_handler = ModelHandler(saved_model_id, data_handler)
 
 
