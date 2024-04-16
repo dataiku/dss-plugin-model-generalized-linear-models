@@ -54,6 +54,7 @@ class ModelHandler:
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
         self.compute_features()
+        self.compute_base_values()
         self.relativities_handler = RelativitiesHandler(self.model_info_handler)
         
     def get_model_versions(self):
@@ -318,7 +319,6 @@ class ModelHandler:
         return lift_chart_data
 
     def get_variable_level_stats(self):
-        predicted = self.get_predicted_and_base()
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
         
