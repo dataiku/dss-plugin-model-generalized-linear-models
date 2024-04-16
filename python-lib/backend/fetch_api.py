@@ -334,15 +334,7 @@ def train_model():
         return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
 
     try:
-        if global_dku_mltask:
-            current_app.logger.info("Utilising an existing ML Task at the API")
-            
-            DkuMLTask = global_dku_mltask
-
-        else: #First initialisation 
-            current_app.logger.info("Initalising an new ML Task at the API")
-            DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
-            global_dku_mltask = DkuMLTask
+        DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
             
         DkuMLTask.update_parameters(distribution_function, link_function, variables)
         DkuMLTask.create_visual_ml_task()
