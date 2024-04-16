@@ -47,6 +47,7 @@ class ModelHandler:
     
     def update_active_version(self):
         
+        self.model = dataiku.Model(self.model_id)
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
         print(self.full_model_id)
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
