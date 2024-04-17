@@ -238,6 +238,7 @@ def get_model_metrics():
     request_json = request.get_json()
     print(request_json)
     model1, model2 = request_json["model1"], request_json["model2"]
+    
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
 
@@ -245,7 +246,6 @@ def get_model_metrics():
     model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
 
     model_deployer.set_new_active_version(model2)
-    model_handler = ModelHandler("U4TLlapA", None)
     model_handler.update_active_version()
 
     mmc = ModelMetricsCalculator(model_handler)
