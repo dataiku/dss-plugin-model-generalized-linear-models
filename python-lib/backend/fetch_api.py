@@ -4,6 +4,7 @@ from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
 from glm_handler.glm_data_handler import GlmDataHandler
+from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
 dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
@@ -234,15 +235,40 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-#     request_json = request.get_json()
-#     print(request_json)
-#     model1, model2 = request_json["model1"], request_json["model2"]
+    request_json = request.get_json()
+    print(request_json)
+    model1, model2 = request_json["model1"], request_json["model2"]
+    model_deployer.set_new_active_version(model1)
+    model_handler.update_active_version()
 
+    mmc = ModelMetricsCalculator(model_handler)
+    model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
 
-    # df.columns = ['variable', 'category', 'relativity']
-    # return jsonify(df.to_dict('records'))
+    model_deployer.set_new_active_version(model2)
+    model_handler = ModelHandler("U4TLlapA", None)
+    model_handler.update_active_version()
 
-    return jsonify(dummy_model_metrics)
+    mmc = ModelMetricsCalculator(model_handler)
+    model_2_aic, model_2_bic, model_2_deviance = mmc.calculate_metrics()
+
+    metrics = {
+        "models": {
+            "Model_1": {
+            "AIC": model_1_aic,
+            "BIC": model_1_bic,
+            "Deviance": model_1_deviance
+            },
+            "Model_2": {
+            "AIC": model_2_aic,
+            "BIC": model_2_bic,
+            "Deviance": model_2_deviance
+            }
+        }
+        }
+    
+    return jsonify(metrics)
+
+#     return jsonify(dummy_model_metrics)
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
