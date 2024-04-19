@@ -96,6 +96,7 @@ import docLogo from "../assets/images/doc-logo-example.svg";
 import firstTabIcon from "../assets/images/first-tab-icon.svg";
 import { API } from '../Api';
 import ModelComparisonChart from './ModelComparisonChart.vue'
+import { useLoader } from "../composables/use-loader";
 import type { QTableColumn } from 'quasar';
 
 export default defineComponent({
@@ -134,7 +135,8 @@ data() {
         comparisonChartTitle: "Model Metrics",
         modelMetrics: {} as ModelMetrics,
         modelComparisonData: [] as chartDataItem[],
-        tableColumns: columns
+        tableColumns: columns,
+        loading: false,
     };
 },
 computed:{
@@ -180,6 +182,13 @@ watch: {
         });
         },
     },
+    loading(newVal) {
+        if (newVal) {
+            useLoader("Training model..").show();
+        } else {
+            useLoader().hide();
+        }
+    },
 },
 methods: {
     closeSideDrawer() {
@@ -188,6 +197,7 @@ methods: {
         }
     },
     async updateVariableString(value: string) {
+        this.loading = true;
         this.selectedVariable = value;
         const payload = {
         model1: this.modelDictionary[this.selectedModelString],
@@ -201,6 +211,7 @@ methods: {
         this.modelMetrics = ModelMetricsResponse?.data as ModelMetrics;
 
         console.log("Model Metric data:", this.modelMetrics);
+        this.loading = false;
 
     },
     async updateModelString(value: string) {

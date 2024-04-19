@@ -79,6 +79,7 @@ import { API } from '../Api';
 import { BsButton, BsLayoutDefault, BsTable } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import firstTabIcon from "../assets/images/first-tab-icon.svg";
+import { useLoader } from "../composables/use-loader";
 import type { QTableColumn } from 'quasar';
 
 const columns: QTableColumn[] = [
@@ -145,6 +146,10 @@ const rows = [
     }
   ]
 
+function round_decimals(x : number) {
+  return Math.round(x * 1000) / 1000
+}
+
 export default defineComponent({
     props: {
       reloadModels: {
@@ -169,6 +174,7 @@ export default defineComponent({
             docLogo,
             firstTabIcon,
             columns: columns,
+            loading: false,
         };
     },
     watch: {
@@ -180,6 +186,13 @@ export default defineComponent({
             });
           },
       },
+      loading(newVal) {
+        if (newVal) {
+            useLoader("Training model..").show();
+        } else {
+            useLoader().hide();
+        }
+    },
     },
     methods: {
       closeSideDrawer() {
@@ -188,19 +201,21 @@ export default defineComponent({
             }
         },
         async updateModelString(value: string) {
+          this.loading = true;
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
           const variableLevelStatsResponse = await API.getVariableLevelStats(model);
-          console.log(variableLevelStatsResponse);
-          console.log(variableLevelStatsResponse?.data);
           this.variableLevelStatsData = variableLevelStatsResponse?.data.map( (point) => {
-              console.log(point);
-              const variableLevelStats = {'variable': point.variable, 'value': point.value, 'coefficient': point.coefficient,
-                                          'standard_error': point.standard_error, 'standard_error_pct': point.standard_error_pct,
-                                          'weight': point.weight, 'weight_pct': point.weight_pct, 'relativity': point.relativity};
+              const variableLevelStats = {'variable': point.variable, 'value': point.value, 
+                                          'coefficient': round_decimals(point.coefficient),
+                                          'standard_error': round_decimals(point.standard_error), 
+                                          'standard_error_pct': round_decimals(point.standard_error_pct),
+                                          'weight': round_decimals(point.weight), 
+                                          'weight_pct': round_decimals(point.weight_pct), 
+                                          'relativity': round_decimals(point.relativity)};
               return variableLevelStats
           });
-          console.log(this.variableLevelStatsData);
+          this.loading = false;
         },
         onClick: function() {
           API.exportModel().then(response => {

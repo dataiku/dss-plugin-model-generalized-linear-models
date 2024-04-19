@@ -67,6 +67,7 @@
 import LiftChart from './LiftChart.vue'
 import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
+import { useLoader } from "../composables/use-loader";
 import * as echarts from "echarts";
 import type { LiftDataPoint, ModelPoint } from '../models';
 import { defineComponent } from "vue";
@@ -103,6 +104,7 @@ export default defineComponent({
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             docLogo,
             firstTabIcon,
+            loading: false,
         };
     },
     watch: {
@@ -114,6 +116,13 @@ export default defineComponent({
             });
           },
       },
+      loading(newVal) {
+          if (newVal) {
+              useLoader("Training model..").show();
+          } else {
+              useLoader().hide();
+          }
+      },
     },
     methods: {
       closeSideDrawer() {
@@ -122,10 +131,12 @@ export default defineComponent({
             }
         },
         async updateModelString(value: string) {
+          this.loading = true;
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
           const dataResponse = await API.getLiftData(model);
           this.chartData = dataResponse?.data;
+          this.loading = false;
         },
     },
     mounted() {
