@@ -396,6 +396,7 @@ methods: {
             console.error('Error submitting variables:', error);
             // Handle errors here
         }
+        this.$emit("update-models", true);
         this.loading = false;
     },
 
@@ -424,7 +425,7 @@ async mounted() {
     const savedLinkFunction = localStorage.getItem('linkFunction');
     await this.getDatasetColumns();
 },
-emits: ['update:modelValue']
+emits: ['update:modelValue', 'update-models']
 })
 </script>   
 <style scoped>

@@ -154,6 +154,9 @@ const rows = [
         }
 
 export default defineComponent({
+    props: {
+      reloadModels: Boolean,
+    },
     components: {
         BarChart,
         DocumentationContent,
@@ -188,6 +191,14 @@ export default defineComponent({
         };
     },
     watch: {
+      reloadModels: {
+          handler() {
+            API.getModels().then((data: any) => {
+              this.models = data.data;
+              this.modelsString = this.models.map(item => item.name);
+            });
+          },
+      },
       selectedVariable(newValue: VariablePoint) {
         this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
         this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);

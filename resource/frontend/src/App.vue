@@ -1,14 +1,19 @@
 <template>
     <BsLayoutDefault ref="layout" :left-panel-width="350">
       <ModelTrainingTab>
+        @update-models="updateModels"
       </ModelTrainingTab>
-      <OneWayTab>
+      <OneWayTab
+      :reload-models="reloadModels">
       </OneWayTab>
-      <VariableLevelStatsTab>
+      <VariableLevelStatsTab
+      :reload-models="reloadModels">
       </VariableLevelStatsTab>
-      <LiftChartTab>
+      <LiftChartTab
+      :reload-models="reloadModels">
       </LiftChartTab>
-      <ModelComparisonTab>
+      <ModelComparisonTab
+      :reload-models="reloadModels">
       </ModelComparisonTab>
 
     </BsLayoutDefault>
@@ -28,6 +33,16 @@ export default defineComponent({
         OneWayTab,
         VariableLevelStatsTab,
         LiftChartTab,
+    },
+    data() {
+    return {
+        reloadModels: false,
+      }
+    },
+    methods: {
+      updateModels(){
+        this.reloadModels = true;
+      },
     }
 })
 </script>
