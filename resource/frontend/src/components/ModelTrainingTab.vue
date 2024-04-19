@@ -96,28 +96,18 @@
         </q-card-section>
         <q-card class="q-pa-xl">
             <div v-for="(column, index) in filteredColumns" class="column-management row-spacing">
-                    <span class="column-name">{{ abbreviateColumnName(column.name) }}</span>
-                    <BsCheckbox v-model="column.isIncluded" label="Include?"></BsCheckbox>
-                    <BsLabel
-                            label="Column Type"
-                            info-text="Does the column contain categorical or numerical data?"
-                    ></BsLabel>
+                    <h6 class="column-name">{{ abbreviateColumnName(column.name) }}</h6>
+                    <BsCheckbox v-model="column.isIncluded" label="Include?" class="custom-label-spacing"></BsCheckbox>
+                    <!-- <BsLabel
+                            
+                            label="C Type"
+                    ></BsLabel> -->
                     <div class="q-gutter-sm row items-center">
                         <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
                     </div>
                     <div class="q-gutter-sm row items-center">
                         <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
                     </div>
-                    <BsLabel
-                            label="Preprocessing"
-                            info-text="Preprocessing Method"
-                    ></BsLabel>
-                    <BsSelect
-                        :modelValue="column.preprocessing"
-                        :all-options="preprocessingOptions"
-                        @update:modelValue="newValue => updatePreprocessing(index, newValue)"
-                        style="min-width: 150px">
-                    </BsSelect>
             </div>
         </q-card>
     </BsContent>
@@ -418,6 +408,7 @@ margin-bottom: 20px; /* Adjust this value as needed */
 }
 .column-management {
 display: flex;
+flex-direction: row;
 align-items: center; /* Align items vertically */
 gap: 20px; /* Spacing between each item */
 }
@@ -489,6 +480,11 @@ margin-top: 5px;
 .error-message {
   color: red;
   margin-top: 10px;
+}
+.custom-label-spacing {
+    margin-right: 150px; /* Adjust the margin as needed */
+    margin-left: 10px; 
+    padding: 5px;       /* Adjust padding for better alignment and spacing */
 }
 </style>
 
