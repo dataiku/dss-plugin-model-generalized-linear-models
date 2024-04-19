@@ -94,9 +94,8 @@ def get_variables():
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
     if is_local:
-        print('get_data')
         import time
-        time.sleep(5)
+        time.sleep(1)
         return jsonify(dummy_df_data.to_dict('records'))
     try:
         current_app.logger.info("Received a new request for data prediction.")

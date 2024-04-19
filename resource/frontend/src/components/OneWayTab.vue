@@ -97,7 +97,7 @@
                       :baseLevelPredictionLine="chartData.map(item => item.baseLevelPrediction)"
                       :chartTitle="selectedVariable.variable"
                       />
-                    <BsTable
+                    <BsTable v-if="selectedVariable.isInModel"
                       :title="selectedVariable.variable"
                       :rows="relativities"
                       :columns="relativitiesColumns"
