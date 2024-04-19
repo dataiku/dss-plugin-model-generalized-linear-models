@@ -83,7 +83,7 @@
 
             series: [
                 {
-                    name: "Model 1 Claim Frequency",
+                    name: "Model 1",
                     type: "line",
                     data: this.model1ClaimFrequency,
                     itemStyle: {
@@ -91,7 +91,7 @@
                     },
                 },
                 {
-                    name: "Model 2 Claim Frequency",
+                    name: "Model 2",
                     type: "line",
                     data: this.model2ClaimFrequency,
                     itemStyle: {
