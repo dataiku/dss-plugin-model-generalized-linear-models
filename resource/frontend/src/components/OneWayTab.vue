@@ -199,13 +199,12 @@ export default defineComponent({
       },
       loading(newVal) {
           if (newVal) {
-              useLoader("Training model..").show();
+              useLoader("Loading data..").show();
           } else {
               useLoader().hide();
           }
       },
       selectedVariable(newValue: VariablePoint) {
-        this.loading = true;
         this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
         this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
         this.relativitiesColumns = columns;
@@ -213,7 +212,6 @@ export default defineComponent({
           const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
           return relativity
         })
-        this.loading = false;
       },
       allData(newValue: DataPoint[]) {
         this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
@@ -230,8 +228,6 @@ export default defineComponent({
         },
         async updateModelString(value: string) {
           this.loading = true;
-          console.log("Loading");
-          this.selectedModelString = value;
           this.selectedVariable = {} as VariablePoint;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
           const variableResponse = await API.getVariables(model);
@@ -241,8 +237,8 @@ export default defineComponent({
           this.allData = dataResponse?.data;
           const relativityResponse = await API.getRelativities(model);
           this.relativitiesData = relativityResponse?.data;
+          this.selectedModelString = value;
           this.loading = false;
-          console.log("Loaded");
         },
         onClick: function() {
           API.exportModel().then(response => {

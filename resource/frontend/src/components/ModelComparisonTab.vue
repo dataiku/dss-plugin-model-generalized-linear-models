@@ -184,7 +184,7 @@ watch: {
     },
     loading(newVal) {
         if (newVal) {
-            useLoader("Training model..").show();
+            useLoader("Loading data..").show();
         } else {
             useLoader().hide();
         }
