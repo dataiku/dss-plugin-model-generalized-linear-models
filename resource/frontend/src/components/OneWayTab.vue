@@ -228,18 +228,9 @@ export default defineComponent({
         async updateVariable(value: VariablePoint) {
           this.selectedVariable = value;
         },
-        async updateModel(value: ModelPoint) {
-          this.selectedModel = value;
-          const variableResponse = await API.getVariables(value);
-          this.variablePoints = variableResponse?.data;
-          this.allVariables = this.variablePoints.map(item => item.variable);
-          const dataResponse = await API.getData(value);
-          this.allData = dataResponse?.data;
-          const relativityResponse = await API.getRelativities(value);
-          this.relativitiesData = relativityResponse?.data;
-        },
         async updateModelString(value: string) {
           this.loading = true;
+          console.log("Loading");
           this.selectedModelString = value;
           this.selectedVariable = {} as VariablePoint;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
@@ -251,6 +242,7 @@ export default defineComponent({
           const relativityResponse = await API.getRelativities(model);
           this.relativitiesData = relativityResponse?.data;
           this.loading = false;
+          console.log("Loaded");
         },
         onClick: function() {
           API.exportModel().then(response => {
