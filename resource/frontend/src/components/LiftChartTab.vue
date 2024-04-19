@@ -77,6 +77,12 @@ import firstTabIcon from "../assets/images/first-tab-icon.svg";
 
 
 export default defineComponent({
+    props: {
+      reloadModels: {
+        type: Boolean,
+        default: false
+      }
+    },
     components: {
         LiftChart,
         DocumentationContent,
@@ -98,6 +104,16 @@ export default defineComponent({
             docLogo,
             firstTabIcon,
         };
+    },
+    watch: {
+      reloadModels: {
+          handler() {
+            API.getModels().then((data: any) => {
+              this.models = data.data;
+              this.modelsString = this.models.map(item => item.name);
+            });
+          },
+      },
     },
     methods: {
       closeSideDrawer() {

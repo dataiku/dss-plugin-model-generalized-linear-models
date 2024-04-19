@@ -1,7 +1,7 @@
 <template>
     <BsLayoutDefault ref="layout" :left-panel-width="350">
-      <ModelTrainingTab>
-        @update-models="updateModels"
+      <ModelTrainingTab
+        @update-models="updateModels">
       </ModelTrainingTab>
       <OneWayTab
       :reload-models="reloadModels">
@@ -36,12 +36,13 @@ export default defineComponent({
     },
     data() {
     return {
-        reloadModels: false,
+        reloadModels: false as boolean,
       }
     },
     methods: {
       updateModels(){
-        this.reloadModels = true;
+        console.log("App: update models");
+        this.reloadModels = !this.reloadModels;
       },
     }
 })

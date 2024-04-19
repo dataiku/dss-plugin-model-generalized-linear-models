@@ -146,6 +146,12 @@ const rows = [
   ]
 
 export default defineComponent({
+    props: {
+      reloadModels: {
+        type: Boolean,
+        default: false
+      }
+    },
     components: {
         BsButton,
         BsLayoutDefault,
@@ -164,6 +170,16 @@ export default defineComponent({
             firstTabIcon,
             columns: columns,
         };
+    },
+    watch: {
+      reloadModels: {
+          handler() {
+            API.getModels().then((data: any) => {
+              this.models = data.data;
+              this.modelsString = this.models.map(item => item.name);
+            });
+          },
+      },
     },
     methods: {
       closeSideDrawer() {

@@ -111,7 +111,12 @@ components: {
     BsTooltip,
     BsTable
 },
-props: [],
+props: {
+      reloadModels: {
+        type: Boolean,
+        default: false
+      }
+    },
 data() {
     return {    
         datasetsString: [] as string[],
@@ -166,7 +171,15 @@ computed:{
 
     }
 },
-watch: {    
+watch: {
+    reloadModels: {
+        handler() {
+        API.getModels().then((data: any) => {
+            this.models = data.data;
+            this.modelsString = this.models.map(item => item.name);
+        });
+        },
+    },
 },
 methods: {
     closeSideDrawer() {

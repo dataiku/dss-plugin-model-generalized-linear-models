@@ -179,7 +179,8 @@ components: {
 },
 props: [],
 data() {
-    return {    
+    return {
+        updateModels: false,
         modelName: "",   
         errorMessage: "", 
         selectedDatasetString: "",
@@ -396,7 +397,8 @@ methods: {
             console.error('Error submitting variables:', error);
             // Handle errors here
         }
-        this.$emit("update-models", true);
+        this.updateModels = !this.updateModels;
+        this.$emit("update-models", this.updateModels);
         this.loading = false;
     },
 
