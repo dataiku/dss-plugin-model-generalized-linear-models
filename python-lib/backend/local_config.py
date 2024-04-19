@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 # Replace by your default project key that you are working on in dev
-DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING_1"
+DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING"
 
 # TODO : Add dip_home to a .env file
 

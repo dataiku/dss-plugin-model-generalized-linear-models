@@ -1,10 +1,14 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
-from glm_handler.dku_model_trainer import DataikuMLTask
-from glm_handler.dku_model_handler import ModelHandler
-from glm_handler.dku_model_deployer import ModelDeployer
-from glm_handler.glm_data_handler import GlmDataHandler
-from glm_handler.dku_model_metrics import ModelMetricsCalculator
+
+is_local = True
+
+if not is_local:
+    from glm_handler.dku_model_trainer import DataikuMLTask
+    from glm_handler.dku_model_handler import ModelHandler
+    from glm_handler.dku_model_deployer import ModelDeployer
+    from glm_handler.glm_data_handler import GlmDataHandler
+    from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
 dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
@@ -20,21 +24,24 @@ import numpy as np
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 client = dataiku.api_client()
 project = client.get_default_project()
-web_app_config = get_webapp_config()
-saved_model_id = web_app_config.get("saved_model_id")
-saved_model = project.get_saved_model(saved_model_id)
-global_dss_mltask = saved_model.get_origin_ml_task()
-global_dku_mltask = DataikuMLTask(web_app_config.get("training_dataset_string"), saved_model_id)
+if not is_local:
+    web_app_config = get_webapp_config()
+    saved_model_id = web_app_config.get("saved_model_id")
+    saved_model = project.get_saved_model(saved_model_id)
+    global_dss_mltask = saved_model.get_origin_ml_task()
+    global_dku_mltask = DataikuMLTask(web_app_config.get("training_dataset_string"), saved_model_id)
 
-data_handler = GlmDataHandler()
-model_deployer = ModelDeployer(global_dss_mltask, saved_model_id)
-model_handler = ModelHandler(saved_model_id, data_handler)
+    data_handler = GlmDataHandler()
+    model_deployer = ModelDeployer(global_dss_mltask, saved_model_id)
+    model_handler = ModelHandler(saved_model_id, data_handler)
 
 
 
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
+    if is_local:
+        return jsonify(dummy_models)
     print(saved_model_id)
     if global_dss_mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
@@ -53,6 +60,8 @@ def get_models():
 
 @fetch_api.route("/variables", methods=["POST"])
 def get_variables():
+    if is_local:
+        return jsonify(dummy_variables)
     request_json = request.get_json()
     full_model_id = request_json["id"]
     web_app_config = get_webapp_config()
@@ -84,6 +93,8 @@ def get_variables():
 
 @fetch_api.route("/data", methods=["POST"])
 def get_data():
+    if is_local:
+        return jsonify(dummy_df_data.to_dict('records'))
     try:
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
@@ -110,9 +121,10 @@ def get_data():
 
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
+    if is_local:
+        return jsonify(dummy_lift_data.to_dict('records'))
     current_app.logger.info("Received a new request for lift chart data.")
     request_json = request.get_json()
-    print(request_json)
     full_model_id = request_json["id"]
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
@@ -132,7 +144,9 @@ def get_lift_data():
 
 
 @fetch_api.route("/update_bins", methods=["POST"])
-def get_updated_data():    
+def get_updated_data(): 
+    if is_local:
+        return jsonify(dummy_get_updated_data.to_dict('records'))
     request_json = request.get_json()
 
     feature = request_json["feature"]
@@ -149,6 +163,8 @@ def get_updated_data():
 
 @fetch_api.route("/relativities", methods=["POST"])
 def get_relativities():
+    if is_local:
+        return jsonify(dummy_relativites.to_dict('records'))
     request_json = request.get_json()
     full_model_id = request_json["id"]
     
@@ -165,6 +181,16 @@ def get_relativities():
 
 @fetch_api.route("/get_variable_level_stats", methods=["POST"])
 def get_variable_level_stats():
+    if is_local:
+        df = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
+                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
+                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
+                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
+                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
+                        'weight': [234, 87, 73, 122, 90], 
+                        'weight_pct': [60, 20, 20, 65, 35], 
+                        'relativity': [1, 1.23, 1.077, 1, 0.98]})
+        return jsonify(df.to_dict('records'))
     print("variable level stats")
     request_json = request.get_json()
     full_model_id = request_json["id"]
@@ -176,21 +202,7 @@ def get_variable_level_stats():
     
     df = model_handler.get_variable_level_stats()
     df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
-    print(df)
     df.fillna(0, inplace=True)
-    return jsonify(df.to_dict('records'))
-    # df = relativities
-    # df.columns = ['variable', 'category', 'relativity']
-    # return jsonify(df.to_dict('records'))
-    df = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
-                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
-                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
-                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
-                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
-                        'weight': [234, 87, 73, 122, 90], 
-                        'weight_pct': [60, 20, 20, 65, 35], 
-                        'relativity': [1, 1.23, 1.077, 1, 0.98]})
-    print(df)
     return jsonify(df.to_dict('records'))
 
 
@@ -199,8 +211,9 @@ def get_variable_level_stats():
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
     # local dev
-    df =get_dummy_model_comparison_data()
-    return jsonify(df.to_dict('records'))
+    if is_local:
+        df =get_dummy_model_comparison_data()
+        return jsonify(df.to_dict('records'))
   
     request_json = request.get_json()
     print(request_json)
@@ -277,37 +290,38 @@ def export_model():
 #     model_handler.update_active_version()
     
 #     df = model_handler.get_relativities_df()
-    relativities_dict = model_handler.relativities
-    
-    nb_col = (len(relativities_dict.keys()) - 1) * 3
-    variables = [col for col in relativities_dict.keys() if col != "base"]
-    variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
-    max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
-    
-    csv_output = ",,\n"
-    csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
-    csv_output += ",,\n"
-    csv_output += ",,\n"
-    csv_output += ",,,".join(variables) + ",,\n"
-    csv_output += ",,\n"
-    csv_output += ",,,".join(variables) + ",,\n"
-    
-    for i in range(max_len):
-        for variable in variables:
-            if i < len(variable_keys[variable]):
-                value = variable_keys[variable][i]
-                csv_output += "{},{},,".format(value, relativities_dict[variable][value])
-            else:
-                csv_output += ",,,"
-        csv_output += "\n"
-    
-    csv_data = csv_output.encode('utf-8')
-    
-    # data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
-    # df = pd.DataFrame(data)
+    if is_local:
+        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+        df = pd.DataFrame(data)
 
-    # # Convert DataFrame to CSV format
-    # csv_data = df.to_csv(index=False).encode('utf-8')
+        # Convert DataFrame to CSV format
+        csv_data = df.to_csv(index=False).encode('utf-8')
+    else:
+        relativities_dict = model_handler.relativities
+        
+        nb_col = (len(relativities_dict.keys()) - 1) * 3
+        variables = [col for col in relativities_dict.keys() if col != "base"]
+        variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
+        max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
+        
+        csv_output = ",,\n"
+        csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
+        csv_output += ",,\n"
+        csv_output += ",,\n"
+        csv_output += ",,,".join(variables) + ",,\n"
+        csv_output += ",,\n"
+        csv_output += ",,,".join(variables) + ",,\n"
+        
+        for i in range(max_len):
+            for variable in variables:
+                if i < len(variable_keys[variable]):
+                    value = variable_keys[variable][i]
+                    csv_output += "{},{},,".format(value, relativities_dict[variable][value])
+                else:
+                    csv_output += ",,,"
+            csv_output += "\n"
+
+        csv_data = csv_output.encode('utf-8')
 
     # Create an in-memory file-like object for CSV data
     csv_io = BytesIO(csv_data)
@@ -325,6 +339,10 @@ def export_model():
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
     # Log the receipt of a new training request
+    if is_local:
+        import time
+        time.sleep(5)
+        return jsonify({'message': 'Model training initiated successfully.'}), 200
     global global_dku_mltask
     
     request_json = request.get_json()
@@ -339,6 +357,7 @@ def train_model():
     except:
         input_dataset = "claim_train"
         code_env_string="py39_sol"
+
         
     current_app.logger.info(f"Training Dataset name selected is: {input_dataset}") 
     
