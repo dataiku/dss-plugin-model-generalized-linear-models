@@ -100,17 +100,23 @@
         </q-card-section>
         <q-card class="q-pa-xl">
             <div v-for="(column, index) in filteredColumns" class="column-management row-spacing">
+                <div class="column-name-container">
                     <h6 class="column-name">{{ abbreviateColumnName(column.name) }}</h6>
+                </div>
+                <div class="checkbox-container">
                     <BsCheckbox v-model="column.isIncluded" label="Include?" class="custom-label-spacing"></BsCheckbox>
-                    <!-- <BsLabel
+                </div>
+                    <div class="radio-group-container">
+                        <!-- <BsLabel
                             
                             label="C Type"
-                    ></BsLabel> -->
-                    <div class="q-gutter-sm row items-center">
-                        <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
-                    </div>
-                    <div class="q-gutter-sm row items-center">
-                        <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
+                        ></BsLabel> -->
+                        <div class="q-gutter-sm row items-center">
+                            <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
+                        </div>
+                        <div class="q-gutter-sm row items-center">
+                            <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
+                        </div>
                     </div>
             </div>
         </q-card>
@@ -150,9 +156,11 @@ import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import firstTabIcon from "../assets/images/first-tab-icon.svg";
-import { useLoader } from "../composables/use-loader";
 import { API } from '../Api';
 import { QRadio } from 'quasar';
+import { useLoader } from "../composables/use-loader";
+
+
 
 export default defineComponent({
 components: {
@@ -318,7 +326,7 @@ methods: {
         }
     },
     abbreviateColumnName(name:string) {
-        const maxLength = 15; // Maximum length of column name
+        const maxLength = 10; // Maximum length of column name
         if (name.length > maxLength) {
         return `${name.substring(0, maxLength - 1)}...`; // 
         }
@@ -427,6 +435,7 @@ display: flex;
 flex-direction: row;
 align-items: center; /* Align items vertically */
 gap: 20px; /* Spacing between each item */
+justify-content: space-between; 
 }
 .form-group {
 display: flex;
@@ -501,6 +510,22 @@ margin-top: 5px;
     margin-right: 150px; /* Adjust the margin as needed */
     margin-left: 10px; 
     padding: 5px;       /* Adjust padding for better alignment and spacing */
+}
+.radio-group-container {
+    margin-left: auto; /* Pushes the container to the right */
+    display: flex;
+    align-items: center;
+}
+.checkbox-container {
+    margin-left: auto; /* Pushes the container to the right */
+    display: flex;
+    align-items: left;
+}
+.column-name-container {
+    margin-left: auto; /* Pushes the container to the right */
+    display: flex;
+    align-items: left;
+    min-width: 150px;
 }
 </style>
 
