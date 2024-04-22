@@ -282,7 +282,7 @@ header {
   padding-right: 0px;
   padding-top: 20px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--bs-spacing-13, 52px);
   min-height: 350px;
 }

@@ -87,9 +87,9 @@ dummy_get_updated_data  = pd.DataFrame({
             'baseLevelPrediction': [0.5, 0.55, 0.6, 0.7, 0.5, 0.5, 0.4, 0.45]
         })
 
-dummy_relativites= pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
-                        'category': ['January', 'February', 'March', 'April','January', 'February', 'March', 'April'],
-                        'relativity': [1.0, 1.087324, 0.98091882, 0.7929717, 1.0, 0.992374, 1.19274, 1.052333]})
+dummy_relativites= pd.DataFrame({'variable': ['Variable1','Variable1','Variable1','Variable1', 'Variable1','Variable1','Variable1', 'Variable1', 'Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
+                        'category': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'December', 'Other','January', 'February', 'March', 'April'],
+                        'relativity': [1.0, 1.087324, 0.98091882, 0.7929717, 1.087324, 0.98091882, 0.7929717, 0.992374, 1.087324, 0.98091882, 0.7929717, 0.992374, 1.0, 0.992374, 1.19274, 1.052333]})
 
 dummy_model_metrics ={
         "models": {
