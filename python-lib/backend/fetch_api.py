@@ -42,7 +42,6 @@ if not is_local:
 def get_models():
     if is_local:
         return jsonify(dummy_models)
-    print(saved_model_id)
     if global_dss_mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
