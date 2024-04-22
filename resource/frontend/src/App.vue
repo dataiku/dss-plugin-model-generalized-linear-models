@@ -25,6 +25,7 @@ import ModelTrainingTab from './components/ModelTrainingTab.vue';
 import ModelComparisonTab from './components/ModelComparisonTab.vue';
 import OneWayTab from './components/OneWayTab.vue';
 import VariableLevelStatsTab from './components/VariableLevelStatsTab.vue';
+import { BsLayoutDefault } from "quasar-ui-bs";
 import { defineComponent } from "vue";
 export default defineComponent({
     components: {
