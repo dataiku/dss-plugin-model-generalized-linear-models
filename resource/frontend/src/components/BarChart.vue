@@ -62,7 +62,9 @@
           xAxis: [{
               type: this.xaxisType==="categorical" ? "category" : null,
               data: this.xaxisLabels,
-              axisLabel: {'interval': 0}
+              axisLabel: {'interval': 0,
+                          'rotate': 45,
+                          }
           }],
           yAxis: [
                     {
