@@ -65,8 +65,8 @@
                     <ModelComparisonChart
                     v-if="selectedVariable"
                         :variableValues="modelComparisonData.map(item => item.variable_values)"
-                        :model1ClaimFrequency="modelComparisonData.map(item => item.model_1_claim_frequency)"
-                        :model2ClaimFrequency="modelComparisonData.map(item => item.model_2_claim_frequency)"
+                        :model1ClaimFrequency="modelComparisonData.map(item => item.Model_1_fittedAverage)"
+                        :model2ClaimFrequency="modelComparisonData.map(item => item.Model_2_fittedAverage)"
                         :exposures="modelComparisonData.map(item => item.exposure)"
                         :observedAverage ="modelComparisonData.map(item => item.observed_average)" 
                         :chartTitle="selectedVariable"
@@ -251,8 +251,8 @@ emits: ['update:modelValue']
 interface chartDataItem{
     variable_values: any;
     exposure: number;
-    model_1_claim_frequency: number;
-    model_2_claim_frequency: number;
+    Model_1_fittedAverage: number;
+    Model_2_fittedAverage: number;
     observed_average: number;
 }
 interface Model {

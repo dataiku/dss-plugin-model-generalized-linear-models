@@ -30,8 +30,8 @@ interface ModelMetrics {
 interface ModelComparisonDataPoint {
     variable_values: any;
     exposure: number;
-    model_1_claim_frequency: number;
-    model_2_claim_frequency: number;
+    Model_1_fittedAverage: number;
+    Model_2_fittedAverage: number;
     observed_average: number;
 }
 

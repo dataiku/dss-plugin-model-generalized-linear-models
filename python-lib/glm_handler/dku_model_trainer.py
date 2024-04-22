@@ -36,6 +36,7 @@ class DataikuMLTask:
         self.model = self.project.get_saved_model(saved_model_id)
         try:
             self.mltask = self.model.get_origin_ml_task()
+            self.ml_task_variables = list(self.mltask.get_settings().get_raw().get('preprocessing').get('per_feature').keys())
         except:
             raise ValueError("""There is no associated ML task for your model. 
             This model was likely imported or trained somewhere else and is not compatible.""")
@@ -126,6 +127,19 @@ class DataikuMLTask:
         logger.info(f"link_function set to {self.link_function}")
 
         self.variables = [{'name': key, **value} for key, value in variables.items()]
+        
+        variable_names = [var['name'] for var in self.variables]
+        
+        # Check if any name in variable_names is not in existing_variable_names
+        if any(name not in self.existing_variable_names for name in variable_names):
+            raise ValueError(
+                """Your original dataset has been updated and the schema has not been propagated. 
+                As a result, your training dataset has column names {} but the model 
+                only has these available to it {}. Please propagate the schema to fix.""".format(
+                    variable_names, self.existing_variable_names
+                )
+            )
+        
         logger.info(f"variables set to {self.variables}")
 
         self.project = self.client.get_default_project()
