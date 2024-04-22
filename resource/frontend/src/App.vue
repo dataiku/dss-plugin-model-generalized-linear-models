@@ -1,6 +1,42 @@
 <template>
     <BsLayoutDefault ref="layout" :left-panel-width="350">
-      <ModelTrainingTab
+      <template v-for="tabInfo in tabs" :key="tabInfo.name">
+            <BsTab :name="tabInfo.name" :docTitle="tabInfo.docTitle">
+                <BsTabIcon>
+                    <img :src="tabInfo.icon" :alt="`${tabInfo.name} Icon`" />
+                </BsTabIcon>
+                <BsDrawer>
+                    <component
+                        :is="tabInfo.drawerComponent"
+                        v-bind="tabInfo.drawerProps"
+                        @update:loading="updateLoading"
+                        @navigate-tab="goToTab"
+                    />
+                </BsDrawer>
+                <BsContent>
+                    <template
+                        v-if="
+                            tabInfo.contentComponent && !tabInfo.showEmptyState
+                        "
+                    >
+                        <component
+                            :is="tabInfo.contentComponent"
+                            v-bind="tabInfo.contentProps"
+                            @update:loading="updateLoading"
+                            @navigate-tab="goToTab"
+                        />
+                    </template>
+                    <template v-else>
+                        <EmptyState
+                            :title="tabInfo.emptyState.title"
+                            :subtitle="tabInfo.emptyState.subtitle"
+                        />
+                    </template>
+                </BsContent>
+            </BsTab>
+        </template>
+
+      <!-- <ModelTrainingTab
         @update-models="updateModels">
       </ModelTrainingTab>
       <OneWayTab
@@ -14,7 +50,7 @@
       </LiftChartTab>
       <ModelComparisonTab
       :reload-models="reloadModels">
-      </ModelComparisonTab>
+      </ModelComparisonTab> -->
 
     </BsLayoutDefault>
 </template>
@@ -27,6 +63,9 @@ import OneWayTab from './components/OneWayTab.vue';
 import VariableLevelStatsTab from './components/VariableLevelStatsTab.vue';
 import { BsLayoutDefault } from "quasar-ui-bs";
 import { defineComponent } from "vue";
+import { useLoader } from "./composables/use-loader";
+import firstTabIcon from "./assets/images/first-tab-icon.svg";
+
 export default defineComponent({
     components: {
         ModelTrainingTab,
@@ -38,13 +77,59 @@ export default defineComponent({
     data() {
     return {
         reloadModels: false as boolean,
+        chartData: null,
+        loading: false as boolean,
       }
     },
     methods: {
       updateModels(){
-        console.log("App: update models");
         this.reloadModels = !this.reloadModels;
       },
+      updateLoading(newVal: boolean) {
+            this.loading = newVal;
+        },
+        goToTab(index: number) {
+            const layout = this.$refs.layout as InstanceType<
+                typeof BsLayoutDefault
+            >;
+            if (layout) {
+                layout.tabIndex = index;
+            }
+        },
+    },
+    watch: {
+      loading(newVal) {
+          if (newVal) {
+              useLoader("Loading data..").show();
+          } else {
+              useLoader().hide();
+          }
+      },
+    },
+    computed: {
+      tabs() {
+            return [
+                {
+                    name: "One-Way Variable",
+                    docTitle: "Parameters Analyzer",
+                    icon: firstTabIcon,
+                    headerInfo: {
+                    },
+                    drawerComponent: "OneWayTab",
+                    contentComponent: "OneWayTabContent",
+                    contentProps: {},
+                    drawerProps: {
+                      reloadModels: this.reloadModels
+                    },
+                    showEmptyState: this.chartData,
+                    emptyState: {
+                        title: "One-Way Variable",
+                        subtitle:
+                            "Select variable in the left column to create chart",
+                    },
+                }
+            ];
+        }
     }
 })
 </script>

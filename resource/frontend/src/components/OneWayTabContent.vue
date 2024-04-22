@@ -1,56 +1,29 @@
 <template>
-  <!-- <BsTabSectionTitle title="One-Way Variable"></BsTabSectionTitle> -->
-    <q-scroll-area style="height: calc(100vh - 100px); max-width: 100%; overflow-x: hidden">
-              <div class="variable-select-container">
-               <BsLabel
-                  label="Select a model"
-                  info-text="Charts will be generated with respect to this model">
-               </BsLabel>
-              <BsSelect
-                  :modelValue="selectedModelString"
-                  :all-options="modelsString"
-                  @update:modelValue="updateModelString"
-                  >
-              </BsSelect>
-              <BsCheckbox v-if="selectedModelString" v-model="includeSuspectVariables" label="Include Suspect Variables">
-              </BsCheckbox>
-              <BsLabel v-if="selectedModelString"
-                  label="Select a Variable"
-                  info-text="Charts will be generated with respect to this variable">
-               </BsLabel>
-                <BsSelect
-                  v-if="selectedModelString"
-                      v-model="selectedVariable"
-                      :all-options="variablePoints"
-                      @update:modelValue="updateVariable">
-                      <template v-slot:selected-item="scope">
-                        <q-item v-if="scope.opt">
-                          {{ selectedVariable.variable }}
-                        </q-item>
-                    </template>
-                          <template #option="props">
-                              <q-item v-if="props.opt.isInModel || includeSuspectVariables" v-bind="props.itemProps" clickable>
-                                  <q-item-section side>
-                                    <div v-if="props.opt.isInModel">selected</div>
-                                    <div v-else>unselected</div>
-                                  </q-item-section>
-                                <q-item-section class="bs-font-medium-2-normal">
-                                    {{ props.opt.variable }}
-                                </q-item-section>
-                              </q-item>
-                        </template>
-                  </BsSelect>
-                  <div v-if="selectedModelString" class="button-container">
-                  <BsButton class="bs-primary-button" 
-                  unelevated
-                  dense
-                  no-caps
-                  padding="4"
-                  @click="onClick">Export</BsButton>
+              <EmptyState
+                    class="tab-content"
+                    title="One-Way Variable"
+                    subtitle="Select variable in the left column to create chart"
+                    v-if="chartData.length==0"/>
+                <div class="tab-content" v-else>
+                    <BarChart
+                      v-if="selectedVariable"
+                      :xaxisLabels="chartData.map(item => ((selectedVariable.variableType == 'categorical') ? item.Category : Number(item.Category)))"
+                      :xaxisType="selectedVariable.variableType"
+                      :barData="chartData.map(item => item.Value)"
+                      :observedAverageLine="chartData.map(item => item.observedAverage)"
+                      :fittedAverageLine="chartData.map(item => item.fittedAverage)"
+                      :baseLevelPredictionLine="chartData.map(item => item.baseLevelPrediction)"
+                      :chartTitle="selectedVariable.variable"
+                      />
+                    <BsTable v-if="selectedVariable.isInModel"
+                      :title="selectedVariable.variable"
+                      :rows="relativities"
+                      :columns="relativitiesColumns"
+                      :globalSearch="false"
+                      row-key="name"
+                    />
                 </div>
-                </div>
-            </q-scroll-area>
-</template>
+    </template>
 
 <script lang="ts">
 import BarChart from './BarChart.vue'
@@ -60,7 +33,8 @@ import * as echarts from "echarts";
 import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
-import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider, BsTabSectionTitle } from "quasar-ui-bs";
+import { useLoader } from "../composables/use-loader";
+import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
 import type { QTableColumn } from 'quasar';
 
 const columns: QTableColumn[] = [
@@ -103,7 +77,6 @@ export default defineComponent({
         BsTable,
         BsCheckbox,
         BsSlider,
-        BsTabSectionTitle,
     },
     data() {
         return {
@@ -112,9 +85,9 @@ export default defineComponent({
             relativitiesData: [] as RelativityPoint[],
             relativitiesTable: [] as RelativityPoint[],
             models: [] as ModelPoint[],
-            selectedModel: {} as ModelPoint,
             modelsString: [] as string[],
             selectedModelString: "",
+            layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             variablePoints: [] as VariablePoint[],
             allVariables: [] as String[],
             variables: [] as VariablePoint[],
@@ -135,6 +108,13 @@ export default defineComponent({
             });
           },
       },
+      loading(newVal) {
+          if (newVal) {
+              useLoader("Loading data..").show();
+          } else {
+              useLoader().hide();
+          }
+      },
       selectedVariable(newValue: VariablePoint) {
         this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
         this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
@@ -149,6 +129,11 @@ export default defineComponent({
       }
     },
     methods: {
+      closeSideDrawer() {
+            if(this.layoutRef){
+                this.layoutRef.drawerOpen = !this.layoutRef.drawerOpen;
+            }
+        },
         async updateVariable(value: VariablePoint) {
           this.selectedVariable = value;
         },
