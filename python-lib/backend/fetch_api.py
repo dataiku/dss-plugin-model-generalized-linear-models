@@ -245,7 +245,7 @@ def get_model_comparison_data():
     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
                              on=['observedAverage','Category', 'exposure'], 
                              how='outer')
-    
+    merged_model_stats.fillna(0, inplace=True)
     current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
     return jsonify(merged_model_stats.to_dict('records'))
 
