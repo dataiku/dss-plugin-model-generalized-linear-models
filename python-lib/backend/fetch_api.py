@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = True
+is_local = False
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -212,6 +212,8 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
+    df =get_dummy_model_comparison_data()
+    return jsonify(df.to_dict('records'))
     # local dev
     if is_local:
         df =get_dummy_model_comparison_data()
@@ -250,8 +252,8 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-    if is_local:
-        return jsonify(dummy_model_metrics)
+#     if is_local:
+#         return jsonify(dummy_model_metrics)
     request_json = request.get_json()
     print(request_json)
     
