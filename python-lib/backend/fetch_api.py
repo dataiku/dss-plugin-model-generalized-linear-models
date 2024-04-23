@@ -252,42 +252,41 @@ def get_model_comparison_data():
 
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
-def get_model_metrics():
-#     if is_local:
-#         return jsonify(dummy_model_metrics)
+async def get_model_metrics():
     request_json = request.get_json()
     print(request_json)
     
     model1, model2 = request_json["model1"], request_json["model2"]
-    
-    model_deployer.set_new_active_version(model1)
-    model_handler.update_active_version()
 
-    mmc = ModelMetricsCalculator(model_handler)
-    model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
+    # Prepare tasks for asynchronous execution
+    results_model1 = asyncio.create_task(get_model_metrics_async(model1))
+    results_model2 = asyncio.create_task(get_model_metrics_async(model2))
 
-    model_deployer.set_new_active_version(model2)
-    model_handler.update_active_version()
-
-    mmc = ModelMetricsCalculator(model_handler)
-    model_2_aic, model_2_bic, model_2_deviance = mmc.calculate_metrics()
+    # Await both tasks concurrently
+    model_1_results = await results_model1
+    model_2_results = await results_model2
 
     metrics = {
         "models": {
-            "Model_1": {
-            "AIC": model_1_aic,
-            "BIC": model_1_bic,
-            "Deviance": model_1_deviance
-            },
-            "Model_2": {
-            "AIC": model_2_aic,
-            "BIC": model_2_bic,
-            "Deviance": model_2_deviance
-            }
+            "Model_1": model_1_results,
+            "Model_2": model_2_results
         }
-        }
-    
+    }
+
     return jsonify(metrics)
+
+async def get_model_metrics_async(model):
+    model_deployer.set_new_active_version(model)
+    model_handler.update_active_version()
+
+    mmc = ModelMetricsCalculator(model_handler)
+    model_aic, model_bic, model_deviance = mmc.calculate_metrics()
+
+    return {
+        "AIC": model_aic,
+        "BIC": model_bic,
+        "Deviance": model_deviance
+    }
 
 #     return jsonify(dummy_model_metrics)
 
