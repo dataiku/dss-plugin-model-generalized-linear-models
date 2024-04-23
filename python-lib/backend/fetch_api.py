@@ -224,13 +224,14 @@ def get_model_comparison_data():
     print(request_json)
     model1, model2 = request_json["model1"], request_json["model2"]
 
-    current_app.logger.info(f"Setting new model version {model2} is now the active version.")
+    current_app.logger.info(f"Setting new model version {model1} is now the active version.")
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
     current_app.logger.info(f"Model {model1} is now the active version.")
     model_1_lift_chart = model_handler.get_lift_chart(8)
     current_app.logger.info(f"Model {model1} lift chart is {model_1_lift_chart.to_string()}")
     
+    current_app.logger.info(f"Setting new model version {model2} is now the active version.")
     model_deployer.set_new_active_version(model2)
     model_handler.update_active_version()
     current_app.logger.info(f"Model {model2} is now the active version.")
