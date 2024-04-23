@@ -224,7 +224,7 @@ def get_model_comparison_data():
     print(request_json)
     model1, model2 = request_json["model1"], request_json["model2"]
 
-    
+    current_app.logger.info(f"Setting new model version {model2} is now the active version.")
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
     current_app.logger.info(f"Model {model1} is now the active version.")
