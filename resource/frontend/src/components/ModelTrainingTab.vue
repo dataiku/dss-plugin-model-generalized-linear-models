@@ -1,7 +1,7 @@
 <template>
 <BsTab name="Model Training" docTitle="GLM Analyzer" :docIcon="docLogo">
     <BsTabIcon>
-        <img :src="firstTabIcon" alt="Target Definition Icon" />
+        <img :src="trainingIcon" alt="Target Definition Icon" />
     </BsTabIcon>
     <BsHeader>
         <BsButton
@@ -155,7 +155,7 @@ import { defineComponent } from "vue";
 import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
-import firstTabIcon from "../assets/images/first-tab-icon.svg";
+import trainingIcon from "../assets/images/training.svg";
 import { API } from '../Api';
 import { QRadio } from 'quasar';
 import { useLoader } from "../composables/use-loader";
@@ -189,7 +189,7 @@ data() {
         datasetsString: [] as string[],
         chartData: [],  
         layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
-        firstTabIcon,
+        trainingIcon,
         docLogo,
         distributionOptions: ['Binomial',
             'Gamma',

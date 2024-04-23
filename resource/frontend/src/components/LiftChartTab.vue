@@ -5,7 +5,7 @@
             :docIcon="docLogo"
         >
             <BsTabIcon>
-                <img :src="firstTabIcon" alt="Target Definition Icon" />
+                <img :src="liftChartIcon" alt="Target Definition Icon" />
             </BsTabIcon>
             <BsHeader>
                 <BsButton
@@ -74,7 +74,7 @@ import { defineComponent } from "vue";
 import { API } from '../Api';
 import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
-import firstTabIcon from "../assets/images/first-tab-icon.svg";
+import liftChartIcon from "../assets/images/lift-chart.svg";
 
 
 export default defineComponent({
@@ -103,7 +103,7 @@ export default defineComponent({
             selectedModelString: "",
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             docLogo,
-            firstTabIcon,
+            liftChartIcon,
             loading: false,
         };
     },

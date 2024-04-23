@@ -5,7 +5,7 @@
             :docIcon="docLogo"
         >
             <BsTabIcon>
-                <img :src="firstTabIcon" alt="Target Definition Icon" />
+                <img :src="variableLevelIcon" alt="Target Definition Icon" />
             </BsTabIcon>
             <BsHeader>
                 <BsButton
@@ -78,7 +78,7 @@ import { defineComponent } from "vue";
 import { API } from '../Api';
 import { BsButton, BsLayoutDefault, BsTable } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
-import firstTabIcon from "../assets/images/first-tab-icon.svg";
+import variableLevelIcon from "../assets/images/variable-level-stats.svg";
 import { useLoader } from "../composables/use-loader";
 import type { QTableColumn } from 'quasar';
 
@@ -172,7 +172,7 @@ export default defineComponent({
             selectedModelString: "",
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             docLogo,
-            firstTabIcon,
+            variableLevelIcon,
             columns: columns,
             loading: false,
         };

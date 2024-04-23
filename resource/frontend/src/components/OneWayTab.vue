@@ -5,7 +5,7 @@
             :docIcon="docLogo"
         >
             <BsTabIcon>
-                <img :src="firstTabIcon" alt="Target Definition Icon" />
+                <img :src="oneWayIcon" alt="Target Definition Icon" />
             </BsTabIcon>
             <BsHeader>
                 <BsButton
@@ -122,7 +122,7 @@ import { useLoader } from "../composables/use-loader";
 import { useNotification } from "../composables/use-notification";
 import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
-import firstTabIcon from "../assets/images/first-tab-icon.svg";
+import oneWayIcon from "../assets/images/one-way.svg";
 import type { QTableColumn } from 'quasar';
 
 const columns: QTableColumn[] = [
@@ -178,7 +178,7 @@ export default defineComponent({
             selectedModelString: "",
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             docLogo,
-            firstTabIcon,
+            oneWayIcon,
             variablePoints: [] as VariablePoint[],
             allVariables: [] as String[],
             variables: [] as VariablePoint[],
