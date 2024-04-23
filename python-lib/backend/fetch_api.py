@@ -63,7 +63,6 @@ def get_variables():
         return jsonify(dummy_variables)
     request_json = request.get_json()
     full_model_id = request_json["id"]
-    web_app_config = get_webapp_config()
     model_deployer.set_new_active_version(full_model_id)
     model_handler.update_active_version()
     try:
@@ -81,6 +80,7 @@ def get_variables():
         
     except ValueError as e:
         current_app.logger.error(f"Validation Error: {e}")
+        return jsonify({"error": e})        
     except Exception as e:
         current_app.logger.error(f"An error occurred: {e}")
     

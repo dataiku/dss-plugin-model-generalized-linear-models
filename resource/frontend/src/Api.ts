@@ -72,6 +72,9 @@ interface VariableLevelStatsPoint {
     relativity: number;
 }
 
+interface ErrorPoint {
+    error: string;
+}
 
 export let API = {
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
@@ -79,10 +82,10 @@ export let API = {
     updateData: (data: FeatureNbBin) => axios.post<DataPoint[]>("/api/update_bins", data),
     getRelativities: (data: ModelPoint) => axios.post<RelativityPoint[]>("/api/relativities", data),
     getModels: () => axios.get<ModelPoint[]>("/api/models"),
-    getVariables: (data: ModelPoint) => axios.post< []>("/api/variables", data),
+    getVariables: (data: ModelPoint) => axios.post<VariablePoint[] | ErrorPoint>("/api/variables", data),
     getProjectDataset: () => axios.get<string[]>("/api/get_project_dataset", {}),
     getDatasetColumns: () => axios.get("/api/get_dataset_columns", {}),
-    trainModel: (payload: any) => axios.post<string[]>("/api/train_model",payload),
+    trainModel: (payload: any) => axios.post<string[]>("/api/train_model", payload),
     getModelComparisonData: (data: any) => axios.post<ModelComparisonDataPoint[]>("/api/get_model_comparison_data", data),
     getModelMetrics: (data: any) => axios.post<ModelMetrics>("/api/get_model_metrics", data),
     exportModel: () => axios.get<Blob>("/api/export_model"),

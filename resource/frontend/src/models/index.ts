@@ -41,3 +41,11 @@ export type VariablePoint = {
     isInModel: boolean;
     variableType: string;
 }
+
+export type ErrorPoint = {
+    error: string;
+}
+
+export function isErrorPoint(obj: any): obj is ErrorPoint {
+    return typeof obj === 'object' && obj !== null && 'error' in obj && typeof obj.error === 'string';
+}

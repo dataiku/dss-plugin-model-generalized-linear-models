@@ -115,9 +115,11 @@ import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import * as echarts from "echarts";
 import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint } from '../models';
+import { isErrorPoint } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
 import { useLoader } from "../composables/use-loader";
+import { useNotification } from "../composables/use-notification";
 import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import firstTabIcon from "../assets/images/first-tab-icon.svg";
@@ -228,17 +230,27 @@ export default defineComponent({
         },
         async updateModelString(value: string) {
           this.loading = true;
-          this.selectedVariable = {} as VariablePoint;
-          const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
-          const variableResponse = await API.getVariables(model);
-          this.variablePoints = variableResponse?.data;
-          this.allVariables = this.variablePoints.map(item => item.variable);
-          const dataResponse = await API.getData(model);
-          this.allData = dataResponse?.data;
-          const relativityResponse = await API.getRelativities(model);
-          this.relativitiesData = relativityResponse?.data;
-          this.selectedModelString = value;
+          try {
+            this.selectedVariable = {} as VariablePoint;
+            const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
+            const variableResponse = await API.getVariables(model)
+            console.log(variableResponse);
+            if (isErrorPoint(variableResponse?.data)) {
+              this.handleError(variableResponse?.data.error);
+            } else {
+              this.variablePoints = variableResponse?.data;
+              this.allVariables = this.variablePoints.map(item => item.variable);
+              const dataResponse = await API.getData(model);
+              this.allData = dataResponse?.data;
+              const relativityResponse = await API.getRelativities(model);
+              this.relativitiesData = relativityResponse?.data;
+              this.selectedModelString = value;
+            }
+        } catch (err) {
+            this.handleError(err);
+        } finally {
           this.loading = false;
+        }
         },
         onClick: function() {
           API.exportModel().then(response => {
@@ -252,6 +264,14 @@ export default defineComponent({
           }).catch(error => {
               console.error('Error exporting model:', error);
           });
+        },
+        notifyError(msg: string) {
+            useNotification("negative", msg);
+        },
+        handleError(msg: any) {
+            this.loading = false;
+            console.error(msg);
+            this.notifyError(msg);
         },
     },
     mounted() {
