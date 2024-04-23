@@ -21,7 +21,7 @@
   name: 'ModifiedBarChart', // Changed the name to reflect the new functionality
   components: { VChart },
   props: {
-    variableValues: {
+    Category: {
       type: Array,
       required: true
     },
@@ -57,7 +57,7 @@
         this.chartOption = {
             xAxis: {
                 type: "category",
-                data: this.variableValues,
+                data: this.Category,
                 name: 'Variable Values',
                 position: 'bottom', 
                 nameLocation: 'center',
@@ -144,7 +144,7 @@
     this.createChartData();
     },
     watch: {
-        variableValues: {
+        Category: {
             deep: true,
             handler() {
                 this.createChartData();

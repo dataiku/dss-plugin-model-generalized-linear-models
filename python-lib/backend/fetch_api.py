@@ -251,6 +251,7 @@ def get_model_comparison_data():
 def get_model_metrics():
     request_json = request.get_json()
     print(request_json)
+    
     model1, model2 = request_json["model1"], request_json["model2"]
     
     model_deployer.set_new_active_version(model1)
