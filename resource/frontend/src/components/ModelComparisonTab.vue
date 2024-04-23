@@ -64,7 +64,7 @@
                 <div>
                     <ModelComparisonChart
                     v-if="selectedVariable"
-                        :variableValues="modelComparisonData.map(item => item.variable_values)"
+                        :variableValues="modelComparisonData.map(item => item.Category)"
                         :model1ClaimFrequency="modelComparisonData.map(item => item.Model_1_fittedAverage)"
                         :model2ClaimFrequency="modelComparisonData.map(item => item.Model_2_fittedAverage)"
                         :exposures="modelComparisonData.map(item => item.exposure)"
@@ -249,7 +249,7 @@ mounted() {
 emits: ['update:modelValue']
 })
 interface chartDataItem{
-    variable_values: any;
+    Category: any;
     exposure: number;
     Model_1_fittedAverage: number;
     Model_2_fittedAverage: number;
