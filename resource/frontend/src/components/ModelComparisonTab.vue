@@ -68,7 +68,7 @@
                         :model1ClaimFrequency="modelComparisonData.map(item => item.Model_1_fittedAverage)"
                         :model2ClaimFrequency="modelComparisonData.map(item => item.Model_2_fittedAverage)"
                         :exposures="modelComparisonData.map(item => item.exposure)"
-                        :observedAverage ="modelComparisonData.map(item => item.observed_average)" 
+                        :observedAverage ="modelComparisonData.map(item => item.observedAverage)" 
                         :chartTitle="selectedVariable"
                         />
                 </div>
@@ -253,7 +253,7 @@ interface chartDataItem{
     exposure: number;
     Model_1_fittedAverage: number;
     Model_2_fittedAverage: number;
-    observed_average: number;
+    observedAverage: number;
 }
 interface Model {
     name: string;

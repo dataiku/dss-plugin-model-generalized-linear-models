@@ -251,6 +251,8 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
+    if is_local:
+        return jsonify(dummy_model_metrics)
     request_json = request.get_json()
     print(request_json)
     

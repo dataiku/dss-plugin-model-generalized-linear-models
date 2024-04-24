@@ -73,7 +73,7 @@
                     },
                 {
                     type: "value",
-                    name: 'Exposure',
+                    name: '',
                 }   
                 ],
 

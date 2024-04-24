@@ -32,7 +32,7 @@ interface ModelComparisonDataPoint {
     exposure: number;
     Model_1_fittedAverage: number;
     Model_2_fittedAverage: number;
-    observed_average: number;
+    observedAverage: number;
 }
 
 interface RelativityPoint {
