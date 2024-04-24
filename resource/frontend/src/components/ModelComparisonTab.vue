@@ -64,7 +64,7 @@
                 <div>
                     <ModelComparisonChart
                     v-if="selectedVariable"
-                        :variableValues="modelComparisonData.map(item => item.Category)"
+                        :Category="modelComparisonData.map(item => item.Category)"
                         :model1ClaimFrequency="modelComparisonData.map(item => item.Model_1_fittedAverage)"
                         :model2ClaimFrequency="modelComparisonData.map(item => item.Model_2_fittedAverage)"
                         :exposures="modelComparisonData.map(item => item.exposure)"

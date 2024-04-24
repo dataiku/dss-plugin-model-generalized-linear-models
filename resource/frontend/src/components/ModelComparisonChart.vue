@@ -74,9 +74,6 @@
                 {
                     type: "value",
                     name: 'Exposure',
-                    nameLocation: 'center',
-                    nameGap: 30,
-                    position: 'right', // Use the right side for the exposure axis
                 }   
                 ],
 
