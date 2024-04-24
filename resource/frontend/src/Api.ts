@@ -28,7 +28,7 @@ interface ModelMetrics {
 }
 
 interface ModelComparisonDataPoint {
-    variable_values: any;
+    Category: any;
     exposure: number;
     Model_1_fittedAverage: number;
     Model_2_fittedAverage: number;
