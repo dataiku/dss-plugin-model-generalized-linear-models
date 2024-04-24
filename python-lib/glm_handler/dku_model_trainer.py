@@ -129,7 +129,9 @@ class DataikuMLTask:
         self.variables = [{'name': key, **value} for key, value in variables.items()]
         
         variable_names = [var['name'] for var in self.variables]
+        settings = self.mltask.get_settings()   
         
+        self.existing_variable_names = settings.get_raw()['preprocessing']['per_feature'].keys()
         # Check if any name in variable_names is not in existing_variable_names
         if any(name not in self.existing_variable_names for name in variable_names):
             raise ValueError(
