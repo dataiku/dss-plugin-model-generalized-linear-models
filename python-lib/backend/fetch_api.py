@@ -211,6 +211,8 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
+    df =get_dummy_model_comparison_data()
+    return jsonify(df.to_dict('records'))
     # local dev
     if is_local:
         df =get_dummy_model_comparison_data()
