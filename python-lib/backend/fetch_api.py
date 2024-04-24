@@ -65,7 +65,9 @@ def get_variables():
     full_model_id = request_json["id"]
     model_deployer.set_new_active_version(full_model_id)
     model_handler.update_active_version()
+    
     try:
+        raise ValueError("predicted_base returned None.")
         predicted_base = model_handler.get_predicted_and_base()
         if predicted_base is None:
             raise ValueError("predicted_base returned None.")
