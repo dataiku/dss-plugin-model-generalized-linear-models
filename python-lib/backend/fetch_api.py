@@ -216,37 +216,37 @@ def get_model_comparison_data():
     df =get_dummy_model_comparison_data()
     return jsonify(df.to_dict('records'))
     # local dev
-    if is_local:
-        df =get_dummy_model_comparison_data()
-        return jsonify(df.to_dict('records'))
+#     if is_local:
+#         df =get_dummy_model_comparison_data()
+#         return jsonify(df.to_dict('records'))
   
-    request_json = request.get_json()
-    print(request_json)
-    model1, model2 = request_json["model1"], request_json["model2"]
+#     request_json = request.get_json()
+#     print(request_json)
+#     model1, model2 = request_json["model1"], request_json["model2"]
 
     
-    model_deployer.set_new_active_version(model1)
-    model_handler.update_active_version()
-    current_app.logger.info(f"Model {model1} is now the active version.")
-    model_1_lift_chart = model_handler.get_lift_chart(8)
-    current_app.logger.info(f"Model {model1} lift chart is {model_1_lift_chart.to_string()}")
+#     model_deployer.set_new_active_version(model1)
+#     model_handler.update_active_version()
+#     current_app.logger.info(f"Model {model1} is now the active version.")
+#     model_1_lift_chart = model_handler.get_lift_chart(8)
+#     current_app.logger.info(f"Model {model1} lift chart is {model_1_lift_chart.to_string()}")
     
-    model_deployer.set_new_active_version(model2)
-    model_handler.update_active_version()
-    current_app.logger.info(f"Model {model2} is now the active version.")
+#     model_deployer.set_new_active_version(model2)
+#     model_handler.update_active_version()
+#     current_app.logger.info(f"Model {model2} is now the active version.")
 
-    model_2_lift_chart = model_handler.get_lift_chart(8)
-    current_app.logger.info(f"Model {model2} lift chart is {model_2_lift_chart.to_string()}")
+#     model_2_lift_chart = model_handler.get_lift_chart(8)
+#     current_app.logger.info(f"Model {model2} lift chart is {model_2_lift_chart.to_string()}")
     
-    model_1_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_1_fittedAverage']
-    model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
+#     model_1_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_1_fittedAverage']
+#     model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
     
-    merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
-                             on=['observedAverage','Category', 'exposure'], 
-                             how='outer')
+#     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
+#                              on=['observedAverage','Category', 'exposure'], 
+#                              how='outer')
     
-    current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
-    return jsonify(merged_model_stats.to_dict('records'))
+#     current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
+#     return jsonify(merged_model_stats.to_dict('records'))
 
 
 
