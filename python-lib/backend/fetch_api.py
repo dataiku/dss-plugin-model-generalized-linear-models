@@ -227,7 +227,7 @@ def get_model_comparison_data():
         current_app.logger.info(f"Model {model1} is now the active version.")
 
         model1_predicted_base = model_handler.get_predicted_and_base()
-        model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'baseLevelPrediction']
+        model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value']
         current_app.logger.info(f"Successfully generated predictions. Sample is {model1_predicted_base.head().to_string()}")
         
         current_app.logger.info(f"Model ID received: {model2}")
