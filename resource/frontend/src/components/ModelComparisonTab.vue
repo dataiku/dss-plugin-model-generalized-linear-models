@@ -65,10 +65,10 @@
                     <ModelComparisonChart
                     v-if="selectedVariable"
                         :Category="modelComparisonData.map(item => item.Category)"
-                        :model1ClaimFrequency="modelComparisonData.map(item => item.Model_1_fittedAverage)"
-                        :model2ClaimFrequency="modelComparisonData.map(item => item.Model_2_fittedAverage)"
-                        :exposures="modelComparisonData.map(item => item.exposure)"
-                        :observedAverage ="modelComparisonData.map(item => item.observedAverage)" 
+                        :model1ClaimFrequency="modelComparisonData.map(item => item.model_1_fittedAverage)"
+                        :model2ClaimFrequency="modelComparisonData.map(item => item.model_2_fittedAverage)"
+                        :exposures="modelComparisonData.map(item => item.Value)"
+                        :observedAverage ="modelComparisonData.map(item => item.model_1_observedAverage)" 
                         :chartTitle="selectedVariable"
                         />
                 </div>
