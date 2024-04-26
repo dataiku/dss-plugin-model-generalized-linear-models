@@ -113,8 +113,6 @@ def get_data():
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
-#     local dev
-        return jsonify(dummy_df_data.to_dict('records'))
     
     except Exception as e:
         current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
@@ -213,13 +211,48 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
-    df =get_dummy_model_comparison_data()
-    return jsonify(df.to_dict('records'))
-    # local dev
-#     if is_local:
-#         df =get_dummy_model_comparison_data()
-#         return jsonify(df.to_dict('records'))
+    if is_local:
+        df =get_dummy_model_comparison_data()
+        return jsonify(df.to_dict('records'))
   
+    try:
+        current_app.logger.info("Received a new request for data prediction.")
+        request_json = request.get_json()
+        model1, model2 = request_json["model1"], request_json["model2"]
+        
+        current_app.logger.info(f"Model ID received: {model1}")
+
+        model_deployer.set_new_active_version(model1)
+        model_handler.update_active_version()
+        current_app.logger.info(f"Model {model1} is now the active version.")
+
+        model1_predicted_base = model_handler.get_predicted_and_base()
+        model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'baseLevelPrediction']
+        
+        current_app.logger.info(f"Model ID received: {model2}")
+
+        model_deployer.set_new_active_version(model2)
+        model_handler.update_active_version()
+        current_app.logger.info(f"Model {model2} is now the active version.")
+
+        model2_predicted_base = model_handler.get_predicted_and_base()
+        model2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'baseLevelPrediction']
+        
+        merged_model_stats = pd.merge(model1_predicted_base, model2_predicted_base, 
+                                 on=['definingVariable','Category', 'Value', 'baseLevelPrediction'], 
+                                 how='outer')
+
+#         model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
+        current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
+        
+        return jsonify(merged_model_stats.to_dict('records'))
+    
+    except Exception as e:
+        current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
+        return jsonify({"error": "An error occurred during data processing."}), 500
+    # local dev
+
+    
 #     request_json = request.get_json()
 #     print(request_json)
 #     model1, model2 = request_json["model1"], request_json["model2"]
