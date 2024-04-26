@@ -243,7 +243,7 @@ def get_model_comparison_data():
                                  how='outer')
 
 #         model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
-        current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
+        current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head()}")
         
         return jsonify(merged_model_stats.to_dict('records'))
     
