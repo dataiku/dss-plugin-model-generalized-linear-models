@@ -228,7 +228,7 @@ def get_model_comparison_data():
 
         model1_predicted_base = model_handler.get_predicted_and_base()
         model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'baseLevelPrediction']
-        current_app.logger.info(f"Successfully generated predictions. Sample is {model1_predicted_base.head()}")
+        current_app.logger.info(f"Successfully generated predictions. Sample is {model1_predicted_base.head().to_string()}")
         
         current_app.logger.info(f"Model ID received: {model2}")
 
@@ -238,14 +238,14 @@ def get_model_comparison_data():
 
         model2_predicted_base = model_handler.get_predicted_and_base()
         model2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'baseLevelPrediction']
-        current_app.logger.info(f"Successfully generated predictions. Sample is {model2_predicted_base.head()}")
+        current_app.logger.info(f"Successfully generated predictions. Sample is {model2_predicted_base.head().to_string()}")
         
         merged_model_stats = pd.merge(model1_predicted_base, model2_predicted_base, 
                                  on=['definingVariable','Category', 'Value', 'baseLevelPrediction'], 
                                  how='outer')
 
 #         model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
-        current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head()}")
+        current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head().to_string()}")
         
         return jsonify(merged_model_stats.to_dict('records'))
     
