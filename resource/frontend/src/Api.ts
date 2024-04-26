@@ -28,11 +28,15 @@ interface ModelMetrics {
 }
 
 interface ModelComparisonDataPoint {
+    definingVariable: any;
     Category: any;
-    exposure: number;
-    Model_1_fittedAverage: number;
-    Model_2_fittedAverage: number;
-    observedAverage: number;
+    model_1_observedAverage: any;
+    model_1_fittedAverage: any;
+    Value: number;
+    model1_baseLevelPrediction: any;
+    model_2_observedAverage: any;
+    model_2_fittedAverage: any;
+    model2_baseLevelPrediction: any;
 }
 
 interface RelativityPoint {
