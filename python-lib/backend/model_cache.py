@@ -16,7 +16,9 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
         model_deployer.set_new_active_version(model_id)
         model_handler.update_active_version()
         model1_predicted_base = model_handler.get_predicted_and_base()
-        model1_predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+        model1_predicted_base.columns = ['definingVariable', 
+                                         'Category', 
+                                         'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
         features = model_handler.get_features()
         relativities = model_handler.get_relativities_df()
         mmc = ModelMetricsCalculator(model_handler)
@@ -44,7 +46,10 @@ def update_model_cache(global_dku_mltask, model_cache, model_handler):
         if model_id not in model_cache.keys():
             model_handler.update_active_version()
             model1_predicted_base = model_handler.get_predicted_and_base()
-            model1_predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+            model1_predicted_base.columns = ['definingVariable', 
+                                             'Category', 
+                                             'observedAverage', 
+                                             'fittedAverage', 'Value', 'baseLevelPrediction']
             features = model_handler.get_features()
             relativities = model_handler.get_relativities_df()
             mmc = ModelMetricsCalculator(model_handler)

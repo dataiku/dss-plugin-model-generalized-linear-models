@@ -155,8 +155,6 @@ def get_relativities():
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
     df = model_cache[full_model_id].get('relativities')
-    df = model_handler.get_relativities_df()
-    df.columns = ['variable', 'category', 'relativity']
     return jsonify(df.to_dict('records'))
 #     local dev
     return jsonify(dummy_relativites.to_dict('records'))
