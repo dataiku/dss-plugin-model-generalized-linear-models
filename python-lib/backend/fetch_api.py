@@ -65,8 +65,7 @@ def get_variables():
     request_json = request.get_json()
     full_model_id = request_json["id"]
     try:   
-        variables = model_cache[full_model_id].get('variables')
-        model_handler.get_features()
+        variables = model_cache[full_model_id].get('features')
         if variables is None:
             raise ValueError("variables returned None.")
         
