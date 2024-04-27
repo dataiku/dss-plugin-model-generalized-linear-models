@@ -227,26 +227,13 @@ def get_model_comparison_data():
         request_json = request.get_json()
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
         
-        model_deploy_time = time()
-        model_deployer.set_new_active_version(model1)
-        model_handler.update_active_version()
-        current_app.logger.info(f"Model {model1} is now the active version. Deployment took {time() - model_deploy_time} seconds.")
-        
-        model1_prediction_time = time()
-        model1_predicted_base = model_handler.get_predicted_and_base()
-        model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
-        current_app.logger.info(f"Model 1 predictions completed in {time() - model1_prediction_time} seconds. Sample: {model1_predicted_base.head().to_string()}")
-        
-        model_deploy_time = time()
-        model_deployer.set_new_active_version(model2)
-        model_handler.update_active_version()
-        current_app.logger.info(f"Model {model2} is now the active version. Deployment took {time() - model_deploy_time} seconds.")
+        current_app.logger.info(f"Retrieving {model1} from the cache")
+        model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
+        current_app.logger.info(f"Successfully retrieved {model1} from the cache")
+        current_app.logger.info(f"Retrieving {model2} from the cache")
+        model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
+        current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
-        model2_prediction_time = time()
-        model2_predicted_base = model_handler.get_predicted_and_base()
-        model2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
-        current_app.logger.info(f"Model 2 predictions completed in {time() - model2_prediction_time} seconds. Sample: {model2_predicted_base.head().to_string()}")
-        
         merge_time = time()
         merged_model_stats = pd.merge(model1_predicted_base, model2_predicted_base, 
                                       on=['definingVariable', 'Category', 'Value'], 
@@ -273,13 +260,13 @@ def get_model_metrics():
         print(f"Returned local dummy metrics in {response_time} seconds.")
         return jsonify(dummy_model_metrics)
     
-   
     request_json = request.get_json()
     print(request_json)
     
     model1, model2 = request_json["model1"], request_json["model2"]
     
     model_1_metrics = model_cache.get(model1).get('model_metrics')
+    model_2_metrics = model_cache.get(model2).get('model_metrics')
     
     metrics = {
         "models": {
@@ -289,53 +276,14 @@ def get_model_metrics():
                 "Deviance": model_1_metrics.get('Deviance')
             },
             "Model_2": {
-                "AIC": model_1_metrics.get('AIC'),
-                "BIC": model_1_metrics.get('AIC'),
-                "Deviance": model_1_metrics.get('AIC'),
+                "AIC": model_2_metrics.get('AIC'),
+                "BIC": model_2_metrics.get('AIC'),
+                "Deviance": model_2_metrics.get('AIC'),
             }
         }
     }
     return jsonify(metrics)
 
-    model_deploy_time = time()
-    model_deployer.set_new_active_version(model1)
-    model_handler.update_active_version()
-    print(f"Model {model1} deployment and update took {time() - model_deploy_time} seconds.")
-    
-    model1_metrics_time = time()
-    mmc = ModelMetricsCalculator(model_handler)
-    model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
-    print(f"Model 1 metrics calculation took {time() - model1_metrics_time} seconds.")
-    
-    model_deploy_time = time()
-    model_deployer.set_new_active_version(model2)
-    model_handler.update_active_version()
-    print(f"Model {model2} deployment and update took {time() - model_deploy_time} seconds.")
-    
-    model2_metrics_time = time()
-    mmc = ModelMetricsCalculator(model_handler)
-    model_2_aic, model_2_bic, model_2_deviance = mmc.calculate_metrics()
-    print(f"Model 2 metrics calculation took {time() - model2_metrics_time} seconds.")
-    
-    total_time = time() - start_time
-    print(f"Total API call duration: {total_time} seconds.")
-    
-    metrics = {
-        "models": {
-            "Model_1": {
-                "AIC": model_1_aic,
-                "BIC": model_1_bic,
-                "Deviance": model_1_deviance
-            },
-            "Model_2": {
-                "AIC": model_2_aic,
-                "BIC": model_2_bic,
-                "Deviance": model_2_deviance
-            }
-        }
-    }
-    
-    return jsonify(metrics)
 
 
 

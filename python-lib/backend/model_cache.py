@@ -6,12 +6,13 @@ from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from time import time
 
 def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
+    model_cache_setup_time = time()
     model_cache = {}
     model_id_list = global_dku_mltask.get_trained_models_ids()
     
     for model_id in model_id_list:
         
-        model_cache_setup_time = time()
+        
         model_deployer.set_new_active_version(model_id)
         model_handler.update_active_version()
         model1_predicted_base = model_handler.get_predicted_and_base()
@@ -28,5 +29,5 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             }
         }
         
-        
+    print("Model achca set up time took {}")
     return model_cache
