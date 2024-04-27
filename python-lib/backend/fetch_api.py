@@ -240,11 +240,12 @@ def get_model_comparison_data():
         model2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
         current_app.logger.info(f"Successfully generated predictions. Sample is {model2_predicted_base.head().to_string()}")
         
+        
         merged_model_stats = pd.merge(model1_predicted_base, model2_predicted_base, 
                                  on=['definingVariable','Category', 'Value'], 
                                  how='outer')
 
-#         model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
+        current_app.logger.info(f"Filtering for select varialbe {selectedVariable} in {merged_model_stats.definingVariable.value_counts()}")
         merged_model_stats = merged_model_stats.definingVariable == selectedVariable
         current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head().to_string()}")
         
