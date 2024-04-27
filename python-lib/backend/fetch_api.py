@@ -235,7 +235,7 @@ def get_model_comparison_data():
         current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
         merge_time = time()
-        merged_model_stats = pd.merge(model1_predicted_base, model2_predicted_base, 
+        merged_model_stats = pd.merge(model_1_predicted_base, model_2_predicted_base, 
                                       on=['definingVariable', 'Category', 'Value'], 
                                       how='outer')
         merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
