@@ -19,7 +19,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
         mmc = ModelMetricsCalculator(model_handler)
         model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
         
-        model_cache['model_id']= {
+        model_cache[model_id]= {
             'predicted_and_base': model1_predicted_base,
             'model_metrics': {
                 "AIC": model_1_aic,
