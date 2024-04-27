@@ -16,7 +16,7 @@
         title="Model Selection">
         <div class="variable-select-container">
             <BsLabel
-                label="Select a Model for Comparison"
+                label="Select Model 1 for Comparison"
                 info-text="Model 1">
             </BsLabel>
             <BsSelect
@@ -26,7 +26,7 @@
                 style="min-width: 250px">
             </BsSelect>
             <BsLabel
-                label="Select a Second Model for Comparison"
+                label="Select Model 2 for Comparison"
                 info-text="Model 2">
             </BsLabel>
             <BsSelect 
@@ -65,13 +65,17 @@
                     <ModelComparisonChart
                     v-if="selectedVariable"
                         :Category="modelComparisonData.map(item => item.Category)"
-                        :model1ClaimFrequency="modelComparisonData.map(item => item.model_1_fittedAverage)"
-                        :model2ClaimFrequency="modelComparisonData.map(item => item.model_2_fittedAverage)"
-                        :exposures="modelComparisonData.map(item => item.Value)"
+                        :model_1_fittedAverage="modelComparisonData.map(item => item.model_1_fittedAverage)"
+                        :model_1_observedAverage="modelComparisonData.map(item => item.model_1_observedAverage)"
+                        :model1_baseLevelPrediction="modelComparisonData.map(item => item.model1_baseLevelPrediction)"
+                        :model_2_observedAverage="modelComparisonData.map(item => item.model_2_observedAverage)"
+                        :model_2_fittedAverage="modelComparisonData.map(item => item.model_2_fittedAverage)"
+                        :exposure="modelComparisonData.map(item => item.Value)"
                         :observedAverage ="modelComparisonData.map(item => item.model_1_observedAverage)" 
                         :chartTitle="selectedVariable"
                         />
                 </div>
+
                 <div>
                     <BsTable
                         :title="comparisonChartTitle"
