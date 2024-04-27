@@ -206,7 +206,7 @@ methods: {
         const payload = {
         model1: this.modelDictionary[this.selectedModelString],
         model2: this.modelDictionary[this.selectedModelTwoString],
-
+        selectedVariable: this.selectedVariable
         }
         const dataResponse = await API.getModelComparisonData(payload);
         this.modelComparisonData = dataResponse?.data;

@@ -218,7 +218,7 @@ def get_model_comparison_data():
     try:
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
-        model1, model2 = request_json["model1"], request_json["model2"]
+        model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
         
         current_app.logger.info(f"Model ID received: {model1}")
 
@@ -245,6 +245,7 @@ def get_model_comparison_data():
                                  how='outer')
 
 #         model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
+        merged_model_stats = merged_model_stats.definingVariable == selectedVariable
         current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head().to_string()}")
         
         return jsonify(merged_model_stats.to_dict('records'))
