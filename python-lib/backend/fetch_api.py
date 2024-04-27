@@ -282,6 +282,7 @@ def export_model():
         # Convert DataFrame to CSV format
         csv_data = df.to_csv(index=False).encode('utf-8')
     else:
+        
         relativities_dict = model_handler.relativities
         
         nb_col = (len(relativities_dict.keys()) - 1) * 3
