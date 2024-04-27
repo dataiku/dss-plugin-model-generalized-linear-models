@@ -34,19 +34,19 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
 
 def update_model_cache(model_cache, model_handler):
     
-        model_handler.update_active_version()
-        model1_predicted_base = model_handler.get_predicted_and_base()
-        model1_predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
-        mmc = ModelMetricsCalculator(model_handler)
-        model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
-        
-        model_cache[model_id]= {
-            'predicted_and_base': model1_predicted_base,
-            'model_metrics': {
-                "AIC": model_1_aic,
-                "BIC": model_1_bic,
-                "Deviance": model_1_deviance
-            }
+    model_handler.update_active_version()
+    model1_predicted_base = model_handler.get_predicted_and_base()
+    model1_predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+    mmc = ModelMetricsCalculator(model_handler)
+    model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
+
+    model_cache[model_id]= {
+        'predicted_and_base': model1_predicted_base,
+        'model_metrics': {
+            "AIC": model_1_aic,
+            "BIC": model_1_bic,
+            "Deviance": model_1_deviance
         }
+    }
         
     return model_cache
