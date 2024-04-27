@@ -289,8 +289,8 @@ def get_model_metrics():
                 "Deviance": model_1_metrics.get('Deviance')
             },
             "Model_2": {
-                "AIC": model_1_metrics.get('AIC'),,
-                "BIC": model_1_metrics.get('AIC'),,
+                "AIC": model_1_metrics.get('AIC'),
+                "BIC": model_1_metrics.get('AIC'),
                 "Deviance": model_1_metrics.get('AIC'),
             }
         }
