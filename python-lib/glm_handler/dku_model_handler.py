@@ -318,6 +318,7 @@ class ModelHandler:
         
         new_data = train_set.join(binned_data[['bin']], how='inner')
         lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
+        lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         return lift_chart_data
 
     def get_variable_level_stats(self):
