@@ -229,12 +229,12 @@ def get_model_comparison_data():
         
         current_app.logger.info(f"Retrieving {model1} from the cache")
         model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
-        model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
+        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
         current_app.logger.info(f"Successfully retrieved {model1} from the cache")
         
         current_app.logger.info(f"Retrieving {model2} from the cache")
         model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
-        model1_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
+        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
         current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
         merge_time = time()
