@@ -14,7 +14,7 @@ from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
 dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
 from backend.logging_settings import logger
 from io import BytesIO
-
+from time import time
 import traceback
 import dataiku
 from dataiku.customwebapp import get_webapp_config
@@ -211,80 +211,52 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
+    start_time = time()
+    
     if is_local:
-        df =get_dummy_model_comparison_data()
+        df = get_dummy_model_comparison_data()
+        current_app.logger.info(f"Data fetched locally in {time() - start_time} seconds.")
         return jsonify(df.to_dict('records'))
-  
+
     try:
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
         
-        current_app.logger.info(f"Model ID received: {model1}")
-
+        model_deploy_time = time()
         model_deployer.set_new_active_version(model1)
         model_handler.update_active_version()
-        current_app.logger.info(f"Model {model1} is now the active version.")
-
+        current_app.logger.info(f"Model {model1} is now the active version. Deployment took {time() - model_deploy_time} seconds.")
+        
+        model1_prediction_time = time()
         model1_predicted_base = model_handler.get_predicted_and_base()
         model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
-        current_app.logger.info(f"Successfully generated predictions. Sample is {model1_predicted_base.head().to_string()}")
+        current_app.logger.info(f"Model 1 predictions completed in {time() - model1_prediction_time} seconds. Sample: {model1_predicted_base.head().to_string()}")
         
-        current_app.logger.info(f"Model ID received: {model2}")
-
+        model_deploy_time = time()
         model_deployer.set_new_active_version(model2)
         model_handler.update_active_version()
-        current_app.logger.info(f"Model {model2} is now the active version.")
+        current_app.logger.info(f"Model {model2} is now the active version. Deployment took {time() - model_deploy_time} seconds.")
 
+        model2_prediction_time = time()
         model2_predicted_base = model_handler.get_predicted_and_base()
         model2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
-        current_app.logger.info(f"Successfully generated predictions. Sample is {model2_predicted_base.head().to_string()}")
+        current_app.logger.info(f"Model 2 predictions completed in {time() - model2_prediction_time} seconds. Sample: {model2_predicted_base.head().to_string()}")
         
-        
+        merge_time = time()
         merged_model_stats = pd.merge(model1_predicted_base, model2_predicted_base, 
-                                 on=['definingVariable','Category', 'Value'], 
-                                 how='outer')
-
-        current_app.logger.info(f"Filtering for select varialbe {selectedVariable} in {merged_model_stats.definingVariable.value_counts()}")
+                                      on=['definingVariable', 'Category', 'Value'], 
+                                      how='outer')
         merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
-        current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head().to_string()}")
+        current_app.logger.info(f"Merged data in {time() - merge_time} seconds. Sample: {merged_model_stats.head().to_string()}")
         
+        total_time = time() - start_time
+        current_app.logger.info(f"Total execution time: {total_time} seconds.")
         return jsonify(merged_model_stats.to_dict('records'))
     
     except Exception as e:
-        current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
-        return jsonify({"error": "An error occurred during data processing."}), 500
-    # local dev
-
-    
-#     request_json = request.get_json()
-#     print(request_json)
-#     model1, model2 = request_json["model1"], request_json["model2"]
-
-    
-#     model_deployer.set_new_active_version(model1)
-#     model_handler.update_active_version()
-#     current_app.logger.info(f"Model {model1} is now the active version.")
-#     model_1_lift_chart = model_handler.get_lift_chart(8)
-#     current_app.logger.info(f"Model {model1} lift chart is {model_1_lift_chart.to_string()}")
-    
-#     model_deployer.set_new_active_version(model2)
-#     model_handler.update_active_version()
-#     current_app.logger.info(f"Model {model2} is now the active version.")
-
-#     model_2_lift_chart = model_handler.get_lift_chart(8)
-#     current_app.logger.info(f"Model {model2} lift chart is {model_2_lift_chart.to_string()}")
-    
-#     model_1_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_1_fittedAverage']
-#     model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
-    
-#     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
-#                              on=['observedAverage','Category', 'exposure'], 
-#                              how='outer')
-    
-#     current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
-#     return jsonify(merged_model_stats.to_dict('records'))
-
+        current_app.logger.error(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 
