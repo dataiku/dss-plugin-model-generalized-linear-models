@@ -262,7 +262,7 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-     start_time = time()
+    start_time = time()
     
     if is_local:
         response_time = time() - start_time
