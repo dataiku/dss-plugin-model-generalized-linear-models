@@ -178,6 +178,7 @@ class ModelHandler:
             for value, relativity in values.items():
                 rel_df = rel_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
         #rel_df = rel_df.append({'feature': 'base', 'value': 'base', 'relativity': self.relativities['base']['base']}, ignore_index=True)
+        rel_df.coluns = ['variable', 'category', 'relativity']
         return rel_df
 
     def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):

@@ -154,10 +154,7 @@ def get_relativities():
     full_model_id = request_json["id"]
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
-
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
-    
+    df = model_cache[full_model_id].get('relativities')
     df = model_handler.get_relativities_df()
     df.columns = ['variable', 'category', 'relativity']
     return jsonify(df.to_dict('records'))
