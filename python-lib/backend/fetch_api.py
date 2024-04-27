@@ -71,13 +71,13 @@ def get_variables():
     model_handler.update_active_version()
     
     try:
-        predicted_base = model_handler.get_predicted_and_base()
-        if predicted_base is None:
-            raise ValueError("predicted_base returned None.")
+#         predicted_base = model_cache[full_model_id].get('predicted_and_base')
+#         if predicted_base is None:
+#             raise ValueError("predicted_base returned None.")
         
-        relativities = model_handler.get_relativities_df()
-        if relativities is None:
-            raise ValueError("relativities returned None.")
+#         relativities = model_handler.get_relativities_df()
+#         if relativities is None:
+#             raise ValueError("relativities returned None.")
         
         variables = model_handler.get_features()
         if variables is None:
