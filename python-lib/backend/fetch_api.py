@@ -55,9 +55,6 @@ def get_models():
         current_app.logger.exception("An error occurred while retrieving models")
         return jsonify({'error': str(e)}), 500
     return jsonify(models)
-# For local dev
-    # return jsonify(dummy_models)
-     
 
 
 
@@ -67,10 +64,9 @@ def get_variables():
         return jsonify(dummy_variables)
     request_json = request.get_json()
     full_model_id = request_json["id"]
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
     try:   
-        variables = model_handler.get_features()
+        variables = model_cache[full_model_id].get('variables')
+        model_handler.get_features()
         if variables is None:
             raise ValueError("variables returned None.")
         
