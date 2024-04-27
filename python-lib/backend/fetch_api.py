@@ -65,6 +65,7 @@ def get_variables():
     full_model_id = request_json["id"]
     model_deployer.set_new_active_version(full_model_id)
     model_handler.update_active_version()
+    
     try:
         predicted_base = model_handler.get_predicted_and_base()
         if predicted_base is None:
@@ -112,8 +113,6 @@ def get_data():
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
-#     local dev
-        return jsonify(dummy_df_data.to_dict('records'))
     
     except Exception as e:
         current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
@@ -212,44 +211,87 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
-    # local dev
     if is_local:
         df =get_dummy_model_comparison_data()
         return jsonify(df.to_dict('records'))
   
-    request_json = request.get_json()
-    print(request_json)
-    model1, model2 = request_json["model1"], request_json["model2"]
+    try:
+        current_app.logger.info("Received a new request for data prediction.")
+        request_json = request.get_json()
+        model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
+        
+        current_app.logger.info(f"Model ID received: {model1}")
+
+        model_deployer.set_new_active_version(model1)
+        model_handler.update_active_version()
+        current_app.logger.info(f"Model {model1} is now the active version.")
+
+        model1_predicted_base = model_handler.get_predicted_and_base()
+        model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
+        current_app.logger.info(f"Successfully generated predictions. Sample is {model1_predicted_base.head().to_string()}")
+        
+        current_app.logger.info(f"Model ID received: {model2}")
+
+        model_deployer.set_new_active_version(model2)
+        model_handler.update_active_version()
+        current_app.logger.info(f"Model {model2} is now the active version.")
+
+        model2_predicted_base = model_handler.get_predicted_and_base()
+        model2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
+        current_app.logger.info(f"Successfully generated predictions. Sample is {model2_predicted_base.head().to_string()}")
+        
+        
+        merged_model_stats = pd.merge(model1_predicted_base, model2_predicted_base, 
+                                 on=['definingVariable','Category', 'Value'], 
+                                 how='outer')
+
+        current_app.logger.info(f"Filtering for select varialbe {selectedVariable} in {merged_model_stats.definingVariable.value_counts()}")
+        merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
+        current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head().to_string()}")
+        
+        return jsonify(merged_model_stats.to_dict('records'))
+    
+    except Exception as e:
+        current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
+        return jsonify({"error": "An error occurred during data processing."}), 500
+    # local dev
 
     
-    model_deployer.set_new_active_version(model1)
-    model_handler.update_active_version()
-    current_app.logger.info(f"Model {model1} is now the active version.")
-    model_1_lift_chart = model_handler.get_lift_chart(8)
-    current_app.logger.info(f"Model {model1} lift chart is {model_1_lift_chart.to_string()}")
-    
-    model_deployer.set_new_active_version(model2)
-    model_handler.update_active_version()
-    current_app.logger.info(f"Model {model2} is now the active version.")
+#     request_json = request.get_json()
+#     print(request_json)
+#     model1, model2 = request_json["model1"], request_json["model2"]
 
-    model_2_lift_chart = model_handler.get_lift_chart(8)
-    current_app.logger.info(f"Model {model2} lift chart is {model_2_lift_chart.to_string()}")
     
-    model_1_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_1_fittedAverage']
-    model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
+#     model_deployer.set_new_active_version(model1)
+#     model_handler.update_active_version()
+#     current_app.logger.info(f"Model {model1} is now the active version.")
+#     model_1_lift_chart = model_handler.get_lift_chart(8)
+#     current_app.logger.info(f"Model {model1} lift chart is {model_1_lift_chart.to_string()}")
     
-    merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
-                             on=['observedAverage','Category', 'exposure'], 
-                             how='outer')
+#     model_deployer.set_new_active_version(model2)
+#     model_handler.update_active_version()
+#     current_app.logger.info(f"Model {model2} is now the active version.")
+
+#     model_2_lift_chart = model_handler.get_lift_chart(8)
+#     current_app.logger.info(f"Model {model2} lift chart is {model_2_lift_chart.to_string()}")
     
-    current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
-    return jsonify(merged_model_stats.to_dict('records'))
+#     model_1_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_1_fittedAverage']
+#     model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
+    
+#     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
+#                              on=['observedAverage','Category', 'exposure'], 
+#                              how='outer')
+    
+#     current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
+#     return jsonify(merged_model_stats.to_dict('records'))
 
 
 
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
+    if is_local:
+        return jsonify(dummy_model_metrics)
     request_json = request.get_json()
     print(request_json)
     

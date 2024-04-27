@@ -108,9 +108,19 @@ dummy_model_metrics ={
 
 def get_dummy_model_comparison_data():
     df = pd.DataFrame()
-    df['Category'] = [0,1,2,3,4,5,6,7,8,9,10]
-    df['exposure'] = np.random.uniform(30, 45, size=11)
-    df['Model_1_fittedAverage'] =  np.random.uniform(50, 60, size=11)
-    df['Model_2_fittedAverage'] =  np.random.uniform(45, 55, size=11)
-    df['observedAverage'] =  np.random.uniform(15, 30, size=11)
+    # df['Category'] = ["B0","B1","B2","B3","B4","B5","B6","B7","B8","B9","B10"]
+    # df['exposure'] = np.random.uniform(30, 120, size=11)
+    # df['Model_1_fittedAverage'] =  np.random.uniform(0.3, .8, size=11)
+    # df['Model_2_fittedAverage'] =  np.random.uniform(0.5, 1, size=11)
+    # df['observedAverage'] =  np.random.uniform(0.6, 0.75, size=11)
+    df['definingVariable'] =["VehPower","VehPower","VehPower","VehPower","VehPower","VehPower","VehPower","VehPower","VehPower","VehPower","VehPower"]
+    df['Category']= ["B0","B1","B2","B3","B4","B5","B6","B7","B8","B9","B10"]
+    df['model_1_observedAverage']= np.random.uniform(0.5, 1, size=11)
+    df['model_1_fittedAverage'] = np.random.uniform(0.5, 1, size=11)
+    df['Value']= np.random.uniform(0.5, 1, size=11)
+    df['model1_baseLevelPrediction']= np.random.uniform(0.5, 1, size=11)
+    df['model_2_observedAverage']= np.random.uniform(0.5, 1, size=11)
+    df['model_2_fittedAverage']= np.random.uniform(0.5, 1, size=11)
+    df['model2_baseLevelPrediction']= np.random.uniform(0.5, 1, size=11)
     return df
+

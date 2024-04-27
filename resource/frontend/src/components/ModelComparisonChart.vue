@@ -25,19 +25,27 @@
       type: Array,
       required: true
     },
-    model1ClaimFrequency: {
+    model_1_observedAverage: {
       type: Array,
       required: true
     },
-    model2ClaimFrequency: {
+    model_1_fittedAverage: {
       type: Array,
       required: true
     },
-    exposures: {
+    model1_baseLevelPrediction: {
       type: Array,
       required: true
     },
-    observedAverage: {
+    model_2_observedAverage: {
+      type: Array,
+      required: true
+    },
+    model_2_fittedAverage:{
+      type: Array,
+      required: true
+    },
+    exposure: {
       type: Array,
       required: true
     },
@@ -66,53 +74,59 @@
             yAxis: [
                     {
                         type: "value",
-                        name: 'Claim Frequency',
+                        name: 'Value',
                         nameLocation: 'center',
                         nameGap: 30,
                         position: 'left',
                     },
                 {
                     type: "value",
-                    name: 'Exposure',
-                    nameLocation: 'center',
-                    nameGap: 30,
-                    position: 'right', // Use the right side for the exposure axis
+                    name: '',
                 }   
                 ],
 
 
             series: [
-                {
-                    name: "Model 1",
-                    type: "line",
-                    data: this.model1ClaimFrequency,
-                    itemStyle: {
-                        color: "#A77BCA",
-                    },
+            {
+                name: "Mdl 1:Fitted Avg",
+                type: "line",
+                data: this.model_1_fittedAverage,
+                itemStyle: {
+                    color: "#00BFFF",
                 },
-                {
-                    name: "Model 2",
-                    type: "line",
-                    data: this.model2ClaimFrequency,
-                    itemStyle: {
-                        color: "#008675",
-                    },
-                    
+            },
+            {
+                name: "Mdl 2:Fitted Avg",
+                type: "line",
+                data: this.model_2_fittedAverage,
+                itemStyle: {
+                    color: "#FF7F50",
                 },
-                {
-                    name: "Observed Average",
-                    type: "line",
-                    data: this.observedAverage,
-                    itemStyle: {
-                        color: "#FFD700",
-                    },
-                    
+                
+            },
+            {
+                name: "Mdl 1:Obs Avg",
+                type: "line",
+                data: this.model_1_observedAverage,
+                itemStyle: {
+                    color: "#32CD32",
                 },
+                
+            },
+            {
+                name: "Mdl 2:Obs Avg",
+                type: "line",
+                data: this.model_2_observedAverage,
+                itemStyle: {
+                    color: "#FFD700",
+                },
+                
+            },
                 {
                     name: "Exposure",
                     type: "bar",
                     yAxisIndex: 1, // This tells ECharts to use the second y-axis for this series
-                    data: this.exposures,
+                    data: this.exposure,
                     itemStyle: {
                         color: "#D9D8D6", // Choose a color that stands out but harmonizes with the chart
                     },

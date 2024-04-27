@@ -16,7 +16,7 @@
         title="Model Selection">
         <div class="variable-select-container">
             <BsLabel
-                label="Select a Model for Comparison"
+                label="Select Model 1 for Comparison"
                 info-text="Model 1">
             </BsLabel>
             <BsSelect
@@ -26,7 +26,7 @@
                 style="min-width: 250px">
             </BsSelect>
             <BsLabel
-                label="Select a Second Model for Comparison"
+                label="Select Model 2 for Comparison"
                 info-text="Model 2">
             </BsLabel>
             <BsSelect 
@@ -64,14 +64,18 @@
                 <div>
                     <ModelComparisonChart
                     v-if="selectedVariable"
-                        :variableValues="modelComparisonData.map(item => item.Category)"
-                        :model1ClaimFrequency="modelComparisonData.map(item => item.Model_1_fittedAverage)"
-                        :model2ClaimFrequency="modelComparisonData.map(item => item.Model_2_fittedAverage)"
-                        :exposures="modelComparisonData.map(item => item.exposure)"
-                        :observedAverage ="modelComparisonData.map(item => item.observed_average)" 
+                        :Category="modelComparisonData.map(item => item.Category)"
+                        :model_1_fittedAverage="modelComparisonData.map(item => item.model_1_fittedAverage)"
+                        :model_1_observedAverage="modelComparisonData.map(item => item.model_1_observedAverage)"
+                        :model1_baseLevelPrediction="modelComparisonData.map(item => item.model1_baseLevelPrediction)"
+                        :model_2_observedAverage="modelComparisonData.map(item => item.model_2_observedAverage)"
+                        :model_2_fittedAverage="modelComparisonData.map(item => item.model_2_fittedAverage)"
+                        :exposure="modelComparisonData.map(item => item.Value)"
+                        :observedAverage ="modelComparisonData.map(item => item.model_1_observedAverage)" 
                         :chartTitle="selectedVariable"
                         />
                 </div>
+
                 <div>
                     <BsTable
                         :title="comparisonChartTitle"
@@ -202,7 +206,7 @@ methods: {
         const payload = {
         model1: this.modelDictionary[this.selectedModelString],
         model2: this.modelDictionary[this.selectedModelTwoString],
-
+        selectedVariable: this.selectedVariable
         }
         const dataResponse = await API.getModelComparisonData(payload);
         this.modelComparisonData = dataResponse?.data;
@@ -249,11 +253,15 @@ mounted() {
 emits: ['update:modelValue']
 })
 interface chartDataItem{
+    definingVariable: any;
     Category: any;
-    exposure: number;
-    Model_1_fittedAverage: number;
-    Model_2_fittedAverage: number;
-    observed_average: number;
+    model_1_observedAverage: any;
+    model_1_fittedAverage: any;
+    Value: number;
+    model1_baseLevelPrediction: any;
+    model_2_observedAverage: any;
+    model_2_fittedAverage: any;
+    model2_baseLevelPrediction: any;
 }
 interface Model {
     name: string;
