@@ -270,11 +270,7 @@ def get_model_metrics():
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
-#     you should provide a model ID to this and export a specific model, it doesnt make sense to store it in memory
-#     model_deployer.set_new_active_version(full_model_id)
-#     model_handler.update_active_version()
-    
-#     df = model_handler.get_relativities_df()
+
     if is_local:
         data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
         df = pd.DataFrame(data)
