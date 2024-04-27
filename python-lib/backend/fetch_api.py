@@ -262,43 +262,59 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
+     start_time = time()
+    
     if is_local:
+        response_time = time() - start_time
+        print(f"Returned local dummy metrics in {response_time} seconds.")
         return jsonify(dummy_model_metrics)
+    
     request_json = request.get_json()
     print(request_json)
     
     model1, model2 = request_json["model1"], request_json["model2"]
     
+    model_deploy_time = time()
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
-
+    print(f"Model {model1} deployment and update took {time() - model_deploy_time} seconds.")
+    
+    model1_metrics_time = time()
     mmc = ModelMetricsCalculator(model_handler)
     model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
-
+    print(f"Model 1 metrics calculation took {time() - model1_metrics_time} seconds.")
+    
+    model_deploy_time = time()
     model_deployer.set_new_active_version(model2)
     model_handler.update_active_version()
-
+    print(f"Model {model2} deployment and update took {time() - model_deploy_time} seconds.")
+    
+    model2_metrics_time = time()
     mmc = ModelMetricsCalculator(model_handler)
     model_2_aic, model_2_bic, model_2_deviance = mmc.calculate_metrics()
-
+    print(f"Model 2 metrics calculation took {time() - model2_metrics_time} seconds.")
+    
+    total_time = time() - start_time
+    print(f"Total API call duration: {total_time} seconds.")
+    
     metrics = {
         "models": {
             "Model_1": {
-            "AIC": model_1_aic,
-            "BIC": model_1_bic,
-            "Deviance": model_1_deviance
+                "AIC": model_1_aic,
+                "BIC": model_1_bic,
+                "Deviance": model_1_deviance
             },
             "Model_2": {
-            "AIC": model_2_aic,
-            "BIC": model_2_bic,
-            "Deviance": model_2_deviance
+                "AIC": model_2_aic,
+                "BIC": model_2_bic,
+                "Deviance": model_2_deviance
             }
         }
-        }
+    }
     
     return jsonify(metrics)
 
-#     return jsonify(dummy_model_metrics)
+
 
 @fetch_api.route('/export_model', methods=['GET'])
 def export_model():
