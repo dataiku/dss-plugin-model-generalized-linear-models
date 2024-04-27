@@ -9,7 +9,7 @@ if not is_local:
     from glm_handler.dku_model_deployer import ModelDeployer
     from glm_handler.glm_data_handler import GlmDataHandler
     from glm_handler.dku_model_metrics import ModelMetricsCalculator
-    from glm_handler.model_cache import setup_model_cache
+    from backend.model_cache import setup_model_cache
     
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
