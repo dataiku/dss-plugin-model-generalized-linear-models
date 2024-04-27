@@ -273,11 +273,30 @@ def get_model_metrics():
         print(f"Returned local dummy metrics in {response_time} seconds.")
         return jsonify(dummy_model_metrics)
     
+   
     request_json = request.get_json()
     print(request_json)
     
     model1, model2 = request_json["model1"], request_json["model2"]
     
+    model_1_metrics = model_cache.get(model1).get('model_metrics')
+    
+    metrics = {
+        "models": {
+            "Model_1": {
+                "AIC": model_1_metrics.get('AIC'),
+                "BIC": model_1_metrics.get('BIC'),
+                "Deviance": model_1_metrics.get('Deviance')
+            },
+            "Model_2": {
+                "AIC": model_1_metrics.get('AIC'),,
+                "BIC": model_1_metrics.get('AIC'),,
+                "Deviance": model_1_metrics.get('AIC'),
+            }
+        }
+    }
+    return jsonify(metrics)
+
     model_deploy_time = time()
     model_deployer.set_new_active_version(model1)
     model_handler.update_active_version()
