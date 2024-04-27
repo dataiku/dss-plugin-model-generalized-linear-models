@@ -29,7 +29,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             }
         }
         
-    print("Model cache set up time took {model_cache_setup_time - time()}")
+    print(f"Model cache set up time took {model_cache_setup_time - time()}")
     return model_cache
 
 def update_model_cache(model_cache, model_handler):
