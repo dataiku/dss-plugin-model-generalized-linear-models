@@ -37,7 +37,7 @@ if not is_local:
     model_deployer = ModelDeployer(global_dss_mltask, saved_model_id)
     model_handler = ModelHandler(saved_model_id, data_handler)
     model_cache = setup_model_cache(global_dss_mltask)
-    current_app.logger.info(f"Model Cache is: {model_cache}")
+    print(f"Model Cache is: {model_cache}")
 
 
 
