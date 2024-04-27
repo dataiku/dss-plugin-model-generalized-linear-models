@@ -408,7 +408,7 @@ def train_model():
         
         global model_cache
         
-        model_cache = update_model_cache(model_cache, model_handler)
+        model_cache = update_model_cache(global_dku_mltask, model_cache, model_handler)
             
 
         
