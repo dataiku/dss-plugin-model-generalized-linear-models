@@ -406,6 +406,12 @@ def train_model():
         
         current_app.logger.info("Model training initiated successfully")
         
+        global model_cache
+        
+        model_cache = update_model_cache(model_cache, model_handler)
+            
+
+        
         return jsonify({'message': 'Model training initiated successfully.'}), 200
     except Exception as e:
         current_app.logger.exception("An error occurred during model training")
