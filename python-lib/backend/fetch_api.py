@@ -246,7 +246,7 @@ def get_model_comparison_data():
                                  how='outer')
 
         current_app.logger.info(f"Filtering for select varialbe {selectedVariable} in {merged_model_stats.definingVariable.value_counts()}")
-        merged_model_stats = merged_model_stats.definingVariable == selectedVariable
+        merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
         current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head().to_string()}")
         
         return jsonify(merged_model_stats.to_dict('records'))
