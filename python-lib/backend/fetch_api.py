@@ -317,21 +317,19 @@ def export_model():
 
             csv_data = csv_output.encode('utf-8')
 
-            # Create an in-memory file-like object for CSV data
-            csv_io = BytesIO(csv_data)
-
-            # Serve the CSV file for download
-            return send_file(
-                csv_io,
-                mimetype='text/csv',
-                as_attachment=True,
-                download_name='model.csv'
-            )
-
         except KeyError as e:
             return jsonify({"error": f"Missing key in data: {str(e)}"}), 500
         except Exception as e:
-            return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+    csv_io = BytesIO(csv_data)
+
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='model.csv'
+    )
 
 
 
