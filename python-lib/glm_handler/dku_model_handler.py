@@ -367,7 +367,7 @@ class ModelHandler:
         coef_table = self.predictor._clf.coef_table.reset_index()
         coef_table.rename({'index':'not_index'},axis=1,inplace=True)
         split_columns = coef_table['not_index'].str.split(':', expand=True)
-        coef_table['dummy'],coef_table['variable']   = split_columns[0], split_columns[1], split_columns[2] 
+        coef_table['dummy'],coef_table['variable'],coef_table['category']   = split_columns[0], split_columns[1],split_columns[2] 
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
         print(f"coef_table is {coef_table}")
         print(f"relativites is {relativities}")
