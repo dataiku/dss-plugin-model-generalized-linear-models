@@ -64,7 +64,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             'predicted_and_base': model1_predicted_base,
             'relativities_dict': relativities_dict,
             'lift_chart_data':lift_chart_data,
-            'variables_stats':variable_stats,
+            'variable_stats':variable_stats,
             'model_metrics': {
                 "AIC": model_1_aic,
                 "BIC": model_1_bic,
@@ -106,8 +106,8 @@ def update_model_cache(global_dku_mltask, model_cache, model_handler):
                 'relativities':relativities,
                 'relativities_dict':relativities_dict,
                 'predicted_and_base': model1_predicted_base,
-                            'lift_chart_data':lift_chart_data,
-                 'variables_stats':variable_stats,
+                 'lift_chart_data':lift_chart_data,
+                 'variable_stats':variable_stats,
                 'model_metrics': {
                     "AIC": model_1_aic,
                     "BIC": model_1_bic,
