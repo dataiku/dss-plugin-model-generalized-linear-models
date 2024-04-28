@@ -381,7 +381,7 @@ class ModelHandler:
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['variable']).transform('sum')
         predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
         
-        variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['variable', 'category'], right_on=['feature', 'category'])
+        variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['variable', 'category'], right_on=['variable', 'category'])
         variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
         variable_level_stats.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
         variable_level_stats.fillna(0, inplace=True)
