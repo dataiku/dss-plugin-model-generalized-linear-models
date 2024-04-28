@@ -356,8 +356,8 @@ class ModelHandler:
         lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
         lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         return lift_chart_data
-
-     def get_variable_level_stats(self):
+    
+    def get_variable_level_stats(self):
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
         
