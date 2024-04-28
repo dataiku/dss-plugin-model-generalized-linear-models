@@ -371,9 +371,10 @@ class ModelHandler:
         coef_table['dummy'],coef_table['variable'],coef_table['category']   = split_columns[0], split_columns[1],split_columns[2] 
         coef_table.drop(['not_index'], axis=1, inplace=True)
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
+        
         print(f"coef_table is {coef_table}")
         print(f"relativites is {relativities}")
-        variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
+        variable_stats = relativities.merge(coef_table[['variable', 'category', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'category'], right_on=['variable', 'category'])
         variable_stats.drop('variable', axis=1, inplace=True)
         print(f"variables stats are {variable_stats}")
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
