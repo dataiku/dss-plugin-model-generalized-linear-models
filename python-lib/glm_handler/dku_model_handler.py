@@ -358,8 +358,12 @@ class ModelHandler:
         return lift_chart_data
 
     def get_variable_level_stats(self):
+        print('Setting up variable level stats')
+        
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+        print('Predicted is {predicted} ')
         relativities = self.get_relativities_df()
+        print('Relativites is {relativities} ')
         
         coef_table = self.predictor._clf.coef_table.reset_index()
         coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
