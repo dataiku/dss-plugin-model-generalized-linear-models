@@ -365,7 +365,9 @@ class ModelHandler:
         relativities = self.get_relativities_df()
         
         coef_table = self.predictor._clf.coef_table.reset_index()
+        print(f"coef_table b4 is {coef_table}")
         coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
+        print(f"coef_table after is {coef_table}")
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
         print(f"coef_table is {coef_table}")
         print(f"relativites is {relativities}")
