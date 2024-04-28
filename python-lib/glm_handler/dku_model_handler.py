@@ -362,7 +362,7 @@ class ModelHandler:
         
         relativities = self.get_relativities_df()
         coef_table = self.predictor._clf.coef_table.reset_index()
-        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+#         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         print(f"relativites are : {relativities.to_string()}")
         print(f"coef_table are : {coef_table.to_string()}")
         print(f"predicted are : {predicted.to_string()}")
