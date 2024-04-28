@@ -188,6 +188,7 @@ export default defineComponent({
             inModelOnly: true,
             includeSuspectVariables: true,
             loading: false,
+            active_model:  {} as ModelPoint,
         };
     },
     watch: {
@@ -233,6 +234,7 @@ export default defineComponent({
           try {
             this.selectedVariable = {} as VariablePoint;
             const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
+            this.active_model = model
             const variableResponse = await API.getVariables(model)
             console.log(variableResponse);
             if (isErrorPoint(variableResponse?.data)) {
@@ -253,7 +255,7 @@ export default defineComponent({
         }
         },
         onClick: function() {
-          API.exportModel(model).then(response => {
+          API.exportModel(this.active_model).then(response => {
               const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
               const link = document.createElement('a');
               link.href = url;
