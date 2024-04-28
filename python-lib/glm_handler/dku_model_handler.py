@@ -360,7 +360,7 @@ class ModelHandler:
     def get_variable_level_stats(self):
         print('Setting up variable level stats')
         
-        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+        predicted = self.get_predicted_and_base()[['variable', 'category', 'exposure']]
 
         relativities = self.get_relativities_df()
         
@@ -376,7 +376,8 @@ class ModelHandler:
         print(f"relativites is {relativities.columns}")
         variable_stats = relativities.merge(coef_table[['variable', 'category', 'coef', 'se', 'se_pct']], how='left', left_on=['variable', 'category'], right_on=['variable', 'category'])
         variable_stats.drop('variable', axis=1, inplace=True)
-        print(f"variables stats are {variable_stats}")
+        print(f"predicted columns are {predicted.columns}")
+        
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['variable']).transform('sum')
         predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
         
