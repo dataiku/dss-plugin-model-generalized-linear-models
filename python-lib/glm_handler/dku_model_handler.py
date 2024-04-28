@@ -372,8 +372,7 @@ class ModelHandler:
         coef_table.drop(['not_index'], axis=1, inplace=True)
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
         
-        print(f"coef_table col is {coef_table.columns}")
-        print(f"relativites is {relativities.columns}")
+        print(f"coef_table col is {coef_table.to_string()}")
         variable_stats = relativities.merge(coef_table[['variable', 'category', 'coef', 'se', 'se_pct']], how='left', left_on=['variable', 'category'], right_on=['variable', 'category'])
 #         variable_stats.drop('variable', axis=1, inplace=True)
         print(f"variable_stats is : {variable_stats.to_string()}")
