@@ -358,23 +358,35 @@ class ModelHandler:
         return lift_chart_data
     
     def get_variable_level_stats(self):
-        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+        
+        
         relativities = self.get_relativities_df()
+        coef_table = self.predictor._clf.coef_table.reset_index()
+        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+        print("relativites are : {relativities.to_str()}")
+        print("coef_table are : {coef_table.to_str()}")
+        print("predicted are : {predicted.to_str()}")
+            
+            
         
         coef_table = self.predictor._clf.coef_table.reset_index()
-        coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
+        coef_table.rename({'index':'not_index'},axis=1,inplace=True)
+        split_columns = coef_table['not_index'].str.split(':', expand=True)
+        coef_table['dummy'],coef_table['variable'],coef_table['category']   = split_columns[0], split_columns[1],split_columns[2] 
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
-        print(coef_table)
+
+        
         variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
         variable_stats.drop('variable', axis=1, inplace=True)
-        print(variable_stats)
+        
+        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
         predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
         
+        
         variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
         variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
-        print(variable_level_stats)
-        print(predicted)
+
         
         return variable_level_stats
         
