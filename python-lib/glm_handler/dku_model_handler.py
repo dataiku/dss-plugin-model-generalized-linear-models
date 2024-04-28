@@ -361,9 +361,8 @@ class ModelHandler:
         print('Setting up variable level stats')
         
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
-        print('Predicted is {predicted} ')
+
         relativities = self.get_relativities_df()
-        print('Relativites is {relativities} ')
         
         coef_table = self.predictor._clf.coef_table.reset_index()
         coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
@@ -371,7 +370,7 @@ class ModelHandler:
         print(coef_table)
         variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
         variable_stats.drop('variable', axis=1, inplace=True)
-        print(variable_stats)
+        print(f"variables stats are {variable_stats}")
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
         predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
         
