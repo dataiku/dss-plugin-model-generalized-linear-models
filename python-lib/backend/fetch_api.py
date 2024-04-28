@@ -114,12 +114,10 @@ def get_lift_data():
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
     current_app.logger.info(f"Model {full_model_id} is now the active version.")
     
     
-    lift_chart = model_handler.get_lift_chart(8)
+    lift_chart = model_cache[full_model_id].get('lift_chart_data')
     lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
