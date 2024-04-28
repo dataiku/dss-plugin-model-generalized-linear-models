@@ -92,7 +92,7 @@ export let API = {
     trainModel: (payload: any) => axios.post<string[]>("/api/train_model", payload),
     getModelComparisonData: (data: any) => axios.post<ModelComparisonDataPoint[]>("/api/get_model_comparison_data", data),
     getModelMetrics: (data: any) => axios.post<ModelMetrics>("/api/get_model_metrics", data),
-    exportModel: () => axios.get<Blob>("/api/export_model"),
+    exportModel: (model: any) => axios.get<Blob>("/api/export_model"),
     getVariableLevelStats: (data: ModelPoint) => axios.post<VariableLevelStatsPoint[]>("/api/get_variable_level_stats", data),
 }
 
