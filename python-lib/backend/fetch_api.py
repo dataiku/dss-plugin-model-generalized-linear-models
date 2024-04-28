@@ -290,9 +290,12 @@ def export_model():
                 return jsonify({"error": "Model not found in cache"}), 404
 
             relativities_dict = relativities_dict.get('relativities_dict')
+            
             if not relativities_dict:
                 return jsonify({"error": "No relativities data found for model"}), 404
-
+            
+            current_app.logger.info(f"Relativities dict for model {model} is {relativities_dict}.")
+            
             nb_col = (len(relativities_dict.keys()) - 1) * 3
             variables = [col for col in relativities_dict.keys() if col != "base"]
             variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
