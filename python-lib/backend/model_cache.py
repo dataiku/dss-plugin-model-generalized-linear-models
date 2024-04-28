@@ -11,7 +11,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
     model_id_list = global_dku_mltask.get_trained_models_ids()
     
     for model_id in model_id_list:
-        
+        loop_start_time = time() 
         
         model_deployer.set_new_active_version(model_id)
         model_handler.update_active_version()
@@ -36,6 +36,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
                 "Deviance": model_1_deviance
             }
         }
+        print(f"Processing time for model {model_id}: {time() - loop_start_time:.2f} seconds")
         
     print(f"Model cache set up time took {model_cache_setup_time - time()}")
     return model_cache
