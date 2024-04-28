@@ -278,6 +278,8 @@ def export_model():
         # Convert DataFrame to CSV format
         csv_data = df.to_csv(index=False).encode('utf-8')
     else:
+        request_json = request.get_json()
+        print(request_json)
         model= request_json["id"]
         
         relativities_dict = model_cache[model].get('relativities_dict')
