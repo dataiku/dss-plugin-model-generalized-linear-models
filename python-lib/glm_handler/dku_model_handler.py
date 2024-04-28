@@ -7,6 +7,7 @@ from glm_handler.dku_utils import extract_active_fullModelId
 import logging
 from backend.logging_settings import logger
 from glm_handler.dku_relativities_handler import RelativitiesHandler
+import time
 
 class ModelHandler:
     """
@@ -47,18 +48,54 @@ class ModelHandler:
     
     def update_active_version(self):
         
+        start_time = time.time()  # Start the timer for the whole method
+
+        # Step 1: Initialize model
+        step_start = time.time()
         self.model = dataiku.Model(self.model_id)
+        print("Step 1 duration:", time.time() - step_start)
+
+        # Step 2: Extract active fullModelId and print it
+        step_start = time.time()
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
         print(self.full_model_id)
+        print("Step 2 duration:", time.time() - step_start)
+
+        # Step 3: Setup model information handler
+        step_start = time.time()
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+        print("Step 3 duration:", time.time() - step_start)
+
+        # Step 4: Get predictor and target variable
+        step_start = time.time()
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
+        print("Step 4 duration:", time.time() - step_start)
+
+        # Step 5: Initialize base values and modalities dictionaries
+        step_start = time.time()
         self.base_values = dict()
         self.modalities = dict()
+        print("Step 5 duration:", time.time() - step_start)
+
+        # Step 6: Compute features
+        step_start = time.time()
         self.compute_features()
+        print("Step 6 duration:", time.time() - step_start)
+
+        # Step 7: Compute base values
+        step_start = time.time()
         self.compute_base_values()
+        print("Step 7 duration:", time.time() - step_start)
+
+        # Step 8: Initialize relativities handler
+        step_start = time.time()
         self.relativities_handler = RelativitiesHandler(self.model_info_handler)
-        
+        print("Step 8 duration:", time.time() - step_start)
+
+        # Print total duration
+        print("Total method duration:", time.time() - start_time)
+
     def get_model_versions(self):
         versions = self.model.list_versions()
         fmi_name = {version['snippet']['fullModelId']: version['snippet']['userMeta']['name'] for version in versions}
