@@ -50,11 +50,6 @@ class ModelHandler:
         
         start_time = time.time()  # Start the timer for the whole method
 
-        # Step 1: Initialize model
-        step_start = time.time()
-        self.model = dataiku.Model(self.model_id)
-        print("Step 1 duration:", time.time() - step_start)
-
         # Step 2: Extract active fullModelId and print it
         step_start = time.time()
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
