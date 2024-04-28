@@ -46,7 +46,10 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
         relativities_dict = model_handler.relativities
         step_elapsed = time() - step_time
         print(f"Step - Get relativities: {step_elapsed:.2f} seconds")
-
+        
+        variable_stats=model_handler.get_variable_level_stats()
+        lift_chart_data = model_handler.get_lift_chart(8)
+        
         # Calculate model metrics
         step_time = time()
         mmc = ModelMetricsCalculator(model_handler)
@@ -60,6 +63,8 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             'relativities': relativities,
             'predicted_and_base': model1_predicted_base,
             'relativities_dict': relativities_dict,
+            'lift_chart_data':lift_chart_data,
+            'variables_stats':variable_stats,
             'model_metrics': {
                 "AIC": model_1_aic,
                 "BIC": model_1_bic,
@@ -91,6 +96,8 @@ def update_model_cache(global_dku_mltask, model_cache, model_handler):
             features = model_handler.get_features()
             relativities = model_handler.get_relativities_df()
             relativities_dict = model_handler.relativities
+            variable_stats=model_handler.get_variable_level_stats()
+            lift_chart_data = model_handler.get_lift_chart(8)
             mmc = ModelMetricsCalculator(model_handler)
             model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
 
@@ -99,6 +106,8 @@ def update_model_cache(global_dku_mltask, model_cache, model_handler):
                 'relativities':relativities,
                 'relativities_dict':relativities_dict,
                 'predicted_and_base': model1_predicted_base,
+                            'lift_chart_data':lift_chart_data,
+                 'variables_stats':variable_stats,
                 'model_metrics': {
                     "AIC": model_1_aic,
                     "BIC": model_1_bic,

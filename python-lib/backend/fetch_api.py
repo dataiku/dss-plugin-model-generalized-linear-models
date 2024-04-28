@@ -179,10 +179,8 @@ def get_variable_level_stats():
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
-    
-    df = model_handler.get_variable_level_stats()
+
+    df = model_cache[full_model_id].get('variable_stats')
     df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
     df.fillna(0, inplace=True)
     df.replace([np.inf, -np.inf], 0, inplace=True)
