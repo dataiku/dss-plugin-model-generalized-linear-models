@@ -376,7 +376,7 @@ class ModelHandler:
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
 
         
-        variable_stats = relativities.merge(coef_table[['variable', 'category', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'category'], right_on=['variable', 'value'])
+        variable_stats = relativities.merge(coef_table[['variable', 'category', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'category'], right_on=['variable', 'category'])
         variable_stats.drop('variable', axis=1, inplace=True)
         
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
