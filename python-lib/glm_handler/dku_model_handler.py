@@ -369,9 +369,11 @@ class ModelHandler:
         
         split_columns = coef_table['not_index'].str.split(':', expand=True)
         coef_table['dummy'],coef_table['variable'],coef_table['category']   = split_columns[0], split_columns[1],split_columns[2] 
+        coef_table['category'].fillna('None', inplace=True)
         coef_table.drop(['not_index'], axis=1, inplace=True)
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
         
+        print(f"coef_table col is {coef_table.to_string()}")
         print(f"coef_table col is {coef_table.to_string()}")
         variable_stats = relativities.merge(coef_table[['variable', 'category', 'coef', 'se', 'se_pct']], how='left', left_on=['variable', 'category'], right_on=['variable', 'category'])
 #         variable_stats.drop('variable', axis=1, inplace=True)
