@@ -362,13 +362,9 @@ class ModelHandler:
         
         relativities = self.get_relativities_df()
         coef_table = self.predictor._clf.coef_table.reset_index()
-#         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
-        print(f"relativites are : {relativities.to_string()}")
-        print(f"coef_table are : {coef_table.to_string()}")
-        print(f"predicted are : {predicted.to_string()}")
-            
-            
-        
+        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+
+
         coef_table = self.predictor._clf.coef_table.reset_index()
         coef_table.rename({'index':'not_index'},axis=1,inplace=True)
         split_columns = coef_table['not_index'].str.split(':', expand=True)
@@ -382,7 +378,7 @@ class ModelHandler:
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
         predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
-        
+        print(f"predicted are : {predicted.to_string()}")
         
         variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['feature', 'category'], right_on=['feature', 'category'])
         variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
