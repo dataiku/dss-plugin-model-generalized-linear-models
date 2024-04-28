@@ -283,7 +283,7 @@ def export_model():
             print(request_json)
             model = request_json.get("id")
             if not model:
-                current_app.logger.error("error": "Model ID not provided")
+                current_app.logger.error("error: Model ID not provided")
 
             relativities_dict = model_cache.get(model).get('relativities_dict')
             if not relativities_dict:
