@@ -357,41 +357,24 @@ class ModelHandler:
         lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         return lift_chart_data
 
-    def get_variable_level_stats(self):
-        print('Setting up variable level stats')
-        
+     def get_variable_level_stats(self):
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
-        predicted.columns =['variable', 'category', 'exposure']
         relativities = self.get_relativities_df()
         
         coef_table = self.predictor._clf.coef_table.reset_index()
-        coef_table.rename({'index':'not_index'},axis=1,inplace=True)
-        
-        split_columns = coef_table['not_index'].str.split(':', expand=True)
-        coef_table['dummy'],coef_table['variable'],coef_table['category']   = split_columns[0], split_columns[1],split_columns[2] 
-        coef_table['category'].fillna('None', inplace=True)
-        coef_table.drop(['not_index'], axis=1, inplace=True)
+        coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
-        
-        print(f"coef_table col is {coef_table.to_string()}")
-        print(f"coef_table col is {coef_table.to_string()}")
-        variable_stats = relativities.merge(coef_table[['variable', 'category', 'coef', 'se', 'se_pct']], how='left', left_on=['variable', 'category'], right_on=['variable', 'category'])
-#         variable_stats.drop('variable', axis=1, inplace=True)
-        print(f"variable_stats is : {variable_stats.to_string()}")
-        
-        predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['variable']).transform('sum')
+        print(coef_table)
+        variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
+        variable_stats.drop('variable', axis=1, inplace=True)
+        print(variable_stats)
+        predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
         predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
         
-        print(f"predicted is : {predicted.to_string()}")
-        
-        variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['variable', 'category'], right_on=['variable', 'category'])
-        variable_level_stats.drop(['exposure_sum'], axis=1, inplace=True)
-        print(f"variable_level_stats col is {variable_level_stats.columns}")
-        variable_level_stats.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
-        variable_level_stats.fillna(0, inplace=True)
-        variable_level_stats.replace([np.inf, -np.inf], 0, inplace=True)
-        
-        print(f"variable_level_stats is : {variable_level_stats.to_string()}")
+        variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
+        variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
+        print(variable_level_stats)
+        print(predicted)
         
         return variable_level_stats
         
