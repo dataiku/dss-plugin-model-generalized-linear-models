@@ -29,6 +29,7 @@ import numpy as np
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 client = dataiku.api_client()
 project = client.get_default_project()
+
 if not is_local:
     web_app_config = get_webapp_config()
     saved_model_id = web_app_config.get("saved_model_id")
@@ -170,13 +171,8 @@ def get_variable_level_stats():
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
-    
-    df = model_handler.get_variable_level_stats()
-    df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
-    df.fillna(0, inplace=True)
-    df.replace([np.inf, -np.inf], 0, inplace=True)
+    df = model_cache[full_model_id].get('variable_level_stats')
+
     return jsonify(df.to_dict('records'))
 
 

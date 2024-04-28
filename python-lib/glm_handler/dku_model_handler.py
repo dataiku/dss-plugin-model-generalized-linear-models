@@ -373,8 +373,10 @@ class ModelHandler:
         
         variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
         variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
-        print(variable_level_stats)
-        print(predicted)
+        variable_level_stats.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
+        variable_level_stats.fillna(0, inplace=True)
+        variable_level_stats.replace([np.inf, -np.inf], 0, inplace=True)
+
         
         return variable_level_stats
         
