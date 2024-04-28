@@ -49,11 +49,14 @@ class ModelHandler:
     def update_active_version(self):
         
         start_time = time.time()  # Start the timer for the whole method
+        # Step 1: Initialize model
+        step_start = time.time()
+        list_version = self.model.list_versions()
+        print("Step 1 duration:", time.time() - step_start)
 
         # Step 2: Extract active fullModelId and print it
         step_start = time.time()
-        self.full_model_id = extract_active_fullModelId(self.model.list_versions())
-        print(self.full_model_id)
+        self.full_model_id = extract_active_fullModelId(list_version)
         print("Step 2 duration:", time.time() - step_start)
 
         # Step 3: Setup model information handler
