@@ -287,7 +287,7 @@ def export_model():
 
             relativities_dict = model_cache.get(model).get('relativities_dict')
             if not relativities_dict:
-                current_app.logger.error("error: Model Cache not found")
+                current_app.logger.error("error: Model Cache not found for {model} cache only has {model_cache.keys()}")
             
             current_app.logger.info(f"Relativities dict for model {model} is {relativities_dict}.")
             
