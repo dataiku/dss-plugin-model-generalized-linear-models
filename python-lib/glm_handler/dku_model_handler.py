@@ -178,6 +178,7 @@ class ModelHandler:
             for value, relativity in values.items():
                 rel_df = rel_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
         #rel_df = rel_df.append({'feature': 'base', 'value': 'base', 'relativity': self.relativities['base']['base']}, ignore_index=True)
+        rel_df.coluns = ['variable', 'category', 'relativity']
         return rel_df
 
     def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
@@ -318,6 +319,7 @@ class ModelHandler:
         
         new_data = train_set.join(binned_data[['bin']], how='inner')
         lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
+        lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         return lift_chart_data
 
     def get_variable_level_stats(self):

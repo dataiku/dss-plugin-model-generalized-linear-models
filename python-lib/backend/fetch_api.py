@@ -9,12 +9,14 @@ if not is_local:
     from glm_handler.dku_model_deployer import ModelDeployer
     from glm_handler.glm_data_handler import GlmDataHandler
     from glm_handler.dku_model_metrics import ModelMetricsCalculator
+    from backend.model_cache import setup_model_cache, update_model_cache
+    
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
 dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
 from backend.logging_settings import logger
 from io import BytesIO
-
+from time import time
 import traceback
 import dataiku
 from dataiku.customwebapp import get_webapp_config
@@ -34,6 +36,8 @@ if not is_local:
     data_handler = GlmDataHandler()
     model_deployer = ModelDeployer(global_dss_mltask, saved_model_id)
     model_handler = ModelHandler(saved_model_id, data_handler)
+    model_cache = setup_model_cache(global_dss_mltask, model_deployer, model_handler)
+    print(f"Model Cache is: {model_cache}")
 
 
 
@@ -51,9 +55,6 @@ def get_models():
         current_app.logger.exception("An error occurred while retrieving models")
         return jsonify({'error': str(e)}), 500
     return jsonify(models)
-# For local dev
-    # return jsonify(dummy_models)
-     
 
 
 
@@ -63,19 +64,8 @@ def get_variables():
         return jsonify(dummy_variables)
     request_json = request.get_json()
     full_model_id = request_json["id"]
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
-    
-    try:
-        predicted_base = model_handler.get_predicted_and_base()
-        if predicted_base is None:
-            raise ValueError("predicted_base returned None.")
-        
-        relativities = model_handler.get_relativities_df()
-        if relativities is None:
-            raise ValueError("relativities returned None.")
-        
-        variables = model_handler.get_features()
+    try:   
+        variables = model_cache[full_model_id].get('features')
         if variables is None:
             raise ValueError("variables returned None.")
         
@@ -104,12 +94,7 @@ def get_data():
         
         current_app.logger.info(f"Model ID received: {full_model_id}")
 
-        model_deployer.set_new_active_version(full_model_id)
-        model_handler.update_active_version()
-        current_app.logger.info(f"Model {full_model_id} is now the active version.")
-
-        predicted_base = model_handler.get_predicted_and_base()
-        predicted_base.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
+        predicted_base = model_cache[full_model_id].get('predicted_and_base')
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
@@ -169,12 +154,9 @@ def get_relativities():
     full_model_id = request_json["id"]
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
-
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
-    
-    df = model_handler.get_relativities_df()
+    df = model_cache[full_model_id].get('relativities')
     df.columns = ['variable', 'category', 'relativity']
+    current_app.logger.info(f"relativites are {df.head()}")
     return jsonify(df.to_dict('records'))
 #     local dev
     return jsonify(dummy_relativites.to_dict('records'))
@@ -211,130 +193,84 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
+    start_time = time()
+    
     if is_local:
-        df =get_dummy_model_comparison_data()
+        df = get_dummy_model_comparison_data()
+        current_app.logger.info(f"Data fetched locally in {time() - start_time} seconds.")
         return jsonify(df.to_dict('records'))
-  
+
     try:
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
         
-        current_app.logger.info(f"Model ID received: {model1}")
-
-        model_deployer.set_new_active_version(model1)
-        model_handler.update_active_version()
-        current_app.logger.info(f"Model {model1} is now the active version.")
-
-        model1_predicted_base = model_handler.get_predicted_and_base()
-        model1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
-        current_app.logger.info(f"Successfully generated predictions. Sample is {model1_predicted_base.head().to_string()}")
+        current_app.logger.info(f"Retrieving {model1} from the cache")
+        model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
+        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
+        current_app.logger.info(f"Successfully retrieved {model1} from the cache")
         
-        current_app.logger.info(f"Model ID received: {model2}")
+        current_app.logger.info(f"Retrieving {model2} from the cache")
+        model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
+        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
+        current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
-        model_deployer.set_new_active_version(model2)
-        model_handler.update_active_version()
-        current_app.logger.info(f"Model {model2} is now the active version.")
-
-        model2_predicted_base = model_handler.get_predicted_and_base()
-        model2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
-        current_app.logger.info(f"Successfully generated predictions. Sample is {model2_predicted_base.head().to_string()}")
-        
-        
-        merged_model_stats = pd.merge(model1_predicted_base, model2_predicted_base, 
-                                 on=['definingVariable','Category', 'Value'], 
-                                 how='outer')
-
-        current_app.logger.info(f"Filtering for select varialbe {selectedVariable} in {merged_model_stats.definingVariable.value_counts()}")
+        merge_time = time()
+        merged_model_stats = pd.merge(model_1_predicted_base, model_2_predicted_base, 
+                                      on=['definingVariable', 'Category', 'Value'], 
+                                      how='outer')
         merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
-        current_app.logger.info(f"Successfully generated predictions. Sample is {merged_model_stats.head().to_string()}")
+        current_app.logger.info(f"Merged data in {time() - merge_time} seconds. Sample: {merged_model_stats.head().to_string()}")
         
+        total_time = time() - start_time
+        current_app.logger.info(f"Total execution time: {total_time} seconds.")
         return jsonify(merged_model_stats.to_dict('records'))
     
     except Exception as e:
-        current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
-        return jsonify({"error": "An error occurred during data processing."}), 500
-    # local dev
-
-    
-#     request_json = request.get_json()
-#     print(request_json)
-#     model1, model2 = request_json["model1"], request_json["model2"]
-
-    
-#     model_deployer.set_new_active_version(model1)
-#     model_handler.update_active_version()
-#     current_app.logger.info(f"Model {model1} is now the active version.")
-#     model_1_lift_chart = model_handler.get_lift_chart(8)
-#     current_app.logger.info(f"Model {model1} lift chart is {model_1_lift_chart.to_string()}")
-    
-#     model_deployer.set_new_active_version(model2)
-#     model_handler.update_active_version()
-#     current_app.logger.info(f"Model {model2} is now the active version.")
-
-#     model_2_lift_chart = model_handler.get_lift_chart(8)
-#     current_app.logger.info(f"Model {model2} lift chart is {model_2_lift_chart.to_string()}")
-    
-#     model_1_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_1_fittedAverage']
-#     model_2_lift_chart.columns = ['Category', 'exposure', 'observedAverage', 'Model_2_fittedAverage']
-    
-#     merged_model_stats = pd.merge(model_1_lift_chart, model_2_lift_chart, 
-#                              on=['observedAverage','Category', 'exposure'], 
-#                              how='outer')
-    
-#     current_app.logger.info(f"merged_model_stats are {merged_model_stats.to_string()}")
-#     return jsonify(merged_model_stats.to_dict('records'))
-
+        current_app.logger.error(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
+    start_time = time()
+    
     if is_local:
+        response_time = time() - start_time
+        print(f"Returned local dummy metrics in {response_time} seconds.")
         return jsonify(dummy_model_metrics)
+    
     request_json = request.get_json()
     print(request_json)
     
     model1, model2 = request_json["model1"], request_json["model2"]
     
-    model_deployer.set_new_active_version(model1)
-    model_handler.update_active_version()
-
-    mmc = ModelMetricsCalculator(model_handler)
-    model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
-
-    model_deployer.set_new_active_version(model2)
-    model_handler.update_active_version()
-
-    mmc = ModelMetricsCalculator(model_handler)
-    model_2_aic, model_2_bic, model_2_deviance = mmc.calculate_metrics()
-
+    model_1_metrics = model_cache.get(model1).get('model_metrics')
+    model_2_metrics = model_cache.get(model2).get('model_metrics')
+    
     metrics = {
         "models": {
             "Model_1": {
-            "AIC": model_1_aic,
-            "BIC": model_1_bic,
-            "Deviance": model_1_deviance
+                "AIC": model_1_metrics.get('AIC'),
+                "BIC": model_1_metrics.get('BIC'),
+                "Deviance": model_1_metrics.get('Deviance')
             },
             "Model_2": {
-            "AIC": model_2_aic,
-            "BIC": model_2_bic,
-            "Deviance": model_2_deviance
+                "AIC": model_2_metrics.get('AIC'),
+                "BIC": model_2_metrics.get('AIC'),
+                "Deviance": model_2_metrics.get('AIC'),
             }
         }
-        }
-    
+    }
     return jsonify(metrics)
 
-#     return jsonify(dummy_model_metrics)
 
-@fetch_api.route('/export_model', methods=['GET'])
+
+
+@fetch_api.route('/export_model', methods=['POST'])
 def export_model():
-#     you should provide a model ID to this and export a specific model, it doesnt make sense to store it in memory
-#     model_deployer.set_new_active_version(full_model_id)
-#     model_handler.update_active_version()
-    
-#     df = model_handler.get_relativities_df()
+
     if is_local:
         data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
         df = pd.DataFrame(data)
@@ -342,33 +278,43 @@ def export_model():
         # Convert DataFrame to CSV format
         csv_data = df.to_csv(index=False).encode('utf-8')
     else:
-        relativities_dict = model_handler.relativities
-        
-        nb_col = (len(relativities_dict.keys()) - 1) * 3
-        variables = [col for col in relativities_dict.keys() if col != "base"]
-        variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
-        max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
-        
-        csv_output = ",,\n"
-        csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
-        csv_output += ",,\n"
-        csv_output += ",,\n"
-        csv_output += ",,,".join(variables) + ",,\n"
-        csv_output += ",,\n"
-        csv_output += ",,,".join(variables) + ",,\n"
-        
-        for i in range(max_len):
-            for variable in variables:
-                if i < len(variable_keys[variable]):
-                    value = variable_keys[variable][i]
-                    csv_output += "{},{},,".format(value, relativities_dict[variable][value])
-                else:
-                    csv_output += ",,,"
-            csv_output += "\n"
+        try:
+            request_json = request.get_json()
+            print(request_json)
+            model = request_json.get("id")
+            if not model:
+                current_app.logger.error("error: Model ID not provided")
 
-        csv_data = csv_output.encode('utf-8')
+            relativities_dict = model_cache.get(model).get('relativities_dict')
+            if not relativities_dict:
+                current_app.logger.error("error: Model Cache not found for {model} cache only has {model_cache.keys()}")
+            
+            current_app.logger.info(f"Relativities dict for model {model} is {relativities_dict}.")
+            
+            nb_col = (len(relativities_dict.keys()) - 1) * 3
+            variables = [col for col in relativities_dict.keys() if col != "base"]
+            variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
+            max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
 
-    # Create an in-memory file-like object for CSV data
+            csv_output = ",,\n"
+            csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
+            csv_output += ",,\n" * 2
+            csv_output += ",,,".join(variables) + ",,\n" * 2
+
+            for i in range(max_len):
+                for variable in variables:
+                    if i < len(variable_keys[variable]):
+                        value = variable_keys[variable][i]
+                        csv_output += "{},{},,".format(value, relativities_dict[variable][value])
+                    else:
+                        csv_output += ",,,"
+                csv_output += "\n"
+
+            csv_data = csv_output.encode('utf-8')
+
+        except KeyError as e:
+            current_app.logger.error(f"An error occurred: {str(e)}")
+
     csv_io = BytesIO(csv_data)
 
     # Serve the CSV file for download
@@ -443,6 +389,12 @@ def train_model():
         
         
         current_app.logger.info("Model training initiated successfully")
+        
+        global model_cache
+        
+        model_cache = update_model_cache(global_dss_mltask, model_cache, model_handler)
+            
+
         
         return jsonify({'message': 'Model training initiated successfully.'}), 200
     except Exception as e:

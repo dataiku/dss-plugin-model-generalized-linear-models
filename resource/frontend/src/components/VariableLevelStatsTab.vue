@@ -167,6 +167,7 @@ export default defineComponent({
         return {
             variableLevelStatsData: [] as VariableLevelStatsPoint[],
             models: [] as ModelPoint[],
+            active_model: {} as ModelPoint,
             selectedModel: {} as ModelPoint,
             modelsString: [] as string[],
             selectedModelString: "",
@@ -205,6 +206,7 @@ export default defineComponent({
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
           const variableLevelStatsResponse = await API.getVariableLevelStats(model);
+          this.active_model = model
           this.variableLevelStatsData = variableLevelStatsResponse?.data.map( (point) => {
               const variableLevelStats = {'variable': point.variable, 'value': point.value, 
                                           'coefficient': round_decimals(point.coefficient),
@@ -218,7 +220,7 @@ export default defineComponent({
           this.loading = false;
         },
         onClick: function() {
-          API.exportModel().then(response => {
+          API.exportModel(this.active_model).then(response => {
               const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
               const link = document.createElement('a');
               link.href = url;

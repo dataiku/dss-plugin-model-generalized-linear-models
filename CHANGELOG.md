@@ -1,5 +1,9 @@
 # Changelog
 
+## [Version 1.1.1] - Bugfix Release - 2024-02
+
+* Update the PredictionModelHandler interface
+
 ## [Version 1.1.0] - Upgrade Release - 2024-01
 
 * Switched the GLM library from statsmodels to glum
