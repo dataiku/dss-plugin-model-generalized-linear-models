@@ -278,46 +278,57 @@ def export_model():
         # Convert DataFrame to CSV format
         csv_data = df.to_csv(index=False).encode('utf-8')
     else:
-        request_json = request.get_json()
-        print(request_json)
-        model= request_json["id"]
-        
-        relativities_dict = model_cache[model].get('relativities_dict')
-        
-        nb_col = (len(relativities_dict.keys()) - 1) * 3
-        variables = [col for col in relativities_dict.keys() if col != "base"]
-        variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
-        max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
-        
-        csv_output = ",,\n"
-        csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
-        csv_output += ",,\n"
-        csv_output += ",,\n"
-        csv_output += ",,,".join(variables) + ",,\n"
-        csv_output += ",,\n"
-        csv_output += ",,,".join(variables) + ",,\n"
-        
-        for i in range(max_len):
-            for variable in variables:
-                if i < len(variable_keys[variable]):
-                    value = variable_keys[variable][i]
-                    csv_output += "{},{},,".format(value, relativities_dict[variable][value])
-                else:
-                    csv_output += ",,,"
-            csv_output += "\n"
+        try:
+            request_json = request.get_json()
+            print(request_json)
+            model = request_json.get("id")
+            if not model:
+                return jsonify({"error": "Model ID not provided"}), 400
 
-        csv_data = csv_output.encode('utf-8')
+            relativities_dict = model_cache.get(model)
+            if not relativities_dict:
+                return jsonify({"error": "Model not found in cache"}), 404
 
-    # Create an in-memory file-like object for CSV data
-    csv_io = BytesIO(csv_data)
+            relativities_dict = relativities_dict.get('relativities_dict')
+            if not relativities_dict:
+                return jsonify({"error": "No relativities data found for model"}), 404
 
-    # Serve the CSV file for download
-    return send_file(
-        csv_io,
-        mimetype='text/csv',
-        as_attachment=True,
-        download_name='model.csv'
-    )
+            nb_col = (len(relativities_dict.keys()) - 1) * 3
+            variables = [col for col in relativities_dict.keys() if col != "base"]
+            variable_keys = {variable: list(relativities_dict[variable].keys()) for variable in variables}
+            max_len = max(len(variable_keys[variable]) for variable in variable_keys.keys())
+
+            csv_output = ",,\n"
+            csv_output += "Base,,{}\n".format(relativities_dict['base']['base'])
+            csv_output += ",,\n" * 2
+            csv_output += ",,,".join(variables) + ",,\n" * 2
+
+            for i in range(max_len):
+                for variable in variables:
+                    if i < len(variable_keys[variable]):
+                        value = variable_keys[variable][i]
+                        csv_output += "{},{},,".format(value, relativities_dict[variable][value])
+                    else:
+                        csv_output += ",,,"
+                csv_output += "\n"
+
+            csv_data = csv_output.encode('utf-8')
+
+            # Create an in-memory file-like object for CSV data
+            csv_io = BytesIO(csv_data)
+
+            # Serve the CSV file for download
+            return send_file(
+                csv_io,
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name='model.csv'
+            )
+
+        except KeyError as e:
+            return jsonify({"error": f"Missing key in data: {str(e)}"}), 500
+        except Exception as e:
+            return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 
 
