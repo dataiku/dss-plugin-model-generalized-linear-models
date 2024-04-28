@@ -218,7 +218,7 @@ export default defineComponent({
           this.loading = false;
         },
         onClick: function() {
-          API.exportModel().then(response => {
+          API.exportModel(model).then(response => {
               const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
               const link = document.createElement('a');
               link.href = url;
