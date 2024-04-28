@@ -29,6 +29,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             'features':features,
              'relativities':relativities,
             'predicted_and_base': model1_predicted_base,
+            'relativities_dict':relativities_dict,
             'model_metrics': {
                 "AIC": model_1_aic,
                 "BIC": model_1_bic,
@@ -60,6 +61,7 @@ def update_model_cache(global_dku_mltask, model_cache, model_handler):
             model_cache[model_id]= {
                 'features':features,
                 'relativities':relativities,
+                'relativities_dict':relativities_dict,
                 'predicted_and_base': model1_predicted_base,
                 'model_metrics': {
                     "AIC": model_1_aic,
