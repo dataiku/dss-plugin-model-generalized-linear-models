@@ -283,16 +283,11 @@ def export_model():
             print(request_json)
             model = request_json.get("id")
             if not model:
-                return jsonify({"error": "Model ID not provided"}), 400
+                current_app.logger.error("error": "Model ID not provided")
 
-            relativities_dict = model_cache.get(model)
+            relativities_dict = model_cache.get(model).get('relativities_dict')
             if not relativities_dict:
-                return jsonify({"error": "Model not found in cache"}), 404
-
-            relativities_dict = relativities_dict.get('relativities_dict')
-            
-            if not relativities_dict:
-                return jsonify({"error": "No relativities data found for model"}), 404
+                current_app.logger.error("error": "Model Cache not found")
             
             current_app.logger.info(f"Relativities dict for model {model} is {relativities_dict}.")
             
