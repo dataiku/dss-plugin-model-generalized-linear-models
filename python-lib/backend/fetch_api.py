@@ -268,7 +268,7 @@ def get_model_metrics():
 
 
 
-@fetch_api.route('/export_model', methods=['GET'])
+@fetch_api.route('/export_model', methods=['POST'])
 def export_model():
 
     if is_local:
