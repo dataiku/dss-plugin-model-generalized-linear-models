@@ -375,7 +375,7 @@ class ModelHandler:
         print(f"coef_table col is {coef_table.columns}")
         print(f"relativites is {relativities.columns}")
         variable_stats = relativities.merge(coef_table[['variable', 'category', 'coef', 'se', 'se_pct']], how='left', left_on=['variable', 'category'], right_on=['variable', 'category'])
-        variable_stats.drop('variable', axis=1, inplace=True)
+#         variable_stats.drop('variable', axis=1, inplace=True)
         print(f"predicted columns are {predicted.columns}")
         
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['variable']).transform('sum')
