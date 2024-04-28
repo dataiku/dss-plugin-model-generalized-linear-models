@@ -21,6 +21,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
                                          'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
         features = model_handler.get_features()
         relativities = model_handler.get_relativities_df()
+        relativities_dict = model_handler.relativities
         mmc = ModelMetricsCalculator(model_handler)
         model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
         
@@ -52,6 +53,7 @@ def update_model_cache(global_dku_mltask, model_cache, model_handler):
                                              'fittedAverage', 'Value', 'baseLevelPrediction']
             features = model_handler.get_features()
             relativities = model_handler.get_relativities_df()
+            relativities_dict = model_handler.relativities
             mmc = ModelMetricsCalculator(model_handler)
             model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
 
