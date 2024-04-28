@@ -13,7 +13,10 @@ if not is_local:
     
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
-dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
+dummy_lift_data,dummy_get_updated_data, dummy_relativites, 
+                                  get_dummy_model_comparison_data, 
+                                  dummy_model_metrics,
+                                  dummy_variable_level_stats)
 from backend.logging_settings import logger
 from io import BytesIO
 from time import time
@@ -114,13 +117,8 @@ def get_lift_data():
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
-    model_deployer.set_new_active_version(full_model_id)
-    model_handler.update_active_version()
-    current_app.logger.info(f"Model {full_model_id} is now the active version.")
     
-    
-    lift_chart = model_handler.get_lift_chart(8)
-    lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    lift_chart = model_cache[model_id].get('lift_chart_data')
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
@@ -164,14 +162,7 @@ def get_relativities():
 @fetch_api.route("/get_variable_level_stats", methods=["POST"])
 def get_variable_level_stats():
     if is_local:
-        df = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
-                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
-                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
-                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
-                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
-                        'weight': [234, 87, 73, 122, 90], 
-                        'weight_pct': [60, 20, 20, 65, 35], 
-                        'relativity': [1, 1.23, 1.077, 1, 0.98]})
+        df = variable_level_stats_df 
         return jsonify(df.to_dict('records'))
     print("variable level stats")
     request_json = request.get_json()
