@@ -118,7 +118,7 @@ def get_lift_data():
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
     
-    lift_chart = model_cache[model_id].get('lift_chart_data')
+    lift_chart = model_cache[full_model_id].get('lift_chart_data')
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
