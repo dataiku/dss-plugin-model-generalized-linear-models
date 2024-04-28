@@ -278,8 +278,9 @@ def export_model():
         # Convert DataFrame to CSV format
         csv_data = df.to_csv(index=False).encode('utf-8')
     else:
+        model= request_json["id"]
         
-        relativities_dict = model_handler.relativities
+        relativities_dict = model_cache[model].get('relativities_dict')
         
         nb_col = (len(relativities_dict.keys()) - 1) * 3
         variables = [col for col in relativities_dict.keys() if col != "base"]
