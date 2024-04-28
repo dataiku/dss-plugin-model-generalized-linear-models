@@ -390,7 +390,8 @@ class ModelHandler:
         variable_level_stats.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
         variable_level_stats.fillna(0, inplace=True)
         variable_level_stats.replace([np.inf, -np.inf], 0, inplace=True)
-
+        
+        print(f"variable_level_stats is : {variable_level_stats.to_string()}")
         
         return variable_level_stats
         
