@@ -382,7 +382,7 @@ class ModelHandler:
         predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
         
         print(f"predicted col is {predicted.columns}")
-        print(f"variable_level_stats col is {variable_level_stats.columns}")
+        print(f"variable_level_stats col is {variable_stats.columns}")
         
         variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['variable', 'category'], right_on=['variable', 'category'])
         variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
