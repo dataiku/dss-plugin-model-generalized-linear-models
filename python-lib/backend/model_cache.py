@@ -6,7 +6,7 @@ from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from time import time
 
 def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
-model_cache_setup_time = time()
+    model_cache_setup_time = time()
     model_cache = {}
     model_id_list = global_dku_mltask.get_trained_models_ids()
 
