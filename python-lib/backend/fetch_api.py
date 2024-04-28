@@ -318,9 +318,8 @@ def export_model():
             csv_data = csv_output.encode('utf-8')
 
         except KeyError as e:
-            return jsonify({"error": f"Missing key in data: {str(e)}"}), 500
-        except Exception as e:
-            return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+            current_app.logger.error(f"An error occurred: {str(e)}")
+
     csv_io = BytesIO(csv_data)
 
     # Serve the CSV file for download
