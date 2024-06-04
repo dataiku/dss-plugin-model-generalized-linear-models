@@ -349,6 +349,10 @@ class ModelHandler:
         variable_stats_cat = variable_stats_cat.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
         variable_stats_cat.drop(['category', 'exposure_sum'], axis=1, inplace=True)
         
+        predicted_num = predicted[~predicted['feature'].isin(categorical_features)]
+        relativities_num = relativities[~relativities['feature'].isin(categorical_features)][relativities['value']==1]
+        coef_table_num = coef_table[~coef_table['feature'].isin(categorical_features)]
+        
         return variable_level_stats
         
     def get_link_function(self):
