@@ -323,6 +323,7 @@ class ModelHandler:
         return lift_chart_data
 
     def get_variable_level_stats(self):
+        # handle numeric and categorical variables separately.
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
         print(relativities)
