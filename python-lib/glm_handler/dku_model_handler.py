@@ -331,11 +331,13 @@ class ModelHandler:
         print(coef_table)
         if coef_table['index'].str.contains(':').any():
             coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
+            variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
         else:
             coef_table['variable'] = coef_table['index']
+            variable_stats = relativities.merge(coef_table[['variable', 'coef', 'se', 'se_pct']], how='left', left_on=['feature'], right_on=['variable'])
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
         print(coef_table)
-        variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
+        
         variable_stats.drop('variable', axis=1, inplace=True)
         print(variable_stats)
         predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
