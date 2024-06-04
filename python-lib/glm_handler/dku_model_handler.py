@@ -356,7 +356,7 @@ class ModelHandler:
 
             variable_stats_cat = variable_stats_cat.merge(predicted_cat, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
             variable_stats_cat.drop(['category', 'exposure_sum'], axis=1, inplace=True)
-            variable_level_stats = variable_stats.append(variable_stats_cat)
+            variable_stats = variable_stats.append(variable_stats_cat)
             
         numeric_features = [feature['variable'] for feature in features if (feature['variableType']=='numeric' and feature['isInModel']==True)]
         
@@ -370,9 +370,9 @@ class ModelHandler:
 
             variable_stats_num = coef_table_num[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
         
-            variable_level_stats = variable_stats.append(variable_stats_num)
+            variable_stats = variable_stats.append(variable_stats_num)
         
-        return variable_level_stats
+        return variable_stats
         
     def get_link_function(self):
         """
