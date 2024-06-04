@@ -325,7 +325,7 @@ class ModelHandler:
     def get_variable_level_stats(self):
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
-        
+        print(relativities)
         coef_table = self.predictor._clf.coef_table.reset_index()
         print('coef_table')
         print(coef_table)
