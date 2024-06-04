@@ -329,6 +329,7 @@ class ModelHandler:
         coef_table = self.predictor._clf.coef_table.reset_index()
         print('coef_table')
         print(coef_table)
+        print(coef_table['index'].str.contains(':'))
         coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
         print(coef_table)
