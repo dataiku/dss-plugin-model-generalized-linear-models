@@ -64,8 +64,10 @@ def get_variables():
         return jsonify(dummy_variables)
     request_json = request.get_json()
     full_model_id = request_json["id"]
-    try:   
+    try:
         variables = model_cache[full_model_id].get('features')
+        print(model_cache[full_model_id])
+        print(variables)
         if variables is None:
             raise ValueError("variables returned None.")
         
