@@ -323,20 +323,14 @@ class ModelHandler:
         return lift_chart_data
 
     def get_variable_level_stats(self):
-        # handle numeric and categorical variables separately.
-        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
-        relativities = self.get_relativities_df()
-        coef_table = self.predictor._clf.coef_table.reset_index()
-        coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
-        
-        features = self.get_features()
-        categorical_features = [feature['variable'] for feature in features if feature['variableType']=='categorical']
+        features = model_handler.get_features()
+        categorical_features = [feature['variable'] for feature in features if (feature['variableType']=='categorical' and feature['isInModel']==True)]
         categorical_features.append('base')
         categorical_features.append('intercept')
         
         predicted_cat = predicted[predicted['feature'].isin(categorical_features)]
         relativities_cat = relativities[relativities['feature'].isin(categorical_features)]
-        coef_table_cat = coef_table[coef_table['feature'].isin(categorical_features)]
+        coef_table_cat = coef_table[(coef_table['index']=='intercept') | (coef_table['index'].str.contains(':'))]
         
         coef_table_cat[['dummy', 'variable', 'value']] = coef_table_cat['index'].str.split(':', expand=True)
         variable_stats_cat = relativities_cat.merge(coef_table_cat[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
@@ -345,13 +339,22 @@ class ModelHandler:
         
         predicted_cat['exposure_sum'] = predicted_cat['exposure'].groupby(predicted_cat['feature']).transform('sum')
         predicted_cat['exposure_pct'] = predicted_cat['exposure']/predicted_cat['exposure_sum']*100
-        
-        variable_stats_cat = variable_stats_cat.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
+
+        variable_stats_cat = variable_stats_cat.merge(predicted_cat, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
         variable_stats_cat.drop(['category', 'exposure_sum'], axis=1, inplace=True)
         
-        predicted_num = predicted[~predicted['feature'].isin(categorical_features)]
-        relativities_num = relativities[~relativities['feature'].isin(categorical_features)][relativities['value']==1]
-        coef_table_num = coef_table[~coef_table['feature'].isin(categorical_features)]
+        numeric_features = [feature['variable'] for feature in features if (feature['variableType']=='numeric' and feature['isInModel']==True)]
+        
+        coef_table_num = coef_table[coef_table['index'].isin(numeric_features)]
+        coef_table_num['feature'] = coef_table_num['index']
+        coef_table_num['value'] = [model_handler.base_values[feature] for feature in coef_table_num['feature']]
+        coef_table_num['exposure'] = 0
+        coef_table_num['exposure_pct'] = 0
+        coef_table_num['relativity'] = 1
+        
+        variable_stats_num = coef_table_num[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
+        
+        variable_level_stats = variable_stats_cat.append(variable_stats_num)
         
         return variable_level_stats
         
