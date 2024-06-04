@@ -323,11 +323,11 @@ class ModelHandler:
         return lift_chart_data
 
     def get_variable_level_stats(self):
-        predicted = model_handler.get_predicted_and_base()[['feature', 'category', 'exposure']]
-        relativities = model_handler.get_relativities_df()
-        coef_table = model_handler.predictor._clf.coef_table.reset_index()
+        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+        relativities = self.get_relativities_df()
+        coef_table = self.predictor._clf.coef_table.reset_index()
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
-        features = model_handler.get_features()
+        features = self.get_features()
         
         coef_table_intercept = coef_table[coef_table['index'] == 'intercept']
         coef_table_intercept['feature'] = 'base'
