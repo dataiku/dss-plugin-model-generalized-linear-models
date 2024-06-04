@@ -212,7 +212,7 @@ class DataikuMLTask:
     def test_settings(self):
         return self.mltask.get_settings()
     
-    def update_to_numeric(self, fs, variable_preprocessing_method='AVGSTD'):
+    def update_to_numeric(self, fs, variable_preprocessing_method='NONE'):
         fs['generate_derivative'] = False
 #         fs['numerical_handling'] = variable_preprocessing_method
         fs['numerical_handling'] = 'REGULAR'
@@ -314,7 +314,7 @@ class DataikuMLTask:
                 # Configure numerical variables with specific processing types
                 elif variable['type'] == 'numerical':
 #                     processing = variable.get('processing', 'NONE')
-                    fs = self.update_to_numeric(fs, "AVGSTD")
+                    fs = self.update_to_numeric(fs, "NONE")
             elif variable_name == self.target_variable:
                     pass
             elif variable_name == self.exposure_variable:
