@@ -329,8 +329,10 @@ class ModelHandler:
         coef_table = self.predictor._clf.coef_table.reset_index()
         print('coef_table')
         print(coef_table)
-        print(coef_table['index'].str.contains(':').any())
-        coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
+        if coef_table['index'].str.contains(':').any():
+            coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
+        #else:
+        #    coef_table['variable'] = coef_table['index']
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
         print(coef_table)
         variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
