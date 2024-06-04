@@ -363,7 +363,7 @@ class ModelHandler:
         if len(numeric_features)>0:
             coef_table_num = coef_table[coef_table['index'].isin(numeric_features)]
             coef_table_num['feature'] = coef_table_num['index']
-            coef_table_num['value'] = [model_handler.base_values[feature] for feature in coef_table_num['feature']]
+            coef_table_num['value'] = [self.base_values[feature] for feature in coef_table_num['feature']]
             coef_table_num['exposure'] = 0
             coef_table_num['exposure_pct'] = 0
             coef_table_num['relativity'] = 1
