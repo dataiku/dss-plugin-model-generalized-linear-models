@@ -15,7 +15,7 @@ class ModelDeployer():
         return {self.saved_model.get_version_details(version['id']).details['smOrigin']['fullModelId']: version['id'] for version in self.saved_model.list_versions()}
 
     def set_new_active_version(self, model_id):
-        if model_id in deployed_models.keys():
+        if model_id in self.deployed_models.keys():
             self.saved_model.set_active_version(self.deployed_models[model_id])
             logger.info(f"Model {model_id} activated successfully.")
         else:
