@@ -325,6 +325,13 @@ class ModelHandler:
     def get_variable_level_stats(self):
         features = model_handler.get_features()
         categorical_features = [feature['variable'] for feature in features if (feature['variableType']=='categorical' and feature['isInModel']==True)]
+        if len(categorical_features) == 0:
+            variable_stats_cat = relativities_cat[relativities_cat['feature']=='base']
+            variable_stats_cat['coef'] = np.nan
+            variable_stats_cat['exposure'] = np.nan
+            variable_stats_cat['exposure'] = np.nan
+            variable_stats_cat['coef'] = np.nan
+            variable_stats_cat['coef'] = np.nan
         categorical_features.append('base')
         categorical_features.append('intercept')
         
