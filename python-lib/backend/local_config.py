@@ -1,24 +1,24 @@
-from backend.dataiku_api import dataiku_api
+from backend.utils.dataiku_api import dataiku_api
 from logging.config import dictConfig
 import os
 import pandas as pd
 import numpy as np
 # Replace by your default project key that you are working on in dev
-DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING"
+# DEFAULT_PROJECT_KEY = "SOL_CLAIM_MODELING"
 
 # TODO : Add dip_home to a .env file
 
-CONFIG = {
-    # put your webapp desired config
-    "webapp_config": {
-        "model_id": "aHJZVrBQ",
-    },
-    "default_project_key": DEFAULT_PROJECT_KEY,
-    "training_dataset_string": "claim_train",
-}
+# CONFIG = {
+#     # put your webapp desired config
+#     "webapp_config": {
+#         "model_id": "aHJZVrBQ",
+#     },
+#     "default_project_key": DEFAULT_PROJECT_KEY,
+#     "training_dataset_string": "claim_train",
+# }
 
 
-os.environ["DKU_CURRENT_PROJECT_KEY"] = CONFIG.get("default_project_key")
+#os.environ["DKU_CURRENT_PROJECT_KEY"] = CONFIG.get("default_project_key")
 
 
 def get_setup_for_dataiku_client():

@@ -19,37 +19,22 @@ from io import BytesIO
 from time import time
 import traceback
 import dataiku
-from dataiku.customwebapp import get_webapp_config
 
 import numpy as np
 
+from backend.utils.dataiku_api import dataiku_api
+
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
-client = dataiku.api_client()
-project = client.get_default_project()
-if not is_local:
-    web_app_config = get_webapp_config()
-    saved_model_id = web_app_config.get("saved_model_id")
-    saved_model = project.get_saved_model(saved_model_id)
-    global_dss_mltask = saved_model.get_origin_ml_task()
-    global_dku_mltask = DataikuMLTask(web_app_config.get("training_dataset_string"), saved_model_id)
-
-    data_handler = GlmDataHandler()
-    model_deployer = ModelDeployer(saved_model, global_dss_mltask, saved_model_id)
-    model_handler = ModelHandler(saved_model_id, data_handler)
-    model_cache = setup_model_cache(global_dss_mltask, model_deployer, model_handler)
-    print(f"Model Cache is: {model_cache}")
-
-
 
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
     if is_local:
         return jsonify(dummy_models)
-    if global_dss_mltask is None:
+    if dataiku_api.global_dss_mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
-        models = format_models(global_dss_mltask)
+        models = format_models(dataiku_api.global_dss_mltask)
         return jsonify(models)
     except Exception as e:
         current_app.logger.exception("An error occurred while retrieving models")
@@ -62,12 +47,11 @@ def get_models():
 def get_variables():
     if is_local:
         return jsonify(dummy_variables)
+    
     request_json = request.get_json()
     full_model_id = request_json["id"]
     try:
-        variables = model_cache[full_model_id].get('features')
-        print(model_cache[full_model_id])
-        print(variables)
+        variables = dataiku_api.model_cache[full_model_id].get('features')
         if variables is None:
             raise ValueError("variables returned None.")
         
@@ -96,7 +80,7 @@ def get_data():
         
         current_app.logger.info(f"Model ID received: {full_model_id}")
 
-        predicted_base = model_cache[full_model_id].get('predicted_and_base')
+        predicted_base = dataiku_api.model_cache[full_model_id].get('predicted_and_base')
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
@@ -118,8 +102,8 @@ def get_lift_data():
 
     current_app.logger.info(f"Model {full_model_id} is now the active version.")
     
-    
-    lift_chart = model_cache[full_model_id].get('lift_chart_data')
+    print("-----> ", dataiku_api.model_cache)
+    lift_chart = dataiku_api.model_cache[full_model_id].get('lift_chart_data')
     lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
@@ -136,7 +120,7 @@ def get_updated_data():
 
     feature = request_json["feature"]
     nb_bins = request_json["nbBin"]
-    predicted_base = model_handler.get_predicted_and_base_feature(feature, nb_bins)
+    predicted_base = dataiku_api.model_handler.get_predicted_and_base_feature(feature, nb_bins)
     df = predicted_base.copy()
     df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
     
@@ -154,7 +138,7 @@ def get_relativities():
     full_model_id = request_json["id"]
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
-    df = model_cache[full_model_id].get('relativities')
+    df = dataiku_api.model_cache[full_model_id].get('relativities')
     df.columns = ['variable', 'category', 'relativity']
     current_app.logger.info(f"relativites are {df.head()}")
     return jsonify(df.to_dict('records'))
@@ -180,7 +164,8 @@ def get_variable_level_stats():
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
 
-    df = model_cache[full_model_id].get('variable_stats')
+    print(dataiku_api.model_cache[full_model_id])
+    df = dataiku_api.model_cache[full_model_id].get('variable_stats')
     df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
     df.fillna(0, inplace=True)
     df.replace([np.inf, -np.inf], 0, inplace=True)
@@ -198,35 +183,32 @@ def get_model_comparison_data():
         current_app.logger.info(f"Data fetched locally in {time() - start_time} seconds.")
         return jsonify(df.to_dict('records'))
 
-    try:
-        current_app.logger.info("Received a new request for data prediction.")
-        request_json = request.get_json()
-        model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
-        
-        current_app.logger.info(f"Retrieving {model1} from the cache")
-        model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
-        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
-        current_app.logger.info(f"Successfully retrieved {model1} from the cache")
-        
-        current_app.logger.info(f"Retrieving {model2} from the cache")
-        model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
-        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
-        current_app.logger.info(f"Successfully retrieved {model2} from the cache")
-
-        merge_time = time()
-        merged_model_stats = pd.merge(model_1_predicted_base, model_2_predicted_base, 
-                                      on=['definingVariable', 'Category', 'Value'], 
-                                      how='outer')
-        merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
-        current_app.logger.info(f"Merged data in {time() - merge_time} seconds. Sample: {merged_model_stats.head().to_string()}")
-        
-        total_time = time() - start_time
-        current_app.logger.info(f"Total execution time: {total_time} seconds.")
-        return jsonify(merged_model_stats.to_dict('records'))
+    current_app.logger.info("Received a new request for data prediction.")
+    request_json = request.get_json()
+    model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
     
-    except Exception as e:
-        current_app.logger.error(f"An error occurred: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+    current_app.logger.info(f"Retrieving {model1} from the cache")
+    model_1_predicted_base = dataiku_api.model_cache.get(model1).get('predicted_and_base')
+    model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
+    current_app.logger.info(f"Successfully retrieved {model1} from the cache")
+    
+    current_app.logger.info(f"Retrieving {model2} from the cache")
+    model_2_predicted_base = dataiku_api.model_cache.get(model2).get('predicted_and_base')
+    model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
+    current_app.logger.info(f"Successfully retrieved {model2} from the cache")
+
+    merge_time = time()
+    merged_model_stats = pd.merge(model_1_predicted_base, model_2_predicted_base, 
+                                    on=['definingVariable', 'Category', 'Value'], 
+                                    how='outer')
+    merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
+    current_app.logger.info(f"Merged data in {time() - merge_time} seconds. Sample: {merged_model_stats.head().to_string()}")
+    
+    total_time = time() - start_time
+    current_app.logger.info(f"Total execution time: {total_time} seconds.")
+    return jsonify(merged_model_stats.to_dict('records'))
+
+   
 
 
 
@@ -244,8 +226,8 @@ def get_model_metrics():
     
     model1, model2 = request_json["model1"], request_json["model2"]
     
-    model_1_metrics = model_cache.get(model1).get('model_metrics')
-    model_2_metrics = model_cache.get(model2).get('model_metrics')
+    model_1_metrics = dataiku_api.model_cache.get(model1).get('model_metrics')
+    model_2_metrics = dataiku_api.model_cache.get(model2).get('model_metrics')
     
     metrics = {
         "models": {
@@ -283,9 +265,9 @@ def export_model():
             if not model:
                 current_app.logger.error("error: Model ID not provided")
 
-            relativities_dict = model_cache.get(model).get('relativities_dict')
+            relativities_dict = dataiku_api.model_cache.get(model).get('relativities_dict')
             if not relativities_dict:
-                current_app.logger.error("error: Model Cache not found for {model} cache only has {model_cache.keys()}")
+                current_app.logger.error("error: Model Cache not found for {model} cache only has {dataiku_api.model_cache.keys()}")
             
             current_app.logger.info(f"Relativities dict for model {model} is {relativities_dict}.")
             
@@ -332,16 +314,14 @@ def train_model():
         import time
         time.sleep(5)
         return jsonify({'message': 'Model training initiated successfully.'}), 200
-    global global_dku_mltask
     
     request_json = request.get_json()
     current_app.logger.info(f"Received a model training request: {request_json}")
     
     try: 
-        web_app_config = get_webapp_config()
-        input_dataset = web_app_config.get("training_dataset_string")
-        code_env_string = web_app_config.get("code_env_string")
-        saved_model_id = web_app_config.get("saved_model_id")
+        input_dataset = dataiku_api.webapp_config.get("training_dataset_string")
+        code_env_string = dataiku_api.webapp_config.get("code_env_string")
+        saved_model_id = dataiku_api.webapp_config.get("saved_model_id")
         
     except:
         input_dataset = "claim_train"
@@ -387,10 +367,8 @@ def train_model():
         
         
         current_app.logger.info("Model training initiated successfully")
-        
-        global model_cache
-        
-        model_cache = update_model_cache(global_dss_mltask, model_cache, model_handler)
+                
+        dataiku_api.model_cache = update_model_cache(dataiku_api.global_dss_mltask, dataiku_api.model_cache, dataiku_api.model_handler)
             
 
         
@@ -406,8 +384,7 @@ def get_dataset_columns():
         # This try statement is just for local development remove the except 
         # which explicitly assins the dataset name
         try: 
-            web_app_config = get_webapp_config()
-            dataset_name = web_app_config.get("training_dataset_string")
+            dataset_name = dataiku_api.web_app_config.get("training_dataset_string")
         except:
             dataset_name = "claim_train"
             
