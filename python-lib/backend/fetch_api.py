@@ -34,7 +34,7 @@ if not is_local:
     global_dku_mltask = DataikuMLTask(web_app_config.get("training_dataset_string"), saved_model_id)
 
     data_handler = GlmDataHandler()
-    model_deployer = ModelDeployer(global_dss_mltask, saved_model_id)
+    model_deployer = ModelDeployer(saved_model, global_dss_mltask, saved_model_id)
     model_handler = ModelHandler(saved_model_id, data_handler)
     model_cache = setup_model_cache(global_dss_mltask, model_deployer, model_handler)
     print(f"Model Cache is: {model_cache}")
@@ -64,8 +64,10 @@ def get_variables():
         return jsonify(dummy_variables)
     request_json = request.get_json()
     full_model_id = request_json["id"]
-    try:   
+    try:
         variables = model_cache[full_model_id].get('features')
+        print(model_cache[full_model_id])
+        print(variables)
         if variables is None:
             raise ValueError("variables returned None.")
         

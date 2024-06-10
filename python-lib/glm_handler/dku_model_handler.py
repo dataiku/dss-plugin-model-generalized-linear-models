@@ -325,23 +325,54 @@ class ModelHandler:
     def get_variable_level_stats(self):
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
-        
         coef_table = self.predictor._clf.coef_table.reset_index()
-        coef_table[['dummy', 'variable', 'value']] = coef_table['index'].str.split(':', expand=True)
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
-        print(coef_table)
-        variable_stats = relativities.merge(coef_table[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
-        variable_stats.drop('variable', axis=1, inplace=True)
-        print(variable_stats)
-        predicted['exposure_sum'] = predicted['exposure'].groupby(predicted['feature']).transform('sum')
-        predicted['exposure_pct'] = predicted['exposure']/predicted['exposure_sum']*100
+        features = self.get_features()
         
-        variable_level_stats = variable_stats.merge(predicted, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
-        variable_level_stats.drop(['category', 'exposure_sum'], axis=1, inplace=True)
-        print(variable_level_stats)
-        print(predicted)
+        coef_table_intercept = coef_table[coef_table['index'] == 'intercept']
+        coef_table_intercept['feature'] = 'base'
+        coef_table_intercept['value'] = 'base'
+        coef_table_intercept['exposure'] = 0
+        coef_table_intercept['exposure_pct'] = 0
+        coef_table_intercept['relativity'] = 0
+
+        variable_stats = coef_table_intercept[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
         
-        return variable_level_stats
+        categorical_features = [feature['variable'] for feature in features if (feature['variableType']=='categorical' and feature['isInModel']==True)]
+        
+        if len(categorical_features)>0:
+        
+            predicted_cat = predicted[predicted['feature'].isin(categorical_features)]
+            relativities_cat = relativities[relativities['feature'].isin(categorical_features)]
+            coef_table_cat = coef_table[(coef_table['index']=='intercept') | (coef_table['index'].str.contains(':'))]
+
+            coef_table_cat[['dummy', 'variable', 'value']] = coef_table_cat['index'].str.split(':', expand=True)
+            variable_stats_cat = relativities_cat.merge(coef_table_cat[['variable', 'value', 'coef', 'se', 'se_pct']], how='left', left_on=['feature', 'value'], right_on=['variable', 'value'])
+
+            variable_stats_cat.drop('variable', axis=1, inplace=True)
+
+            predicted_cat['exposure_sum'] = predicted_cat['exposure'].groupby(predicted_cat['feature']).transform('sum')
+            predicted_cat['exposure_pct'] = predicted_cat['exposure']/predicted_cat['exposure_sum']*100
+
+            variable_stats_cat = variable_stats_cat.merge(predicted_cat, how='left', left_on=['feature', 'value'], right_on=['feature', 'category'])
+            variable_stats_cat.drop(['category', 'exposure_sum'], axis=1, inplace=True)
+            variable_stats = variable_stats.append(variable_stats_cat)
+            
+        numeric_features = [feature['variable'] for feature in features if (feature['variableType']=='numeric' and feature['isInModel']==True)]
+        
+        if len(numeric_features)>0:
+            coef_table_num = coef_table[coef_table['index'].isin(numeric_features)]
+            coef_table_num['feature'] = coef_table_num['index']
+            coef_table_num['value'] = [self.base_values[feature] for feature in coef_table_num['feature']]
+            coef_table_num['exposure'] = 0
+            coef_table_num['exposure_pct'] = 0
+            coef_table_num['relativity'] = 1
+
+            variable_stats_num = coef_table_num[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
+        
+            variable_stats = variable_stats.append(variable_stats_num)
+        
+        return variable_stats
         
     def get_link_function(self):
         """
