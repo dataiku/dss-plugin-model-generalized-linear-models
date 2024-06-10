@@ -1,17 +1,13 @@
-import logging
 from typing import Any, Dict
+
 import dataiku
 from dataiku.customwebapp import get_webapp_config
-import pandas as pd
-from dataiku.customrecipe import get_recipe_config
-import os
-import pwd
-from typing import Optional
-from glm_handler.dku_model_trainer import DataikuMLTask
-from glm_handler.dku_model_handler import ModelHandler
 from glm_handler.dku_model_deployer import ModelDeployer
+from glm_handler.dku_model_handler import ModelHandler
+from glm_handler.dku_model_trainer import DataikuMLTask
 from glm_handler.glm_data_handler import GlmDataHandler
-from backend.model_cache import setup_model_cache, update_model_cache
+
+from backend.model_cache import setup_model_cache
 
 
 class DataikuApi:
@@ -19,6 +15,7 @@ class DataikuApi:
         self._webapp_config = None
         self._default_project = None
         self._default_project_key = None
+
         self._client = dataiku.api_client()
 
         self._global_dss_mltask = None
@@ -29,8 +26,6 @@ class DataikuApi:
         self._model_cache = None
 
     def setup(self, webapp_config: Dict, default_project_key: str):
-        print('setup')
-        print(os.environ["DKU_CURRENT_PROJECT_KEY"])
         self._webapp_config = webapp_config
         self._default_project_key = default_project_key
 
@@ -45,7 +40,7 @@ class DataikuApi:
     def default_project(self):
         try:
             return self.client.get_default_project()
-        except Exception as err:
+        except:
             if self._default_project_key:
                 return self.client.get_project(self._default_project_key)
             else:
@@ -55,7 +50,7 @@ class DataikuApi:
     def default_project_key(self):
         try:
             return dataiku.get_custom_variables()["projectKey"]
-        except Exception as err:
+        except:
             if self._default_project_key:
                 return self._default_project_key
             else:
@@ -130,28 +125,18 @@ class DataikuApi:
     @property
     def model_cache(self):
         if self._model_cache is None:
-            self._model_cache =  setup_model_cache(self.global_dss_mltask, self.model_deployer, self.model_handler)
-            return self._model_cache
-           
+            try:
+                self._model_cache =  setup_model_cache(self.global_dss_mltask, self.model_deployer, self.model_handler)
+                return self._model_cache
+            except:
+                raise Exception("Please define the default project before using it.")
         else:
             return self._model_cache
 
+    
+    @model_cache.setter
+    def model_cache(self, value):
+        self._model_cache = value
 
-    def get_root_lib_path(self):
-        paths = os.environ.get("PYTHONPATH")
-        if paths:
-            target_directory = "project-python-libs"
-            paths_splitted = paths.split(":")
-            logger.info("DEBUG SPLITTED PATHS")
-            logger.info(os.environ)
-            logger.info(paths_splitted)
-            for path in paths_splitted:
-                if target_directory in path:
-                    return os.path.join(
-                        path.split(target_directory)[0],
-                        target_directory,
-                        self.default_project_key,
-                    )
-        return None
 
 dataiku_api = DataikuApi()

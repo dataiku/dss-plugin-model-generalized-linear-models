@@ -1,12 +1,14 @@
-from pathlib import Path
 import json
 import os
+from pathlib import Path
+
 from backend.utils.dataiku_api import dataiku_api
+
 
 def load_local_config():
     local_config_path = Path("config.local.json")
     if local_config_path.exists():
-        with open(local_config_path, 'r') as local_config_file:
+        with open(local_config_path, 'r', encoding="utf-8") as local_config_file:
             return json.load(local_config_file)
     return None
 

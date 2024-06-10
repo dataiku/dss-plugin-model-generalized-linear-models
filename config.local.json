@@ -1,0 +1,7 @@
+{
+    "webapp_config": {
+        "saved_model_id": "ukULNdCL",
+        "training_dataset_string": "claim_train"
+    },
+    "default_project_key": "SOL_CLAIM_MODELING_1"
+}

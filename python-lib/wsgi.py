@@ -1,11 +1,9 @@
-from flask import Flask
-from dotenv import load_dotenv
 import os
-import logging
+
 from backend.utils.extensions import setup_dataiku_client
+from dotenv import load_dotenv
+from flask import Flask
 
-
-logger = logging.getLogger(__name__)
 
 def register_routes(app: Flask):
     from backend.fetch_api import fetch_api
@@ -25,7 +23,6 @@ def create_app() -> Flask:
     load_dotenv()
 
     app = Flask(__name__)
-    logger.info("Creating Flask Application")
 
     register_extensions()
     register_routes(app)

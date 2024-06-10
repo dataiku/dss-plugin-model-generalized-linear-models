@@ -5,7 +5,6 @@ import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 import logging
-from backend.logging_settings import logger
 from glm_handler.dku_relativities_handler import RelativitiesHandler
 
 class ModelHandler:
@@ -49,7 +48,6 @@ class ModelHandler:
         
         self.model = dataiku.Model(self.model_id)
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
-        print(self.full_model_id)
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()

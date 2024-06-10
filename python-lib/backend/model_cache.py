@@ -1,9 +1,7 @@
-from glm_handler.dku_model_trainer import DataikuMLTask
-from glm_handler.dku_model_handler import ModelHandler
-from glm_handler.dku_model_deployer import ModelDeployer
-from glm_handler.glm_data_handler import GlmDataHandler
-from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from time import time
+
+from glm_handler.dku_model_metrics import ModelMetricsCalculator
+
 
 def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
     model_cache_setup_time = time()
