@@ -27,10 +27,7 @@ def get_models():
 
 
 @fetch_api.route("/variables", methods=["POST"])
-def get_variables():
-    if is_local:
-        return jsonify(dummy_variables)
-    
+def get_variables():    
     request_json = request.get_json()
     full_model_id = request_json["id"]
     try:
