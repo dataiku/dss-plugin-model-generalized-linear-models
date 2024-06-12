@@ -13,25 +13,67 @@
     "dataiku",
     "font_awesome"
   ],
+  "paramsPythonSetup": "web_app_setting_list.py",
   "params": [
-      {
-          "name": "saved_model_id",
-          "label": "Model",
-          "description": "Select the GLM Model to Analyze",
-          "type": "SAVED_MODEL"
-      },
-
-      {
+    {
         "name": "training_dataset_string",
         "label": "Training Dataset",
         "description": "Select the Training Dataset for Modelling",
         "type": "DATASET"
+    },
+      
+    {
+      "name": "target_column",
+      "label": "Target Variable",
+      "description": "Select the Target for Modelling",
+      "type": "DATASET_COLUMN",
+      "datasetParamName": "training_dataset_string",
+      "mandatory": true
+    },
+    {
+        "name": "prediction_type",
+        "label": "Prediction Type",
+        "description": "Select the Default Prediction Type",
+         "type": "SELECT",
+          "selectChoices" : [
+              { "value": "BINARY_CLASSIFICATION", "label": "Binary Classification"},
+              { "value": "REGRESSION", "label": "Regression"}
+          ]
     },
     {
         "name": "code_env_string",
         "label": "Code Environment",
         "description": "Select the Code Environment for Modelling",
         "type": "CODE_ENV"
+    },
+      {
+          "name": "setup_type",
+          "label": "Setup Type",
+            "description": "Continue the existing analysis from a previous session or start new",
+          "type": "SELECT",
+          "selectChoices" : [
+              { "value": "new", "label": "New Analysis"},
+              { "value": "continue", "label": "Continue Existing"}
+          ],
+          "mandatory": true
+      },
+
+    {
+      "name": "existing_analysis_id",
+      "label": "Existing Analysis",
+      "type": "SELECT",
+       "getChoicesFromPython": true,
+      "mandatory": false,
+      "visibilityCondition": "model.setup_type == 'continue'"
+    }, 
+    {
+      "name": "saved_model_id",
+        "label": "Deployed Model",
+        "description": "Continue the analysis from a previous session",
+        "type": "SAVED_MODEL",
+        "getChoicesFromPython": true,
+        "mandatory": false,
+        "visibilityCondition": "model.setup_type == 'continue'"
     }
   ]
 }

@@ -26,30 +26,47 @@ import numpy as np
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 client = dataiku.api_client()
 project = client.get_default_project()
-if not is_local:
-    web_app_config = get_webapp_config()
-    saved_model_id = web_app_config.get("saved_model_id")
-    saved_model = project.get_saved_model(saved_model_id)
-    global_dss_mltask = saved_model.get_origin_ml_task()
-    global_dku_mltask = DataikuMLTask(web_app_config.get("training_dataset_string"), saved_model_id)
 
+if not is_local:   
+    web_app_config = get_webapp_config()
+    existing_analysis_id = web_app_config.get("existing_analysis_id")
+    input_dataset = web_app_config.get("training_dataset_string")
+    prediction_type = web_app_config.get("prediction_type")
+    setup_type = web_app_config.get("setup_type")
+    
     data_handler = GlmDataHandler()
-    model_deployer = ModelDeployer(saved_model, global_dss_mltask, saved_model_id)
-    model_handler = ModelHandler(saved_model_id, data_handler)
-    model_cache = setup_model_cache(global_dss_mltask, model_deployer, model_handler)
-    print(f"Model Cache is: {model_cache}")
+    
+    if setup_type != "new":
+        saved_model_id = web_app_config.get("saved_model_id")
+        global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type)
+        global_DkuMLTask.setup_using_existing_ml_task(existing_analysis_id, saved_model_id)
+        print(f'Savemodel id is {saved_model_id}')
+        model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
+        model_handler = ModelHandler(saved_model_id, data_handler)
+        model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
+    else:
+        global_DkuMLTask = None
+        model_cache = None
+        model_deployer = None
+        model_handler = None
+    
+
 
 
 
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
+    
+    current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
     if is_local:
         return jsonify(dummy_models)
-    if global_dss_mltask is None:
+    if global_DkuMLTask.mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
-        models = format_models(global_dss_mltask)
+        dku_ml_task = global_DkuMLTask.mltask
+        models = format_models(dku_ml_task)
+        current_app.logger.info(f"models from global ML task is {models}")
         return jsonify(models)
     except Exception as e:
         current_app.logger.exception("An error occurred while retrieving models")
@@ -332,7 +349,7 @@ def train_model():
         import time
         time.sleep(5)
         return jsonify({'message': 'Model training initiated successfully.'}), 200
-    global global_dku_mltask
+    global global_DkuMLTask, model_cache, model_deployer, model_handler
     
     request_json = request.get_json()
     current_app.logger.info(f"Received a model training request: {request_json}")
@@ -341,7 +358,8 @@ def train_model():
         web_app_config = get_webapp_config()
         input_dataset = web_app_config.get("training_dataset_string")
         code_env_string = web_app_config.get("code_env_string")
-        saved_model_id = web_app_config.get("saved_model_id")
+        target_column = web_app_config.get("target_column")
+        prediction_type = web_app_config.get("prediction_type")
         
     except:
         input_dataset = "claim_train"
@@ -361,7 +379,6 @@ def train_model():
         "distribution_function": distribution_function,
         "link_function": link_function,
         "variables": variables,
-        "saved_model_id":saved_model_id
     }
     missing_params = [key for key, value in params.items() if not value]
     if missing_params:
@@ -370,31 +387,37 @@ def train_model():
         return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
 
     try:
-        DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
-        
-        DkuMLTask.update_parameters(distribution_function, link_function, variables)
-        DkuMLTask.create_visual_ml_task()
+        if not global_DkuMLTask:
+            current_app.logger.debug("First time training a model, creating global_DkuMLTask")
+            global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type)
+            global_DkuMLTask.create_inital_ml_task(target_column)# defaults to target set in web app settings, this is overriden
+            
+        global_DkuMLTask.update_parameters(distribution_function, link_function, variables)
+        global_DkuMLTask.create_visual_ml_task()
         current_app.logger.debug("Visual ML task created successfully")
 
-        DkuMLTask.enable_glm_algorithm()
+        global_DkuMLTask.enable_glm_algorithm()
         current_app.logger.debug("GLM algorithm enabled successfully")
 
-        settings = DkuMLTask.test_settings()
-        settings_new = DkuMLTask.configure_variables()
+        settings = global_DkuMLTask.test_settings()
+        settings_new = global_DkuMLTask.configure_variables()
         current_app.logger.debug("Model settings configured successfully")
 
-        DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
-        
+        model_details = global_DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
+        saved_model_id = model_details.get("savedModelId")
         
         current_app.logger.info("Model training initiated successfully")
         
-        global model_cache
+        if not model_cache:
+            model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
+            model_handler = ModelHandler(saved_model_id, data_handler)
+            model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
         
-        model_cache = update_model_cache(global_dss_mltask, model_cache, model_handler)
+        model_cache = update_model_cache(global_DkuMLTask.mltask, model_cache, model_handler)
             
 
         
-        return jsonify({'message': 'Model training initiated successfully.'}), 200
+        return jsonify({'message': 'Model training completed successfully.'}), 200
     except Exception as e:
         current_app.logger.exception("An error occurred during model training")
         return jsonify({'error': str(e)}), 500
