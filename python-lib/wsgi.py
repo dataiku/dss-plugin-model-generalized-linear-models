@@ -7,10 +7,7 @@ from flask import Flask
 
 def register_routes(app: Flask):
     from backend.fetch_api import fetch_api
-    from webaiku.extension import WEBAIKU
-
-    WEBAIKU(app, "webapps/vue_template", 5000)
-    WEBAIKU.extend(app, [fetch_api])
+    app.register_blueprint(fetch_api)
 
 
 def register_extensions():
