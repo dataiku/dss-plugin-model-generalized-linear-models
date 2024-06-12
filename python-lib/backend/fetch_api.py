@@ -288,7 +288,7 @@ def train_model():
 def get_dataset_columns():
     
     try:
-        dataset_name = dataiku_api.web_app_config.get("training_dataset_string")
+        dataset_name = dataiku_api.webapp_config.get("training_dataset_string")
         
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
 
