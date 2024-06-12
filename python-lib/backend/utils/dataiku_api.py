@@ -102,7 +102,8 @@ class DataikuApi:
         if self._model_deployer is None:
             try:
                 saved_model_id = self.webapp_config.get("saved_model_id")
-                self._model_deployer =  ModelDeployer(self.global_dss_mltask, saved_model_id)
+                saved_model = self.default_project.get_saved_model(saved_model_id)
+                self._model_deployer =  ModelDeployer(saved_model, self.global_dss_mltask, saved_model_id)
                 return self._model_deployer
             except:
                 raise Exception("Please define the default project before using it.")
