@@ -96,23 +96,33 @@ class DataikuMLTask:
                 "offset_mode": "OFFSETS/EXPOSURES",
                 "offset_columns": [self.offset_variable],
                 "exposure_columns": [self.exposure_variable],
-                "training_dataset": self.input_dataset
+                "training_dataset": self.input_dataset,
+                'penalty': [0],
+                'l1_ratio': [0]
             })
         elif self.exposure_variable:
             algo_settings['params'].update({
                 "offset_mode": "OFFSETS/EXPOSURES",
                 "offset_columns": [],
                 "exposure_columns": [self.exposure_variable],
-                "training_dataset": self.input_dataset
+                "training_dataset": self.input_dataset,
+                'penalty': [0],
+                'l1_ratio': [0]
             })
         elif self.offset_variable:
             algo_settings['params'].update({
                 "offset_mode": "OFFSETS",
                 "offset_columns": [self.offset_variable],
-                "training_dataset": self.input_dataset
+                "training_dataset": self.input_dataset,
+                'penalty': [0],
+                'l1_ratio': [0]
             })
         else:
-            algo_settings['params']["offset_mode"] = "BASIC"
+            algo_settings['params'].update({
+                "offset_mode": "BASIC",
+                "offset_columns": [0],
+                "training_dataset": [0],
+            })
         
         settings.save()
     
