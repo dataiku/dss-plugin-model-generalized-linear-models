@@ -276,6 +276,7 @@ class DataikuMLTask:
         '        self.mode_column = series.mode()[0]\n'
         '        self.columns = set(self.modalities)\n'
         '        self.columns.remove(self.mode_column)\n'
+        '        self.columns = list(self.columns)\n'
         '        self.column_name = series.name\n'
         '    def transform(self, series):\n'
         '        to_replace={m: self.mode_column for m in np.unique(series) if m not in self.modalities}\n'
