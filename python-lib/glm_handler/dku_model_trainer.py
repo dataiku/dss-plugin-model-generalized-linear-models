@@ -3,7 +3,8 @@ from dataiku import pandasutils as pdu
 import pandas as pd
 import logging
 from dataikuapi.dss.ml import DSSMLTask
-
+import random
+import string
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -23,28 +24,25 @@ class DataikuMLTask:
         offset_variable (str): Name of the offset variable, if any.
     """
     
-    def __init__(self, input_dataset, saved_model_id):
+    def __init__(self, input_dataset, prediction_type):
         logger.info("Initializing DataikuMLTask")
         self.client = dataiku.api_client()
-        self.saved_model_id = saved_model_id
+#         self.saved_model_id = saved_model_id
         self.project = self.client.get_default_project()
         self.project_key = self.project.project_key 
-        self.dku_model_obj = dataiku.Model(saved_model_id)
         logger.info("Dataiku API client initialized")
         self.input_dataset = input_dataset
+        self.prediction_type = prediction_type
         logger.info(f"input_dataset set to {input_dataset}")
-        self.model = self.project.get_saved_model(saved_model_id)
-        try:
-            self.mltask = self.model.get_origin_ml_task()
-            self.ml_task_variables = list(self.mltask.get_settings().get_raw().get('preprocessing').get('per_feature').keys())
-        except:
-            raise ValueError("""There is no associated ML task for your model. 
-            This model was likely imported or trained somewhere else and is not compatible.""")
-        
-        self.analysis_id = None
-        self.mltask_id = None
-        
+        self.mltask = None
+        self.saved_model_id = None
         logger.info("DataikuMLTask initialized successfully")
+    
+    def setup_using_existing_ml_task(self, analysis_id, saved_model_id):
+        self.saved_model_id = saved_model_id
+        self.analysis= self.project.get_analysis(analysis_id)
+        self.mltask_id = self.analysis.list_ml_tasks().get('mlTasks')[0].get('mlTaskId')
+        self.mltask = self.analysis.get_ml_task(self.mltask_id)
     
     def extract_active_fullModelId(self, json_data):
         """
@@ -98,23 +96,33 @@ class DataikuMLTask:
                 "offset_mode": "OFFSETS/EXPOSURES",
                 "offset_columns": [self.offset_variable],
                 "exposure_columns": [self.exposure_variable],
-                "training_dataset": self.input_dataset
+                "training_dataset": self.input_dataset,
+                'penalty': [0],
+                'l1_ratio': [0]
             })
         elif self.exposure_variable:
             algo_settings['params'].update({
                 "offset_mode": "OFFSETS/EXPOSURES",
                 "offset_columns": [],
                 "exposure_columns": [self.exposure_variable],
-                "training_dataset": self.input_dataset
+                "training_dataset": self.input_dataset,
+                'penalty': [0],
+                'l1_ratio': [0]
             })
         elif self.offset_variable:
             algo_settings['params'].update({
                 "offset_mode": "OFFSETS",
                 "offset_columns": [self.offset_variable],
-                "training_dataset": self.input_dataset
+                "training_dataset": self.input_dataset,
+                'penalty': [0],
+                'l1_ratio': [0]
             })
         else:
-            algo_settings['params']["offset_mode"] = "BASIC"
+            algo_settings['params'].update({
+                "offset_mode": "BASIC",
+                "offset_columns": [0],
+                "training_dataset": [0],
+            })
         
         settings.save()
     
@@ -161,7 +169,42 @@ class DataikuMLTask:
             elif role == "offset":
                 self.offset_variable = variable['name']
                 logger.info(f"offset_variable set to {self.offset_variable}")
+
+
+    def generate_random_word(self, min_length=3, max_length=10):
+        # Randomly choose the length of the word
+        word_length = random.randint(min_length, max_length)
+        # Generate a word by randomly selecting letters
+        word = ''.join(random.choice(string.ascii_lowercase) for _ in range(word_length))
+        return word
     
+    def rename_analysis(self, analysis_id):
+        
+        analysis = self.project.get_analysis(analysis_id)
+        new_analysis_defintion = analysis.get_definition().get_raw()
+        random_word = self.generate_random_word(5,6)
+        new_analysis_defintion['name'] = str(self.input_dataset) + "_"+str(random_word)
+        analysis_definition = analysis.set_definition(new_analysis_defintion)
+    
+    def create_inital_ml_task(self, target_variable):
+        
+        self.mltask = self.project.create_prediction_ml_task(
+                input_dataset=self.input_dataset,
+                target_variable=target_variable,
+                ml_backend_type='PY_MEMORY',  # ML backend to use
+                guess_policy='DEFAULT'  # Template to use for setting default parameters
+            )
+        
+        self.ml_task_variables = list(self.mltask.get_settings().get_raw().get('preprocessing').get('per_feature').keys())
+        
+        
+        analysis_id = self.mltask.get_settings().analysis_id
+        self.rename_analysis(analysis_id)
+       
+        
+        return self.mltask
+        
+        
     def create_visual_ml_task(self):
         """
         Creates a new visual ML task in Dataiku.
@@ -171,26 +214,12 @@ class DataikuMLTask:
         
         # Create a new ML Task to predict the variable from the specified dataset
         if not self.mltask:
-            logger.info("No ML task exists check the set up of saved model")
-        
-#             self.mltask = self.project.create_prediction_ml_task(
-#                 input_dataset=self.input_dataset,
-#                 target_variable=self.target_variable,
-#                 ml_backend_type='PY_MEMORY',  # ML backend to use
-#                 guess_policy='DEFAULT'  # Template to use for setting default parameters
-#             )
-
-
-#             # Wait for the ML task to be ready
-#             self.mltask.wait_guess_complete()
-            
-#             self.analysis_id = self.mltask.analysis_id
-#             self.mltask_id = self.mltask.mltask_id
+            logger.info("Creating a new ML task")
+            self.mltask = self.create_inital_ml_task(self.target)
             
         else:
-            logger.info(f"Using Saved model detected as {self.model.id}, updating existing sessions")
-            
-#             self.mltask = DSSMLTask(self.client, self.project_key, self.analysis_id, self.mltask_id)
+            logger.info("ML task already exists")
+ 
             
         self.update_mltask_modelling_params()
         
@@ -394,7 +423,13 @@ class DataikuMLTask:
             logging.error("No model to deploy. Exiting deployment process.")
             return
 #         self.mltask.deploy_to_flow(model_id, self.dku_model_obj.get_name(), self.input_dataset)
-        self.mltask.redeploy_to_flow(model_id, saved_model_id=self.saved_model_id)
+        if self.saved_model_id:
+            self.mltask.redeploy_to_flow(model_id, saved_model_id=self.saved_model_id)
+        else:
+            model_name = str(self.input_dataset) + "_Model_"+ str(random.randint(0, 1000))
+            model_details = self.mltask.deploy_to_flow(model_id, model_name=model_name,train_dataset=self.input_dataset)
+            return model_details
+            
         logger.info(f"Model {model_id} deployed successfully.")
     
     def train_model(self, code_env_string, session_name=None):
@@ -414,7 +449,9 @@ class DataikuMLTask:
         self.mltask.wait_train_complete()
         logging.info("Model training completed. Deploying the model.")
         try:
-            self.deploy_model()
+            model_details = self.deploy_model()
+            logger.info(f"Model Details are {model_details}")
+            return model_details
         except Exception as e:
             # This logs the error message along with the stack trace.
             logging.exception("Failed to deploy model to the flow: %s", e)
