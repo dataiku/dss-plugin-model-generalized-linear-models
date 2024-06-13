@@ -64,12 +64,15 @@ class GlmDataHandler():
         grouped = data.groupby(["bin"]).aggregate({
             exposure: 'sum',
             'weighted_target': 'sum',
-            'weighted_prediction': 'sum'
+            'weighted_prediction': ['sum', 'min', 'max']
         })
-        grouped['observedData'] = grouped['weighted_target'] / grouped[exposure]
-        grouped['predictedData'] = grouped['weighted_prediction'] / grouped[exposure]
+        grouped.columns = grouped.columns.map('_'.join)
+        grouped = grouped.reset_index()
+        grouped['observedData'] = grouped['weighted_target_sum'] / grouped[exposure + '_sum']
+        grouped['predictedData'] = grouped['weighted_prediction_sum'] / grouped[exposure + '_sum']
+        grouped['binInterval'] = [('%s' % float('%.3g' % value_min)) + ':' + ('%s' % float('%.3g' % value_max)) for value_min, value_max in zip(grouped['weighted_prediction_min'], grouped['weighted_prediction_max'])]
         grouped.reset_index(inplace=True)
-        grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
+        grouped.drop(['index', 'weighted_target_sum', 'weighted_prediction_sum', 'weighted_prediction_min', 'weighted_prediction_max', 'bin'], axis=1, inplace=True)
         return grouped
     
     def calculate_weighted_aggregations(self, test_set, non_excluded_features):

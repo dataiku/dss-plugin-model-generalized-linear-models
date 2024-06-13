@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = True
+is_local = False
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -116,17 +116,20 @@ def get_lift_data():
     request_json = request.get_json()
     full_model_id = request_json["id"]
     nb_bins = request_json["nbBins"]
-    
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
     current_app.logger.info(f"Model {full_model_id} is now the active version.")
     
     
     lift_chart = model_cache[full_model_id].get('lift_chart_data')
-    lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    current_nb_bins = len(lift_chart)
+    if current_nb_bins != nb_bins:
+        lift_chart = model_handler.get_lift_chart(nb_bins)
+        model_cache[full_model_id]['lift_chart_data'] = lift_chart
+    
+    lift_chart.columns = ['Value', 'observedAverage', 'fittedAverage', 'Category']
     lift_chart['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['observedAverage']]
     lift_chart['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['fittedAverage']]
-    print(lift_chart)
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
