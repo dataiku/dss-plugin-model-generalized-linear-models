@@ -275,6 +275,7 @@ class DataikuMLTask:
         '        self.modalities = np.unique(series)\n'
         '        self.mode_column = series.mode()[0]\n'
         '        self.columns = set(self.modalities)\n'
+        '        self.columns = list(self.columns)\n'
         '        self.columns.remove(self.mode_column)\n'
         '        self.column_name = series.name\n'
         '    def transform(self, series):\n'
