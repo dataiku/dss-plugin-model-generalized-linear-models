@@ -32,7 +32,11 @@
                   @update:modelValue="updateModelString"
                   style="min-width: 250px">
               </BsSelect>
-            </div>
+              <BsLabel v-if="selectedModelString"
+                      label="Run Analysis on">
+                    </BsLabel>
+                    <BsToggle v-if="selectedModelString" v-model="trainTest" labelRight="Test" labelLeft="Train"/>
+              </div>
                 <BsButton
                     flat
                     round
@@ -72,7 +76,7 @@ import * as echarts from "echarts";
 import type { LiftDataPoint, ModelPoint } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
-import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
+import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider, BsToggle } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import liftChartIcon from "../assets/images/lift-chart.svg";
 
@@ -93,6 +97,7 @@ export default defineComponent({
         BsTable,
         BsCheckbox,
         BsSlider,
+        BsToggle
     },
     data() {
         return {
@@ -105,6 +110,7 @@ export default defineComponent({
             docLogo,
             liftChartIcon,
             loading: false,
+            trainTest: false
         };
     },
     watch: {

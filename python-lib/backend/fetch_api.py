@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = False
+is_local = True
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -58,9 +58,9 @@ if not is_local:
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
     
-    current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
     if is_local:
         return jsonify(dummy_models)
+    current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
     if global_DkuMLTask.mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:

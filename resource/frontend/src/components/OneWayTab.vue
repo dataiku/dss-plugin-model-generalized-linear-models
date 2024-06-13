@@ -43,7 +43,6 @@
                       v-model="selectedVariable"
                       :all-options="variablePoints"
                       @update:modelValue="updateVariable">
-                      <!-- <template v-slot:selected>{{ selectedVariable.variable }}</template> -->
                       <template v-slot:selected-item="scope">
                         <q-item v-if="scope.opt">
                           {{ selectedVariable.variable }}
@@ -61,6 +60,10 @@
                               </q-item>
                         </template>
                   </BsSelect>
+                  <BsLabel v-if="selectedModelString"
+                    label="Run Analysis on">
+                  </BsLabel>
+                  <BsToggle v-if="selectedModelString" v-model="trainTest" labelRight="Test" labelLeft="Train"/>
                   <div v-if="selectedModelString" class="button-container">
                   <BsButton class="bs-primary-button" 
                   unelevated
@@ -120,7 +123,7 @@ import { defineComponent } from "vue";
 import { API } from '../Api';
 import { useLoader } from "../composables/use-loader";
 import { useNotification } from "../composables/use-notification";
-import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
+import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider, BsToggle } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import oneWayIcon from "../assets/images/one-way.svg";
 import type { QTableColumn } from 'quasar';
@@ -165,6 +168,7 @@ export default defineComponent({
         BsTable,
         BsCheckbox,
         BsSlider,
+        BsToggle
     },
     data() {
         return {
@@ -189,6 +193,7 @@ export default defineComponent({
             includeSuspectVariables: true,
             loading: false,
             active_model:  {} as ModelPoint,
+            trainTest: false
         };
     },
     watch: {
@@ -236,7 +241,6 @@ export default defineComponent({
             const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
             this.active_model = model
             const variableResponse = await API.getVariables(model)
-            console.log(variableResponse);
             if (isErrorPoint(variableResponse?.data)) {
               this.handleError(variableResponse?.data.error);
             } else {
