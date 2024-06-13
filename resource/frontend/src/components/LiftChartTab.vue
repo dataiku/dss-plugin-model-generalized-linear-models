@@ -32,6 +32,10 @@
                   @update:modelValue="updateModelString"
                   style="min-width: 250px">
               </BsSelect>
+              <BsLabel v-if="selectedModelString"
+                  label="Select the number of bins">
+              </BsLabel>
+              <BsSlider  v-if="selectedModelString" @update:modelValue="updateNbBins" v-model="nbBins" :min="2" :max="20"/>
             </div>
                 <BsButton
                     flat
@@ -69,7 +73,7 @@ import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import { useLoader } from "../composables/use-loader";
 import * as echarts from "echarts";
-import type { LiftDataPoint, ModelPoint } from '../models';
+import type { LiftDataPoint, ModelPoint, ModelNbBins } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
 import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
@@ -105,6 +109,7 @@ export default defineComponent({
             docLogo,
             liftChartIcon,
             loading: false,
+            nbBins: 8,
         };
     },
     watch: {
@@ -134,10 +139,20 @@ export default defineComponent({
           this.loading = true;
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
-          const dataResponse = await API.getLiftData(model);
+          const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name};
+          const dataResponse = await API.getLiftData(modelNbBins);
           this.chartData = dataResponse?.data;
           this.loading = false;
         },
+        async updateNbBins(value: number) {
+          this.loading = true;
+          this.nbBins = value;
+          const model = this.models.filter( (v: ModelPoint) => v.name==this.selectedModelString)[0];
+          const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name};
+          const dataResponse = await API.getLiftData(modelNbBins);
+          this.chartData = dataResponse?.data;
+          this.loading = false;
+        }
     },
     mounted() {
       API.getModels().then((data: any) => {

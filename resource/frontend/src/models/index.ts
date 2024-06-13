@@ -36,6 +36,12 @@ export type ModelPoint = {
     name: string;
 }
 
+export type ModelNbBins = { 
+    id: string;
+    name: string;
+    nbBins: number;
+}
+
 export type VariablePoint = {
     variable: string;
     isInModel: boolean;

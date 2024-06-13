@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = False
+is_local = True
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -109,10 +109,13 @@ def get_data():
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
     if is_local:
+        dummy_lift_data['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['observedAverage']]
+        dummy_lift_data['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['fittedAverage']]
         return jsonify(dummy_lift_data.to_dict('records'))
     current_app.logger.info("Received a new request for lift chart data.")
     request_json = request.get_json()
     full_model_id = request_json["id"]
+    nb_bins = request_json["nbBins"]
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
@@ -121,6 +124,9 @@ def get_lift_data():
     
     lift_chart = model_cache[full_model_id].get('lift_chart_data')
     lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    lift_chart['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['observedAverage']]
+    lift_chart['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['fittedAverage']]
+    print(lift_chart)
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
@@ -344,7 +350,7 @@ def train_model():
         saved_model_id = web_app_config.get("saved_model_id")
         
     except:
-        input_dataset = "claim_train"
+        input_dataset = "train"
         code_env_string="py39_sol"
 
         
@@ -409,7 +415,7 @@ def get_dataset_columns():
             web_app_config = get_webapp_config()
             dataset_name = web_app_config.get("training_dataset_string")
         except:
-            dataset_name = "claim_train"
+            dataset_name = "train"
             
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
 

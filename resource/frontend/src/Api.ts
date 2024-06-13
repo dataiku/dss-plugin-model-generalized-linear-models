@@ -50,6 +50,12 @@ interface ModelPoint {
     name: string;
 }
 
+interface ModelNbBins {
+    id: string;
+    name: string;
+    nbBins: number;
+}
+
 interface FeatureNbBin {
     feature: string;
     nbBin: number;
@@ -82,7 +88,7 @@ interface ErrorPoint {
 
 export let API = {
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
-    getLiftData: (data: ModelPoint) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
+    getLiftData: (data: ModelNbBins) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
     updateData: (data: FeatureNbBin) => axios.post<DataPoint[]>("/api/update_bins", data),
     getRelativities: (data: ModelPoint) => axios.post<RelativityPoint[]>("/api/relativities", data),
     getModels: () => axios.get<ModelPoint[]>("/api/models"),
