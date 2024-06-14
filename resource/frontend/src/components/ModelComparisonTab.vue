@@ -51,6 +51,10 @@
                 @update:modelValue="updateVariableString"
                 style="min-width: 150px">
             </BsSelect>
+            <BsLabel v-if="isVariableSelectEnabled"
+                label="Run Analysis on">
+                </BsLabel>
+                <BsToggle v-if="isVariableSelectEnabled" v-model="trainTest" labelRight="Test" labelLeft="Train"/>
         </div>
         </BsCollapsiblePanel>
     </BsDrawer>
@@ -95,7 +99,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import EmptyState from './EmptyState.vue';
-import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip ,BsTable,} from "quasar-ui-bs";
+import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip ,BsTable, BsToggle,} from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import comparisonIcon from "../assets/images/comparator.svg";
 import { API } from '../Api';
@@ -114,7 +118,8 @@ components: {
     BsDrawer,
     BsContent,
     BsTooltip,
-    BsTable
+    BsTable,
+    BsToggle
 },
 props: {
       reloadModels: {
@@ -141,6 +146,7 @@ data() {
         modelComparisonData: [] as chartDataItem[],
         tableColumns: columns,
         loading: false,
+        trainTest: false
     };
 },
 computed:{

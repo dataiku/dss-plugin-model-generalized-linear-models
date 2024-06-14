@@ -36,6 +36,12 @@ export type ModelPoint = {
     name: string;
 }
 
+export type ModelTrainPoint = { 
+    id: string;
+    name: string;
+    trainTest: boolean;
+}
+
 export type VariablePoint = {
     variable: string;
     isInModel: boolean;

@@ -32,7 +32,15 @@
                   @update:modelValue="updateModelString"
                   style="min-width: 250px">
               </BsSelect>
-            </div>
+              <BsLabel v-if="selectedModelString"
+                      label="Run Analysis on">
+                    </BsLabel>
+                    <BsToggle v-if="selectedModelString" 
+                    @update:modelValue="updateTrainTest"
+                    v-model="trainTest" 
+                    labelRight="Test" 
+                    labelLeft="Train"/>
+              </div>
                 <BsButton
                     flat
                     round
@@ -72,7 +80,7 @@ import * as echarts from "echarts";
 import type { LiftDataPoint, ModelPoint } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
-import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
+import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider, BsToggle } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import liftChartIcon from "../assets/images/lift-chart.svg";
 
@@ -93,6 +101,7 @@ export default defineComponent({
         BsTable,
         BsCheckbox,
         BsSlider,
+        BsToggle
     },
     data() {
         return {
@@ -105,6 +114,7 @@ export default defineComponent({
             docLogo,
             liftChartIcon,
             loading: false,
+            trainTest: false
         };
     },
     watch: {
@@ -134,10 +144,20 @@ export default defineComponent({
           this.loading = true;
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
-          const dataResponse = await API.getLiftData(model);
+          const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
+          const dataResponse = await API.getLiftData(modelTrainPoint);
           this.chartData = dataResponse?.data;
           this.loading = false;
         },
+        async updateTrainTest(value: boolean) {
+          this.loading = true;
+          this.trainTest = value;
+          const model = this.models.filter( (v: ModelPoint) => v.name==this.selectedModelString)[0];
+          const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
+          const dataResponse = await API.getLiftData(modelTrainPoint);
+          this.chartData = dataResponse?.data;
+          this.loading = false;
+        }
     },
     mounted() {
       API.getModels().then((data: any) => {

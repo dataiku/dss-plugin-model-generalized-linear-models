@@ -58,9 +58,9 @@ if not is_local:
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
     
-    current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
     if is_local:
         return jsonify(dummy_models)
+    current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
     if global_DkuMLTask.mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
@@ -110,10 +110,13 @@ def get_data():
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         full_model_id = request_json["id"]
-        
+        train_test = request_json['trainTest']
+        dataset = 'test' if train_test else 'train'
+
         current_app.logger.info(f"Model ID received: {full_model_id}")
 
         predicted_base = model_cache[full_model_id].get('predicted_and_base')
+        predicted_base = predicted_base[predicted_base['dataset']==dataset]
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
@@ -130,6 +133,8 @@ def get_lift_data():
     current_app.logger.info("Received a new request for lift chart data.")
     request_json = request.get_json()
     full_model_id = request_json["id"]
+    train_test = request_json["trainTest"]
+    dataset = 'test' if train_test else 'train'
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
@@ -137,7 +142,8 @@ def get_lift_data():
     
     
     lift_chart = model_cache[full_model_id].get('lift_chart_data')
-    lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    lift_chart = lift_chart[lift_chart['dataset'] == dataset]
+    lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage', 'dataset']
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
