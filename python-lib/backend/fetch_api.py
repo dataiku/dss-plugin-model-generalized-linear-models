@@ -303,7 +303,6 @@ def export_model():
     else:
         try:
             request_json = request.get_json()
-            print(request_json)
             model = request_json.get("id")
             if not model:
                 current_app.logger.error("error: Model ID not provided")
@@ -349,6 +348,39 @@ def export_model():
     )
 
 
+@fetch_api.route('/export_variable_level_stats', methods=['POST'])
+def export_variable_level_stats():
+
+    if is_local:
+        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+        df = pd.DataFrame(data)
+
+        # Convert DataFrame to CSV format
+        csv_data = df.to_csv(index=False).encode('utf-8')
+    else:
+        try:
+            request_json = request.get_json()
+            full_model_id = request_json["id"]
+            
+            current_app.logger.info(f"Model ID received: {full_model_id}")
+
+            df = model_cache[full_model_id].get('variable_stats')
+            df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
+
+            csv_data = df.to_csv(index=False).encode('utf-8')
+
+        except KeyError as e:
+            current_app.logger.error(f"An error occurred: {str(e)}")
+
+    csv_io = BytesIO(csv_data)
+
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='variable_level_stats.csv'
+    )
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
