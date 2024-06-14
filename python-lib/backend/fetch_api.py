@@ -111,7 +111,7 @@ def get_data():
         request_json = request.get_json()
         full_model_id = request_json["id"]
         train_test = request_json['trainTest']
-        dataset = 'train' if train_test else 'test'
+        dataset = 'test' if train_test else 'train'
 
         current_app.logger.info(f"Model ID received: {full_model_id}")
 
@@ -134,7 +134,7 @@ def get_lift_data():
     request_json = request.get_json()
     full_model_id = request_json["id"]
     train_test = request_json["trainTest"]
-    dataset = 'train' if train_test else 'test'
+    dataset = 'test' if train_test else 'train'
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
 

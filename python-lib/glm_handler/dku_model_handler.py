@@ -333,6 +333,19 @@ class ModelHandler:
         
         return train_set
     
+    def get_model_predictions_on_test(self):
+        """
+        Generates model predictions on the training dataset.
+
+        Returns:
+            pd.DataFrame: A DataFrame of the training dataset with an additional column for predictions.
+        """
+        test_set = self.model_info_handler.get_test_df()[0].copy()
+        predicted = self.predictor.predict(test_set)
+        test_set['prediction'] = predicted
+        
+        return test_set
+    
     def get_lift_chart(self, nb_bins):
         """
         Calculates and returns the lift chart data for the model on the training set,
@@ -355,13 +368,13 @@ class ModelHandler:
         lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         lift_chart_data['dataset'] = 'train'
         
-        test_set = self.get_model_predictions_on_train()
+        test_set = self.get_model_predictions_on_test()
         test_set_df = pd.DataFrame(test_set)
         
         tempdata_test = self.data_handler.sort_and_cumsum_exposure(test_set_df, self.exposure)
         binned_data_test = self.data_handler.bin_data(tempdata_test, nb_bins)
         
-        new_data_test = train_set.join(binned_data_test[['bin']], how='inner')
+        new_data_test = test_set.join(binned_data_test[['bin']], how='inner')
         lift_chart_data_test = self.data_handler.aggregate_metrics_by_bin(new_data_test, self.exposure, self.target)
         lift_chart_data_test.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         lift_chart_data_test['dataset'] = 'test'
