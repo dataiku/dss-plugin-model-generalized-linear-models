@@ -114,6 +114,7 @@ def get_data():
         current_app.logger.info(f"Model ID received: {full_model_id}")
 
         predicted_base = model_cache[full_model_id].get('predicted_and_base')
+        predicted_base = predicted_base[predicted_base['dataset']=='train']
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))

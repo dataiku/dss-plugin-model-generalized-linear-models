@@ -49,7 +49,6 @@ class ModelHandler:
         
         self.model = dataiku.Model(self.model_id)
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
-        print(self.full_model_id)
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
@@ -183,16 +182,28 @@ class ModelHandler:
 
     def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
         test_set = self.extract_test_set_predictions()
+        train_set = self.extract_train_set_predictions()
         self.apply_weights_to_data(test_set)
+        self.apply_weights_to_data(train_set)
         base_predictions = self.compute_base_predictions(test_set, feature, class_map)
         predicted_base_df = self.prepare_final_data(test_set, feature, nb_bins_numerical, base_predictions)
-        return predicted_base_df
+        base_predictions_train = self.compute_base_predictions(train_set, feature, class_map)
+        predicted_base_train_df = self.prepare_final_data(train_set, feature, nb_bins_numerical, base_predictions_train)
+        predicted_base_df['dataset'] = 'test'
+        predicted_base_train_df['dataset'] = 'train'
+        return predicted_base_df.append(predicted_base_train_df)
 
     def extract_test_set_predictions(self):
         test_set = self.model_info_handler.get_test_df()[0].copy()
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted
         return test_set
+    
+    def extract_train_set_predictions(self):
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+        predicted = self.predictor.predict(train_set)
+        train_set['predicted'] = predicted
+        return train_set
 
     def apply_weights_to_data(self, test_set):
         used_features = list(self.base_values.keys())
