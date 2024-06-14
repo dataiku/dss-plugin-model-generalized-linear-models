@@ -353,7 +353,20 @@ class ModelHandler:
         new_data = train_set.join(binned_data[['bin']], how='inner')
         lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
         lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
-        return lift_chart_data
+        lift_chart_data['dataset'] = 'train'
+        
+        test_set = self.get_model_predictions_on_train()
+        test_set_df = pd.DataFrame(test_set)
+        
+        tempdata_test = self.data_handler.sort_and_cumsum_exposure(test_set_df, self.exposure)
+        binned_data_test = self.data_handler.bin_data(tempdata_test, nb_bins)
+        
+        new_data_test = train_set.join(binned_data_test[['bin']], how='inner')
+        lift_chart_data_test = self.data_handler.aggregate_metrics_by_bin(new_data_test, self.exposure, self.target)
+        lift_chart_data_test.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+        lift_chart_data_test['dataset'] = 'test'
+        
+        return lift_chart_data.append(lift_chart_data_test)
 
     def get_variable_level_stats(self):
         predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
