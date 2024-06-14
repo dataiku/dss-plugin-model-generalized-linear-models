@@ -92,13 +92,8 @@ interface ErrorPoint {
 }
 
 export let API = {
-<<<<<<< HEAD
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
     getLiftData: (data: ModelNbBins) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
-=======
-    getData: (data: ModelTrainPoint) => axios.post<DataPoint[]>("/api/data", data),
-    getLiftData: (data: ModelTrainPoint) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
->>>>>>> origin/glm-hub
     updateData: (data: FeatureNbBin) => axios.post<DataPoint[]>("/api/update_bins", data),
     getRelativities: (data: ModelPoint) => axios.post<RelativityPoint[]>("/api/relativities", data),
     getModels: () => axios.get<ModelPoint[]>("/api/models"),
