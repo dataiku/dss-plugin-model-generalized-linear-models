@@ -54,8 +54,10 @@ interface ModelNbBins {
     id: string;
     name: string;
     nbBins: number;
-}   
-interface ModelTrainPoint {
+    trainTest: boolean;
+}
+
+interface ModelTrainPoint { 
     id: string;
     name: string;
     trainTest: boolean;

@@ -40,6 +40,7 @@ export type ModelNbBins = {
     id: string;
     name: string;
     nbBins: number;
+    trainTest: boolean;
 }
 export type ModelTrainPoint = { 
     id: string;

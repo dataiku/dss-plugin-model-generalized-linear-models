@@ -150,7 +150,7 @@ export default defineComponent({
           this.loading = true;
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
-          const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name};
+          const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name, trainTest: this.trainTest};
           const dataResponse = await API.getLiftData(modelNbBins);
           this.chartData = dataResponse?.data;
           this.loading = false;
@@ -161,7 +161,6 @@ export default defineComponent({
           const model = this.models.filter( (v: ModelPoint) => v.name==this.selectedModelString)[0];
           const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name, trainTest: this.trainTest};
           const dataResponse = await API.getLiftData(modelNbBins);
-          const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
           this.chartData = dataResponse?.data;
           this.loading = false;
         },
