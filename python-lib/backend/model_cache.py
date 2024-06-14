@@ -28,6 +28,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
         # Get predicted and base
         step_time = time()
         model1_predicted_base = model_handler.get_predicted_and_base()
+        print(model1_predicted_base)
         model1_predicted_base.columns = ['definingVariable', 
                                          'Category', 
                                          'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction', 'dataset']

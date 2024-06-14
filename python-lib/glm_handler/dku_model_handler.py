@@ -191,6 +191,8 @@ class ModelHandler:
         predicted_base_train_df = self.prepare_final_data(train_set, feature, nb_bins_numerical, base_predictions_train)
         predicted_base_df['dataset'] = 'test'
         predicted_base_train_df['dataset'] = 'train'
+        print(predicted_base_df)
+        print(predicted_base_df.append(predicted_base_train_df))
         return predicted_base_df.append(predicted_base_train_df)
 
     def extract_test_set_predictions(self):
@@ -265,6 +267,15 @@ class ModelHandler:
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
         return test_set
+    
+    def prepare_train_set(self):
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+        predicted = self.predictor.predict(train_set)
+        train_set['predicted'] = predicted
+        train_set['weight'] = 1 if self.exposure is None else train_set[self.exposure]
+        train_set['weighted_target'] = train_set[self.target] * train_set['weight']
+        train_set['weighted_predicted'] = train_set['predicted'] * train_set['weight']
+        return train_set
 
     def compute_base_predictions(self, test_set, used_features, class_map=None):
         base_data = dict()
@@ -288,14 +299,25 @@ class ModelHandler:
     def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
         self.compute_base_values()
         test_set = self.prepare_test_set()
+        train_set = self.prepare_train_set()
         used_features = list(self.base_values.keys())
+        
         base_data = self.compute_base_predictions(test_set, used_features, class_map)
         test_set = self.merge_predictions(test_set, base_data)
         test_set = self.data_handler.bin_numeric_columns(test_set, nb_bins_numerical,self.features, self.non_excluded_features)
         predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.non_excluded_features)
         predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
-        self.predicted_base_df = predicted_base_df
-        return predicted_base_df
+        predicted_base_df['dataset'] = 'test'
+        
+        base_data_train = self.compute_base_predictions(train_set, used_features, class_map)
+        train_set = self.merge_predictions(train_set, base_data)
+        train_set = self.data_handler.bin_numeric_columns(train_set, nb_bins_numerical, self.features, self.non_excluded_features)
+        predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.non_excluded_features)
+        predicted_base_train_df = self.data_handler.construct_final_dataframe(predicted_base_train)
+        predicted_base_train_df['dataset'] = 'train'
+        
+        self.predicted_base_df = predicted_base_df.append(predicted_base_train_df)
+        return self.predicted_base_df
 
 
     def get_model_predictions_on_train(self):
