@@ -150,12 +150,11 @@ def get_lift_data():
         lift_chart = model_handler.get_lift_chart(nb_bins)
         model_cache[full_model_id]['lift_chart_data'] = lift_chart
     
-    lift_chart.columns = ['Value', 'observedAverage', 'fittedAverage', 'Category']
+    lift_chart.columns = ['Value', 'observedAverage', 'fittedAverage', 'Category', 'dataset']
     lift_chart['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['observedAverage']]
     lift_chart['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['fittedAverage']]
     lift_chart['Value'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['Value']]
     lift_chart = lift_chart[lift_chart['dataset'] == dataset]
-    lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage', 'dataset']
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
