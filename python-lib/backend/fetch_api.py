@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = True
+is_local = False
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -365,7 +365,7 @@ def export_variable_level_stats():
             df = model_cache[full_model_id].get('variable_stats')
             df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
 
-            csv_data = df.to_csv()
+            csv_data = df.to_csv(index=False).encode('utf-8')
 
         except KeyError as e:
             current_app.logger.error(f"An error occurred: {str(e)}")

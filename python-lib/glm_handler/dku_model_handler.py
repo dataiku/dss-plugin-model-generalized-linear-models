@@ -382,7 +382,8 @@ class ModelHandler:
         return lift_chart_data.append(lift_chart_data_test)
 
     def get_variable_level_stats(self):
-        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+        predicted_base = self.get_predicted_and_base()
+        predicted = predicted_base[predicted_base['dataset'] == 'train'][['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
         coef_table = self.predictor._clf.coef_table.reset_index()
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
