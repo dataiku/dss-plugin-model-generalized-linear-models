@@ -54,6 +54,11 @@ interface ModelNbBins {
     id: string;
     name: string;
     nbBins: number;
+}   
+interface ModelTrainPoint {
+    id: string;
+    name: string;
+    trainTest: boolean;
 }
 
 interface FeatureNbBin {
@@ -87,8 +92,13 @@ interface ErrorPoint {
 }
 
 export let API = {
+<<<<<<< HEAD
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
     getLiftData: (data: ModelNbBins) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
+=======
+    getData: (data: ModelTrainPoint) => axios.post<DataPoint[]>("/api/data", data),
+    getLiftData: (data: ModelTrainPoint) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
+>>>>>>> origin/glm-hub
     updateData: (data: FeatureNbBin) => axios.post<DataPoint[]>("/api/update_bins", data),
     getRelativities: (data: ModelPoint) => axios.post<RelativityPoint[]>("/api/relativities", data),
     getModels: () => axios.get<ModelPoint[]>("/api/models"),
@@ -99,6 +109,7 @@ export let API = {
     getModelComparisonData: (data: any) => axios.post<ModelComparisonDataPoint[]>("/api/get_model_comparison_data", data),
     getModelMetrics: (data: any) => axios.post<ModelMetrics>("/api/get_model_metrics", data),
     exportModel: (model: ModelPoint) => axios.post<Blob>("/api/export_model", model),
+    exportVariableLevelStats: (model: ModelPoint) => axios.post<Blob>("/api/export_variable_level_stats", model),
     getVariableLevelStats: (data: ModelPoint) => axios.post<VariableLevelStatsPoint[]>("/api/get_variable_level_stats", data),
 }
 

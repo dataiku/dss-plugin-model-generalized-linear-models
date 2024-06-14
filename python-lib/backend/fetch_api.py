@@ -26,30 +26,47 @@ import numpy as np
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 client = dataiku.api_client()
 project = client.get_default_project()
-if not is_local:
-    web_app_config = get_webapp_config()
-    saved_model_id = web_app_config.get("saved_model_id")
-    saved_model = project.get_saved_model(saved_model_id)
-    global_dss_mltask = saved_model.get_origin_ml_task()
-    global_dku_mltask = DataikuMLTask(web_app_config.get("training_dataset_string"), saved_model_id)
 
+if not is_local:   
+    web_app_config = get_webapp_config()
+    existing_analysis_id = web_app_config.get("existing_analysis_id")
+    input_dataset = web_app_config.get("training_dataset_string")
+    prediction_type = web_app_config.get("prediction_type")
+    setup_type = web_app_config.get("setup_type")
+    
     data_handler = GlmDataHandler()
-    model_deployer = ModelDeployer(saved_model, global_dss_mltask, saved_model_id)
-    model_handler = ModelHandler(saved_model_id, data_handler)
-    model_cache = setup_model_cache(global_dss_mltask, model_deployer, model_handler)
-    print(f"Model Cache is: {model_cache}")
+    
+    if setup_type != "new":
+        saved_model_id = web_app_config.get("saved_model_id")
+        global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type)
+        global_DkuMLTask.setup_using_existing_ml_task(existing_analysis_id, saved_model_id)
+        print(f'Savemodel id is {saved_model_id}')
+        model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
+        model_handler = ModelHandler(saved_model_id, data_handler)
+        model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
+    else:
+        global_DkuMLTask = None
+        model_cache = None
+        model_deployer = None
+        model_handler = None
+    
+
 
 
 
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
+    
     if is_local:
         return jsonify(dummy_models)
-    if global_dss_mltask is None:
+    current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
+    if global_DkuMLTask.mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
-        models = format_models(global_dss_mltask)
+        dku_ml_task = global_DkuMLTask.mltask
+        models = format_models(dku_ml_task)
+        current_app.logger.info(f"models from global ML task is {models}")
         return jsonify(models)
     except Exception as e:
         current_app.logger.exception("An error occurred while retrieving models")
@@ -93,10 +110,13 @@ def get_data():
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         full_model_id = request_json["id"]
-        
+        train_test = request_json['trainTest']
+        dataset = 'test' if train_test else 'train'
+
         current_app.logger.info(f"Model ID received: {full_model_id}")
 
         predicted_base = model_cache[full_model_id].get('predicted_and_base')
+        predicted_base = predicted_base[predicted_base['dataset']==dataset]
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
@@ -116,6 +136,9 @@ def get_lift_data():
     request_json = request.get_json()
     full_model_id = request_json["id"]
     nb_bins = request_json["nbBins"]
+    train_test = request_json["trainTest"]
+    dataset = 'test' if train_test else 'train'
+    
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
     current_app.logger.info(f"Model {full_model_id} is now the active version.")
@@ -131,6 +154,8 @@ def get_lift_data():
     lift_chart['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['observedAverage']]
     lift_chart['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['fittedAverage']]
     lift_chart['Value'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['Value']]
+    lift_chart = lift_chart[lift_chart['dataset'] == dataset]
+    lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage', 'dataset']
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
@@ -215,12 +240,14 @@ def get_model_comparison_data():
         
         current_app.logger.info(f"Retrieving {model1} from the cache")
         model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
-        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
+        model_1_predicted_base = model_1_predicted_base[model_1_predicted_base['dataset']=='test']
+        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction', 'dataset']
         current_app.logger.info(f"Successfully retrieved {model1} from the cache")
         
         current_app.logger.info(f"Retrieving {model2} from the cache")
         model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
-        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
+        model_2_predicted_base = model_2_predicted_base[model_2_predicted_base['dataset']=='test']
+        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction', 'dataset']
         current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
         merge_time = time()
@@ -288,7 +315,6 @@ def export_model():
     else:
         try:
             request_json = request.get_json()
-            print(request_json)
             model = request_json.get("id")
             if not model:
                 current_app.logger.error("error: Model ID not provided")
@@ -334,6 +360,39 @@ def export_model():
     )
 
 
+@fetch_api.route('/export_variable_level_stats', methods=['POST'])
+def export_variable_level_stats():
+
+    if is_local:
+        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+        df = pd.DataFrame(data)
+
+        # Convert DataFrame to CSV format
+        csv_data = df.to_csv(index=False).encode('utf-8')
+    else:
+        try:
+            request_json = request.get_json()
+            full_model_id = request_json["id"]
+            
+            current_app.logger.info(f"Model ID received: {full_model_id}")
+
+            df = model_cache[full_model_id].get('variable_stats')
+            df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
+
+            csv_data = df.to_csv(index=False).encode('utf-8')
+
+        except KeyError as e:
+            current_app.logger.error(f"An error occurred: {str(e)}")
+
+    csv_io = BytesIO(csv_data)
+
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='variable_level_stats.csv'
+    )
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
@@ -342,7 +401,7 @@ def train_model():
         import time
         time.sleep(5)
         return jsonify({'message': 'Model training initiated successfully.'}), 200
-    global global_dku_mltask
+    global global_DkuMLTask, model_cache, model_deployer, model_handler
     
     request_json = request.get_json()
     current_app.logger.info(f"Received a model training request: {request_json}")
@@ -351,7 +410,8 @@ def train_model():
         web_app_config = get_webapp_config()
         input_dataset = web_app_config.get("training_dataset_string")
         code_env_string = web_app_config.get("code_env_string")
-        saved_model_id = web_app_config.get("saved_model_id")
+        target_column = web_app_config.get("target_column")
+        prediction_type = web_app_config.get("prediction_type")
         
     except:
         input_dataset = "train"
@@ -371,7 +431,6 @@ def train_model():
         "distribution_function": distribution_function,
         "link_function": link_function,
         "variables": variables,
-        "saved_model_id":saved_model_id
     }
     missing_params = [key for key, value in params.items() if not value]
     if missing_params:
@@ -380,31 +439,37 @@ def train_model():
         return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
 
     try:
-        DkuMLTask = DataikuMLTask(input_dataset, saved_model_id)
-        
-        DkuMLTask.update_parameters(distribution_function, link_function, variables)
-        DkuMLTask.create_visual_ml_task()
+        if not global_DkuMLTask:
+            current_app.logger.debug("First time training a model, creating global_DkuMLTask")
+            global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type)
+            global_DkuMLTask.create_inital_ml_task(target_column)# defaults to target set in web app settings, this is overriden
+            
+        global_DkuMLTask.update_parameters(distribution_function, link_function, variables)
+        global_DkuMLTask.create_visual_ml_task()
         current_app.logger.debug("Visual ML task created successfully")
 
-        DkuMLTask.enable_glm_algorithm()
+        global_DkuMLTask.enable_glm_algorithm()
         current_app.logger.debug("GLM algorithm enabled successfully")
 
-        settings = DkuMLTask.test_settings()
-        settings_new = DkuMLTask.configure_variables()
+        settings = global_DkuMLTask.test_settings()
+        settings_new = global_DkuMLTask.configure_variables()
         current_app.logger.debug("Model settings configured successfully")
 
-        DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
-        
+        model_details = global_DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
+        saved_model_id = model_details.get("savedModelId")
         
         current_app.logger.info("Model training initiated successfully")
         
-        global model_cache
+        if not model_cache:
+            model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
+            model_handler = ModelHandler(saved_model_id, data_handler)
+            model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
         
-        model_cache = update_model_cache(global_dss_mltask, model_cache, model_handler)
+        model_cache = update_model_cache(global_DkuMLTask.mltask, model_cache, model_handler)
             
 
         
-        return jsonify({'message': 'Model training initiated successfully.'}), 200
+        return jsonify({'message': 'Model training completed successfully.'}), 200
     except Exception as e:
         current_app.logger.exception("An error occurred during model training")
         return jsonify({'error': str(e)}), 500
