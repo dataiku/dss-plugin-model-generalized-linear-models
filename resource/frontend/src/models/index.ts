@@ -36,10 +36,17 @@ export type ModelPoint = {
     name: string;
 }
 
+<<<<<<< HEAD
+export type ModelNbBins = { 
+    id: string;
+    name: string;
+    nbBins: number;
+=======
 export type ModelTrainPoint = { 
     id: string;
     name: string;
     trainTest: boolean;
+>>>>>>> origin/glm-hub
 }
 
 export type VariablePoint = {
