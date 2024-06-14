@@ -63,7 +63,11 @@
                   <BsLabel v-if="selectedModelString"
                     label="Run Analysis on">
                   </BsLabel>
-                  <BsToggle v-if="selectedModelString" v-model="trainTest" labelRight="Test" labelLeft="Train"/>
+                  <BsToggle v-if="selectedModelString" 
+                  v-model="trainTest"
+                  @update:modelValue="updateTrainTest"
+                  labelRight="Test" 
+                  labelLeft="Train"/>
                   <div v-if="selectedModelString" class="button-container">
                   <BsButton class="bs-primary-button" 
                   unelevated
@@ -117,7 +121,7 @@ import BarChart from './BarChart.vue'
 import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import * as echarts from "echarts";
-import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint } from '../models';
+import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, ModelTrainPoint } from '../models';
 import { isErrorPoint } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
@@ -234,6 +238,12 @@ export default defineComponent({
         async updateVariable(value: VariablePoint) {
           this.selectedVariable = value;
         },
+        async updateTrainTest(value: boolean) {
+          this.trainTest = value;
+          const modelTrainPoint = {id: this.active_model.id, name: this.active_model.name, trainTest: this.trainTest};
+          const dataResponse = await API.getData(modelTrainPoint);
+          this.allData = dataResponse?.data;
+        },
         async updateModelString(value: string) {
           this.loading = true;
           try {
@@ -246,7 +256,8 @@ export default defineComponent({
             } else {
               this.variablePoints = variableResponse?.data;
               this.allVariables = this.variablePoints.map(item => item.variable);
-              const dataResponse = await API.getData(model);
+              const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
+              const dataResponse = await API.getData(modelTrainPoint);
               this.allData = dataResponse?.data;
               const relativityResponse = await API.getRelativities(model);
               this.relativitiesData = relativityResponse?.data;

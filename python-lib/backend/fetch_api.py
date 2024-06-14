@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = False
+is_local = True
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -110,11 +110,13 @@ def get_data():
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         full_model_id = request_json["id"]
-        
+        train_test = request_json['trainTest']
+        dataset = 'train' if train_test else 'test'
+
         current_app.logger.info(f"Model ID received: {full_model_id}")
 
         predicted_base = model_cache[full_model_id].get('predicted_and_base')
-        predicted_base = predicted_base[predicted_base['dataset']=='train']
+        predicted_base = predicted_base[predicted_base['dataset']==dataset]
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
