@@ -41,6 +41,24 @@
           ]
     },
     {
+        "name": "policy",
+        "label": "Policy",
+        "description": "Select the Training Test Split Policy",
+         "type": "SELECT",
+          "selectChoices" : [
+              { "value": "random_split", "label": "Random 80:20 Split"},
+              { "value": "explicit_test_set", "label": "Define a Test Set"}
+          ]
+    },
+    {
+        "name": "test_dataset_string",
+        "label": "Testing Dataset",
+        "description": "Select the Testing Dataset for Modelling",
+        "type": "DATASET",
+      "visibilityCondition": "model.policy == 'explicit_test_set'"
+    },
+      
+    {
         "name": "code_env_string",
         "label": "Code Environment",
         "description": "Select the Code Environment for Modelling",

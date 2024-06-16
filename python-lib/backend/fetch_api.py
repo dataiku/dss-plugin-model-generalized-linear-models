@@ -33,12 +33,14 @@ if not is_local:
     input_dataset = web_app_config.get("training_dataset_string")
     prediction_type = web_app_config.get("prediction_type")
     setup_type = web_app_config.get("setup_type")
+    policy = web_app_config.get("policy")
+    test_dataset_string = web_app_config.get("test_dataset_string")
     
     data_handler = GlmDataHandler()
     
     if setup_type != "new":
         saved_model_id = web_app_config.get("saved_model_id")
-        global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type)
+        global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
         global_DkuMLTask.setup_using_existing_ml_task(existing_analysis_id, saved_model_id)
         print(f'Savemodel id is {saved_model_id}')
         model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
@@ -423,6 +425,8 @@ def train_model():
     link_function = request_json.get('model_parameters', {}).get('link_function')
     model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
     variables = request_json.get('variables')
+    policy = web_app_config.get("policy")
+    test_dataset_string = web_app_config.get("test_dataset_string")
 
     current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
     params = {
@@ -440,7 +444,7 @@ def train_model():
     try:
         if not global_DkuMLTask:
             current_app.logger.debug("First time training a model, creating global_DkuMLTask")
-            global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type)
+            global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
             global_DkuMLTask.create_inital_ml_task(target_column)# defaults to target set in web app settings, this is overriden
             
         global_DkuMLTask.update_parameters(distribution_function, link_function, variables)
