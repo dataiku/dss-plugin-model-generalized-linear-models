@@ -40,6 +40,10 @@ class DataikuMLTask:
         self.policy = policy
         logger.info("DataikuMLTask initialized successfully")
     
+    def refresh_mltask(self):
+        self.mltask.guess()
+        self.mltask.wait_guess_complete()
+    
     def setup_using_existing_ml_task(self, analysis_id, saved_model_id):
         self.saved_model_id = saved_model_id
         self.analysis= self.project.get_analysis(analysis_id)
@@ -155,6 +159,8 @@ class DataikuMLTask:
         settings.save()
     
     def update_parameters(self, distribution_function, link_function, variables):
+        # pick up any new interaction vars that have been created         
+        self.refresh_mltask()
         
         self.distribution_function = distribution_function.lower()
         logger.info(f"distribution_function set to {self.distribution_function}")
