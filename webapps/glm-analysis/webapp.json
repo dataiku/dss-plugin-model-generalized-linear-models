@@ -15,37 +15,7 @@
   ],
   "paramsPythonSetup": "web_app_setting_list.py",
   "params": [
-    {
-        "name": "training_dataset_string",
-        "label": "Training Dataset",
-        "description": "Select the Training Dataset for Modelling",
-        "type": "DATASET"
-    },
       
-    {
-      "name": "target_column",
-      "label": "Target Variable",
-      "description": "Select the Target for Modelling",
-      "type": "DATASET_COLUMN",
-      "datasetParamName": "training_dataset_string",
-      "mandatory": true
-    },
-    {
-        "name": "prediction_type",
-        "label": "Prediction Type",
-        "description": "Select the Default Prediction Type",
-         "type": "SELECT",
-          "selectChoices" : [
-              { "value": "BINARY_CLASSIFICATION", "label": "Binary Classification"},
-              { "value": "REGRESSION", "label": "Regression"}
-          ]
-    },
-    {
-        "name": "code_env_string",
-        "label": "Code Environment",
-        "description": "Select the Code Environment for Modelling",
-        "type": "CODE_ENV"
-    },
       {
           "name": "setup_type",
           "label": "Setup Type",
@@ -57,6 +27,12 @@
           ],
           "mandatory": true
       },
+     {
+        "type": "SEPARATOR",
+        "description": "",
+        "label": "Existing Model Details",
+        "visibilityCondition": "model.setup_type == 'continue'"
+    },
 
     {
       "name": "existing_analysis_id",
@@ -74,6 +50,64 @@
         "getChoicesFromPython": true,
         "mandatory": false,
         "visibilityCondition": "model.setup_type == 'continue'"
+    },
+     {
+        "type": "SEPARATOR",
+        "description": "",
+         "label": "Modelling Parameters"
+    },
+    {
+        "name": "training_dataset_string",
+        "label": "Training Dataset",
+        "description": "Select the Training Dataset for Modelling",
+        "type": "DATASET"
+    },
+    {
+        "name": "prediction_type",
+        "label": "Prediction Type",
+        "description": "Select the Default Prediction Type",
+         "type": "SELECT",
+          "selectChoices" : [
+              { "value": "BINARY_CLASSIFICATION", "label": "Binary Classification"},
+              { "value": "REGRESSION", "label": "Regression"}
+          ]
+    },
+
+    {
+      "name": "target_column",
+      "label": "Target Variable",
+      "type": "DATASET_COLUMN",
+      "datasetParamName": "training_dataset_string",
+      "mandatory": true
+    },
+
+    {
+        "name": "policy",
+        "label": "Policy",
+        "description": "Select the Training Test Split Policy",
+         "type": "SELECT",
+          "selectChoices" : [
+              { "value": "random_split", "label": "Random 80:20 Split"},
+              { "value": "explicit_test_set", "label": "Define a Test Set"}
+          ]
+    },
+    {
+        "name": "test_dataset_string",
+        "label": "Testing Dataset",
+        "description": "Select the Testing Dataset for Modelling",
+        "type": "DATASET",
+      "visibilityCondition": "model.policy == 'explicit_test_set'"
+    },
+     {
+        "type": "SEPARATOR",
+        "description": "",
+         "label": "Additional Parameters"
+    },
+    {
+        "name": "code_env_string",
+        "label": "Code Environment",
+        "description": "Select the Code Environment for Modelling",
+        "type": "CODE_ENV"
     }
   ]
 }
