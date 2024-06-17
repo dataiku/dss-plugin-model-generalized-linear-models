@@ -63,8 +63,7 @@ class DataikuMLTask:
     
     def assign_train_test_policy(self):
         
-        dku_dataset_selection_params = {'datasetSmartName': 'claim_test',
-              'selection': {'useMemTable': False,
+        dku_dataset_selection_params = {'useMemTable': False,
                'filter': {'distinct': False, 'enabled': False},
                'partitionSelectionMethod': 'ALL',
                'latestPartitionsN': 1,
@@ -74,7 +73,7 @@ class DataikuMLTask:
                'targetRatio': 0.02,
                'ascending': True,
                'withinFirstN': -1,
-               'maxReadUncompressedBytes': -1}}
+               'maxReadUncompressedBytes': -1}
             
         if self.policy == "explicit_test_set":
             settings = self.mltask.get_settings()
