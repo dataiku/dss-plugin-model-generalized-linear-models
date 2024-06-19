@@ -83,7 +83,7 @@ def get_variables():
     full_model_id = request_json["id"]
     try:
         variables = model_cache[full_model_id].get('features')
-        print(model_cache[full_model_id])
+        print(f"Model cache for{full_model_id} is {model_cache[full_model_id]}")
         print(variables)
         if variables is None:
             raise ValueError("variables returned None.")
@@ -404,6 +404,7 @@ def train_model():
         current_app.logger.debug("Model settings configured successfully")
 
         model_details = global_DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
+        current_app.logger.debug(f"Model model_details are {model_details}")
         saved_model_id = model_details.get("savedModelId")
         
         current_app.logger.info("Model training initiated successfully")
@@ -419,7 +420,7 @@ def train_model():
         
         return jsonify({'message': 'Model training completed successfully.'}), 200
     except Exception as e:
-        current_app.logger.exception("An error occurred during model training")
+        current_app.logger.exception(f"An error occurred during model training {e}")
         return jsonify({'error': str(e)}), 500
 
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
