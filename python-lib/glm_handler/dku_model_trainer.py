@@ -49,6 +49,7 @@ class DataikuMLTask:
         self.analysis= self.project.get_analysis(analysis_id)
         self.mltask_id = self.analysis.list_ml_tasks().get('mlTasks')[0].get('mlTaskId')
         self.mltask = self.analysis.get_ml_task(self.mltask_id)
+        self.remove_failed_trainings()
     
     def extract_active_fullModelId(self, json_data):
         """
@@ -413,6 +414,15 @@ class DataikuMLTask:
         settings.save()
         logger.info(f"set code env settings to {self.mltask.get_settings().mltask_settings.get('envSelection')} ")
     
+    def remove_failed_trainings(self):
+        
+        ids = self.mltask.get_trained_models_ids()
+        for model_id in ids:
+            state = self.mltask.get_trained_model_details(model_id).details.get('trainInfo').get('state')
+            if state == "FAILED":
+                self.mltask.delete_trained_model(model_id)
+        
+    
     def get_latest_model(self):
         """
         Retrieves the ID of the latest trained model.
@@ -492,3 +502,5 @@ class DataikuMLTask:
         except Exception as e:
             # This logs the error message along with the stack trace.
             logging.exception("Failed to deploy model to the flow: %s", e)
+            logging.info("Removing Failed Model Traings.")
+            self.remove_failed_trainings()
