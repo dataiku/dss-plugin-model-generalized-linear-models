@@ -73,6 +73,32 @@ def get_models():
         return jsonify({'error': str(e)}), 500
     return jsonify(models)
 
+@fetch_api.route("/get_latest_mltask_params", methods=["GET"])
+def get_latest_mltask_params():
+    if setup_type != "new":
+        settings = global_DkuMLTask.mltask.get_settings()
+        algo_settigns = settings.get_algorithm_settings('CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression')
+        exposure_column = algo_settigns.get('params').get('exposure_columns')[0]
+    
+        features = settings.get('preprocessing').get('per_feature').keys()
+
+        features_dict = {}
+        for feature in features:
+            feature_settings = mltask.get_settings().get_feature_preprocessing(feature)
+            features_dict[feature] = {
+                "role": feature_settings.get('role'),
+                 'type': feature_settings.get('type'),
+                "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling')
+
+            }
+    
+        setup_params = {
+            "exposure":exposure_column,
+            "params": features_dict
+        }
+
+    return jsonify(setup_params)
+
 
 
 @fetch_api.route("/variables", methods=["POST"])

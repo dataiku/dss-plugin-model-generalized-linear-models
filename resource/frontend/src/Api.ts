@@ -81,6 +81,7 @@ interface ErrorPoint {
 }
 
 export let API = {
+    getLatestMLTaskParams: () => axios.get("/api/get_latest_mltask_params", {}),
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
     getLiftData: (data: ModelPoint) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
     updateData: (data: FeatureNbBin) => axios.post<DataPoint[]>("/api/update_bins", data),
