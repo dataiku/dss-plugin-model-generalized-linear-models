@@ -176,51 +176,51 @@ components: {
 
 },
 props: [],
-data() {
-    return {
-        updateModels: false,
-        modelName: "",   
-        errorMessage: "", 
-        selectedDatasetString: "",
-        selectedTargetVariable: "",
-        selectedExposureVariable: "",
-        selectedDistributionFunctionString: 'Gaussian' as string,
-        selectedLinkFunctionString: 'Log' as string,
-        datasetsString: [] as string[],
-        chartData: [],  
-        layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
-        trainingIcon,
-        docLogo,
-        distributionOptions: ['Binomial',
-            'Gamma',
-            'Gaussian',
-            'Inverse Gaussian',
-            'Poisson',
-            'Negative Binomial', 
-            'Tweedie',
-        ],
-        linkOptions: [
-            'CLogLog',
-            'Log',
-            'Logit',
-            'Cauchy',
-            'Identity',
-            'Power',
-            'Inverse Power',
-            'Inverse Squared'
-        ],
-        typeOptions: [
-            'Categorical',
-            'Numerical'
-        ],
-        preprocessingOptions: [
-            'Dummy Encode',
-            'Standard Rescaling',
-        ],
-        datasetColumns: [] as Column[], // Populate this based on your actual data
-        loading: false,
-    };
-},
+    data() {
+        return {
+            updateModels: false,
+            modelName: "",   
+            errorMessage: "", 
+            selectedDatasetString: "",
+            selectedTargetVariable: "",
+            selectedExposureVariable: "",
+            selectedDistributionFunctionString: 'Gaussian' as string,
+            selectedLinkFunctionString: 'Log' as string,
+            datasetsString: [] as string[],
+            chartData: [],  
+            layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
+            trainingIcon,
+            docLogo,
+            distributionOptions: ['Binomial',
+                'Gamma',
+                'Gaussian',
+                'Inverse Gaussian',
+                'Poisson',
+                'Negative Binomial', 
+                'Tweedie',
+            ],
+            linkOptions: [
+                'CLogLog',
+                'Log',
+                'Logit',
+                'Cauchy',
+                'Identity',
+                'Power',
+                'Inverse Power',
+                'Inverse Squared'
+            ],
+            typeOptions: [
+                'Categorical',
+                'Numerical'
+            ],
+            preprocessingOptions: [
+                'Dummy Encode',
+                'Standard Rescaling',
+            ],
+            datasetColumns: [] as Column[], // Populate this based on your actual data
+            loading: false,
+        };
+    },
 computed:{
     targetVariablesOptions(){
         return this.datasetColumns.map(column=>{
@@ -245,16 +245,13 @@ computed:{
         }
 },
 watch: {
-
     selectedTargetVariable(newValue, oldValue) {
         console.log(` Attempting to change selectedTargetVariable changed from ${oldValue} to ${newValue}`);
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
-                // Set the role of the selected target variable to 'Target'
                 column.role = 'Target';
             } else {
-                // Reset role for non-target columns if necessary
-                column.role = 'Variable'; // Or any default value you prefer
+                column.role = 'Variable'; 
             }
         });
     },
@@ -262,11 +259,9 @@ watch: {
         console.log(` Attempting to change selectedExposureVariable changed from ${oldValue} to ${newValue}`);
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
-                // Set the role of the selected target variable to 'Target'
                 column.role = 'Exposure';
             } else if (column.role !== 'Target') {
-                // Reset role for non-target columns if necessary
-                column.role = 'Variable'; // Or any default value you prefer
+                column.role = 'Variable'; 
             }
         });
     },
@@ -398,32 +393,41 @@ methods: {
         this.updateModels = !this.updateModels;
         this.$emit("update-models", this.updateModels);
         this.loading = false;
-    },
-
+    },  
     async getDatasetColumns() {
-        try {
+      try {
         const response = await API.getDatasetColumns();
+        const paramsResponse = await API.getLatestMLTaskParams();
+        const params = paramsResponse.data.params;
+        console.log("Params are:", params);
 
         console.log("Datasets:", response.data);
-        this.datasetColumns = response.data.map((columnName: string) => ({
+        this.datasetColumns = response.data.map((columnName: string) => {
+          const param = params[columnName] || {};
+          return {
             name: columnName,
-            isIncluded: false,
-            role: 'Variable',
-            type: 'Categorical',
-            preprocessing: 'Dummy Encode'
-        }));
+            isIncluded: param.role !== 'REJECT' ,
+            role: param.role || 'REJECT',
+            type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
+            preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
+          };
+        });
+        this.selectedTargetVariable = paramsResponse.data.target_column;
+        this.selectedExposureVariable = paramsResponse.data.exposure_colum;
         console.log("First assignment:", this.datasetColumns);
-        } catch (error) {
-            console.error('Error fetching datasets:', error);
-            this.datasetColumns = [];
-        }
-    },  
-},
+      } catch (error) {
+        console.error('Error fetching datasets:', error);
+        this.datasetColumns = [];
+      }
+    }
+    },
+
 async mounted() {
     this.layoutRef = this.$refs.layout as InstanceType<typeof BsLayoutDefault>;
     const savedDistributionFunction = localStorage.getItem('DistributionFunction');
     const savedLinkFunction = localStorage.getItem('linkFunction');
     await this.getDatasetColumns();
+    
 },
 emits: ['update:modelValue', 'update-models']
 })

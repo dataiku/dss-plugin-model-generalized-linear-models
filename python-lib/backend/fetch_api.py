@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = False
+is_local = True 
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -13,7 +13,8 @@ if not is_local:
     
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
-dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
+dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, 
+dummy_model_metrics, dummy_setup_params)
 from backend.logging_settings import logger
 from io import BytesIO
 from time import time
@@ -58,12 +59,12 @@ if not is_local:
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
     
-    current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
     if is_local:
         return jsonify(dummy_models)
     if global_DkuMLTask.mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
+        current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
         dku_ml_task = global_DkuMLTask.mltask
         models = format_models(dku_ml_task)
         current_app.logger.info(f"models from global ML task is {models}")
@@ -75,6 +76,9 @@ def get_models():
 
 @fetch_api.route("/get_latest_mltask_params", methods=["GET"])
 def get_latest_mltask_params():
+    if is_local:
+        current_app.logger.info(f"Returning Params {dummy_setup_params}")
+        return jsonify(dummy_setup_params)
     if setup_type != "new":
         settings = global_DkuMLTask.mltask.get_settings()
         algo_settigns = settings.get_algorithm_settings('CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression')
@@ -84,16 +88,23 @@ def get_latest_mltask_params():
 
         features_dict = {}
         for feature in features:
-            feature_settings = mltask.get_settings().get_feature_preprocessing(feature)
+            feature_settings = global_DkuMLTask.mltask.get_settings().get_feature_preprocessing(feature)
             features_dict[feature] = {
                 "role": feature_settings.get('role'),
                  'type': feature_settings.get('type'),
                 "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling')
 
             }
+            if feature == exposure_column:
+                features_dict[feature]["role"]=="Exposure"
+            if features_dict[feature]["role"]=="TARGET":
+                features_dict[feature]["role"]=="Target"
+                target_column = feature
+
     
         setup_params = {
-            "exposure":exposure_column,
+            "target_column": target_column,
+            "exposure_colum":exposure_column,
             "params": features_dict
         }
 
@@ -371,15 +382,14 @@ def export_model():
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
     # Log the receipt of a new training request
+    request_json = request.get_json()
+    current_app.logger.info(f"Received a model training request: {request_json}")
     if is_local:
         import time
         time.sleep(5)
         return jsonify({'message': 'Model training initiated successfully.'}), 200
     global global_DkuMLTask, model_cache, model_deployer, model_handler
-    
-    request_json = request.get_json()
-    current_app.logger.info(f"Received a model training request: {request_json}")
-    
+
     try: 
         web_app_config = get_webapp_config()
         input_dataset = web_app_config.get("training_dataset_string")
