@@ -77,7 +77,7 @@ class GlmDataHandler():
         grouped = grouped.reset_index()
         grouped['observedData'] = grouped['weighted_target_sum'] / grouped[exposure + '_sum']
         grouped['predictedData'] = grouped['weighted_prediction_sum'] / grouped[exposure + '_sum']
-        grouped['binInterval'] = [('%s' % float('%.3g' % value_min)) + ':' + ('%s' % float('%.3g' % value_max)) for value_min, value_max in zip(grouped['prediction_min'], grouped['prediction_max'])]
+        grouped['binInterval'] = [('%s' % float('%.3g' % value_min)) + '-' + ('%s' % float('%.3g' % value_max)) for value_min, value_max in zip(grouped['prediction_min'], grouped['prediction_max'])]
         grouped.reset_index(inplace=True)
         grouped.drop(['index', 'weighted_target_sum', 'weighted_prediction_sum', 'prediction_min', 'prediction_max', 'bin'], axis=1, inplace=True)
         return grouped
