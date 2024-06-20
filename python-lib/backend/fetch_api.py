@@ -119,6 +119,10 @@ def get_data():
 
         predicted_base = model_cache[full_model_id].get('predicted_and_base')
         predicted_base = predicted_base[predicted_base['dataset']==dataset]
+        predicted_base['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['observedAverage']]
+        predicted_base['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['fittedAverage']]
+        predicted_base['Value'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['Value']]
+        predicted_base['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['baseLevelPrediction']]
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
