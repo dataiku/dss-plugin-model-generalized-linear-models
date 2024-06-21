@@ -395,7 +395,7 @@ class ModelHandler:
         coef_table_intercept['value'] = 'base'
         coef_table_intercept['exposure'] = 0
         coef_table_intercept['exposure_pct'] = 0
-        coef_table_intercept['relativity'] = 0
+        coef_table_intercept['relativity'] = relativities[relativities['feature'] == 'base']['relativity'].iloc[0]
 
         variable_stats = coef_table_intercept[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
         
