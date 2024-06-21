@@ -155,6 +155,7 @@ class ModelHandler:
 
     def calculate_relative_predictions(self, sample_train_row, baseline_prediction):
         self.relativities = {'base': {'base': baseline_prediction}}
+        train_set = self.extract_train_set_predictions()
         for feature in self.base_values.keys():
             self.relativities[feature] = {self.base_values[feature]: 1.0}
             if self.features[feature]['type'] == 'CATEGORY':    
@@ -165,8 +166,9 @@ class ModelHandler:
                     self.relativities[feature][modality] = prediction / baseline_prediction
             else:
                 train_row_copy = sample_train_row.copy()
-                min_value, max_value = self.modalities[feature]['min'], self.modalities[feature]['max']
-                for value in np.linspace(min_value, max_value, 10):
+                #min_value, max_value = self.modalities[feature]['min'], self.modalities[feature]['max']
+                unique_values = sorted(list(set(train_set[feature])))
+                for value in unique_values:
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
                     self.relativities[feature][value] = prediction / baseline_prediction
