@@ -1,0 +1,62 @@
+import logging
+
+from dataiku.customwebapp import get_webapp_config
+
+
+class LazyLogger:
+    _logger = None
+    _initialized = False
+
+    @classmethod
+    def _initialize_logger(cls):
+        if not cls._initialized:
+            try:
+                webapp_config = get_webapp_config()
+                log_level = webapp_config.get('log_level', 'INFO')
+            except Exception as e:
+                log_level = 'INFO'
+
+            level = getattr(logging, log_level.upper(), logging.INFO)
+            if not isinstance(level, int):
+                raise ValueError(f'Invalid log level: {log_level}')
+
+            if cls._logger is None:
+                cls._logger = logging.getLogger(__name__)
+            cls._logger.setLevel(level)
+
+            if not cls._logger.handlers:
+                handler = logging.StreamHandler()
+                formatter = logging.Formatter(
+                    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                handler.setFormatter(formatter)
+                cls._logger.addHandler(handler)
+                cls._logger.propagate = False
+
+            cls._initialized = True
+
+    def debug(self, msg, *args, **kwargs):
+        self._initialize_logger()
+        self._logger.debug(msg, *args, **kwargs)
+
+    def info(self, msg, *args, **kwargs):
+        self._initialize_logger()
+        self._logger.info(msg, *args, **kwargs)
+
+    def warn(self, msg, *args, **kwargs):
+        self._initialize_logger()
+        self._logger.warning(msg, *args, **kwargs)
+
+    def error(self, msg, *args, **kwargs):
+        self._initialize_logger()
+        self._logger.error(msg, *args, **kwargs)
+
+    def critical(self, msg, *args, **kwargs):
+        self._initialize_logger()
+        self._logger.critical(msg, *args, **kwargs)
+
+    def exception(self, msg, *args, **kwargs):
+        self._initialize_logger()
+        self._logger.exception(msg, *args, **kwargs)
+
+
+logger = LazyLogger()

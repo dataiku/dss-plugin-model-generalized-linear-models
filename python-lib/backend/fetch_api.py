@@ -62,10 +62,11 @@ def get_models():
     
     if is_local:
         return jsonify(dummy_models)
-    current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
+    
     if global_DkuMLTask.mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
+        current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
         dku_ml_task = global_DkuMLTask.mltask
         models = format_models(dku_ml_task)
         current_app.logger.info(f"models from global ML task is {models}")
