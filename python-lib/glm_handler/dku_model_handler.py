@@ -4,8 +4,7 @@ import pandas as pd
 import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
-import logging
-from backend.logging_settings import logger
+from logging_assist.logging import logger
 from glm_handler.dku_relativities_handler import RelativitiesHandler
 
 class ModelHandler:
