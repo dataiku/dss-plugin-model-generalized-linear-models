@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = True 
+is_local = False 
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -76,6 +76,7 @@ def get_models():
 
 @fetch_api.route("/get_latest_mltask_params", methods=["POST"])
 def get_latest_mltask_params():
+    
     request_json = request.get_json()
     current_app.logger.info(f"Recieved request with payload in ml task params: {request_json}")
     full_model_id = request_json["id"]
