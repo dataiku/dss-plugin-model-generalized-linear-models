@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = True 
+is_local = False 
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -80,11 +80,14 @@ def get_latest_mltask_params():
         current_app.logger.info(f"Returning Params {dummy_setup_params}")
         return jsonify(dummy_setup_params)
     if setup_type != "new":
+        
         settings = global_DkuMLTask.mltask.get_settings()
-        algo_settigns = settings.get_algorithm_settings('CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression')
-        exposure_column = algo_settigns.get('params').get('exposure_columns')[0]
+        algo_settings = settings.get_algorithm_settings('CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression')
+        exposure_column = algo_settings.get('params').get('exposure_columns')[0]
+        distribution_function = algo_settings.get('params').get('family_name')
+        link_function = algo_settings.get('params').get(distribution_function+"_link")
     
-        features = settings.get('preprocessing').get('per_feature').keys()
+        features = settings.get_raw().get('preprocessing').get('per_feature').keys()
 
         features_dict = {}
         for feature in features:
@@ -104,10 +107,12 @@ def get_latest_mltask_params():
     
         setup_params = {
             "target_column": target_column,
-            "exposure_colum":exposure_column,
+            "exposure_column":exposure_column,
+            "distribution_function": distribution_function.title(),
+            "link_function":link_function.title(),
             "params": features_dict
         }
-
+    current_app.logger.info(f"Returning setup params {setup_params}")
     return jsonify(setup_params)
 
 
