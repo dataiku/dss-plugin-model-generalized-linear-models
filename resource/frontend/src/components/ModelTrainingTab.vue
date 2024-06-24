@@ -21,7 +21,7 @@
             <BsSelect
                 :modelValue="selectedModelString"
                 :all-options="modelsString"
-                @update:modelValue="getDatasetColumns   "
+                @update:modelValue="value => getDatasetColumns(value)"
                 style="min-width: 250px">
             </BsSelect>
             <BsLabel
@@ -140,6 +140,10 @@ type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing';
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
 interface TypeWithValue {
   value: string;
+}
+interface Model {
+    id: string;
+    name: string;
 }
 interface Column {
         name: string;
@@ -299,7 +303,6 @@ methods: {
           this.loading = true;
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
-          const dataResponse = await API.getLiftData(model);
           this.loading = false;
         },
     validateSubmission() {
@@ -414,12 +417,15 @@ methods: {
         this.$emit("update-models", this.updateModels);
         this.loading = false;
     },  
-    async getDatasetColumns(model_id = null) {
-    if (model_id) {
-      console.log("model_id parameter provided:", model_id);
+    async getDatasetColumns(model_value = null) {
+    if (model_value) {
+      console.log("model_id parameter provided:", model_value);
         try {
-            const response = await API.getDatasetColumns();
-            const paramsResponse = await API.getLatestMLTaskParams(model_id);
+            const response = await API.getDatasetColumns()
+            this.selectedModelString = model_value;
+            const model = this.models.filter((v: ModelPoint) => v.name==model_value)[0];
+            console.log("Making request with model Id :", model);
+            const paramsResponse = await API.getLatestMLTaskParams(model);
             const params = paramsResponse.data.params;
             console.log("Params are:", params);
 
@@ -472,6 +478,7 @@ async mounted() {
     API.getModels().then((data: any) => {
         this.models = data.data;
         this.modelsString = this.models.map(item => item.name);
+        console.log("Models load are", this.models)
       });
     this.layoutRef = this.$refs.layout as InstanceType<typeof BsLayoutDefault>;
     const savedDistributionFunction = localStorage.getItem('DistributionFunction');

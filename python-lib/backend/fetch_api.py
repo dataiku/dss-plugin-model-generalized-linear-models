@@ -76,9 +76,8 @@ def get_models():
 
 @fetch_api.route("/get_latest_mltask_params", methods=["POST"])
 def get_latest_mltask_params():
-    
     request_json = request.get_json()
-    current_app.logger.info(f"Recieved request with payload: {request_json}")
+    current_app.logger.info(f"Recieved request with payload in ml task params: {request_json}")
     full_model_id = request_json["id"]
     current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
     
@@ -88,7 +87,7 @@ def get_latest_mltask_params():
         return jsonify(dummy_setup_params)
     if setup_type != "new":
         client = dataiku.api_client()
-        mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=model_id)
+        mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
         
         settings = mltask.get_settings()
         algo_settings = settings.get_algorithm_settings('CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression')
