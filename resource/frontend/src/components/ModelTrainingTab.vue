@@ -413,7 +413,9 @@ methods: {
           };
         });
         this.selectedTargetVariable = paramsResponse.data.target_column;
-        this.selectedExposureVariable = paramsResponse.data.exposure_colum;
+        this.selectedExposureVariable = paramsResponse.data.exposure_column;
+        this.selectedDistributionFunctionString=  paramsResponse.data.distribution_function;
+        this.selectedLinkFunctionString=paramsResponse.data.link_function;
         console.log("First assignment:", this.datasetColumns);
       } catch (error) {
         console.error('Error fetching datasets:', error);

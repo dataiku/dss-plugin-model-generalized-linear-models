@@ -82,7 +82,9 @@ interface ErrorPoint {
 
 interface MLTaskParams {
     target_column: string;
-    exposure_colum: string;
+    exposure_column: string;
+    distribution_function: string;
+    link_function: string;
     params: {
         [key: string]: {
             role: string;
