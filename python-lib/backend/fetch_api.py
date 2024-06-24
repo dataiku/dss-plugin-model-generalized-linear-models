@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 
-is_local = False 
+is_local = True 
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -74,14 +74,23 @@ def get_models():
         return jsonify({'error': str(e)}), 500
     return jsonify(models)
 
-@fetch_api.route("/get_latest_mltask_params", methods=["GET"])
+@fetch_api.route("/get_latest_mltask_params", methods=["POST"])
 def get_latest_mltask_params():
+    
+    request_json = request.get_json()
+    current_app.logger.info(f"Recieved request with payload: {request_json}")
+    full_model_id = request_json["id"]
+    current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
+    
     if is_local:
+        
         current_app.logger.info(f"Returning Params {dummy_setup_params}")
         return jsonify(dummy_setup_params)
     if setup_type != "new":
+        client = dataiku.api_client()
+        mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=model_id)
         
-        settings = global_DkuMLTask.mltask.get_settings()
+        settings = mltask.get_settings()
         algo_settings = settings.get_algorithm_settings('CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression')
         exposure_column = algo_settings.get('params').get('exposure_columns')[0]
         distribution_function = algo_settings.get('params').get('family_name')

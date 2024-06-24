@@ -13,8 +13,17 @@
     <BsDrawer>
         <BsCollapsiblePanel
         title="Model Parameters">
-        <!-- <h5 class="h5-spacing">Model Parameters</h5> -->
-        <div class="variable-select-container">
+            <div class="variable-select-container">
+            <BsLabel
+                label="Load a previous model"
+                info-text="Charts will be generated with respect to this model">
+            </BsLabel>
+            <BsSelect
+                :modelValue="selectedModelString"
+                :all-options="modelsString"
+                @update:modelValue="getDatasetColumns   "
+                style="min-width: 250px">
+            </BsSelect>
             <BsLabel
                     label="Select a Distribution Function"
                     info-text="Distribution function for GLM"
@@ -152,6 +161,7 @@ included: boolean;
 };
 }
 import { defineComponent } from "vue";
+import type { ModelPoint } from '../models';
 import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
@@ -181,6 +191,9 @@ props: [],
             updateModels: false,
             modelName: "",   
             errorMessage: "", 
+            selectedModelString: "",
+            models: [] as ModelPoint[],
+            modelsString: [] as string[],
             selectedDatasetString: "",
             selectedTargetVariable: "",
             selectedExposureVariable: "",
@@ -282,6 +295,13 @@ watch: {
     
 },
 methods: {
+    async updateModelString(value: string) {
+          this.loading = true;
+          this.selectedModelString = value;
+          const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
+          const dataResponse = await API.getLiftData(model);
+          this.loading = false;
+        },
     validateSubmission() {
         this.errorMessage = ''; // Reset error message before validation
         if (!this.modelName) {
@@ -394,41 +414,70 @@ methods: {
         this.$emit("update-models", this.updateModels);
         this.loading = false;
     },  
-    async getDatasetColumns() {
-      try {
+    async getDatasetColumns(model_id = null) {
+    if (model_id) {
+      console.log("model_id parameter provided:", model_id);
+        try {
+            const response = await API.getDatasetColumns();
+            const paramsResponse = await API.getLatestMLTaskParams(model_id);
+            const params = paramsResponse.data.params;
+            console.log("Params are:", params);
+
+            console.log("Datasets:", response.data);
+            this.datasetColumns = response.data.map((columnName: string) => {
+            const param = params[columnName] || {};
+            return {
+                name: columnName,
+                isIncluded: param.role !== 'REJECT' ,
+                role: param.role || 'REJECT',
+                type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
+                preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
+            };
+            });
+            this.selectedTargetVariable = paramsResponse.data.target_column;
+            this.selectedExposureVariable = paramsResponse.data.exposure_column;
+            this.selectedDistributionFunctionString=  paramsResponse.data.distribution_function;
+            this.selectedLinkFunctionString=paramsResponse.data.link_function;
+            console.log("First assignment:", this.datasetColumns);
+        } catch (error) {
+            console.error('Error fetching datasets:', error);
+            this.datasetColumns = [];
+        }
+
+      }
+    else {
+        console.log("No model id provided:");
+        try {
         const response = await API.getDatasetColumns();
-        const paramsResponse = await API.getLatestMLTaskParams();
-        const params = paramsResponse.data.params;
-        console.log("Params are:", params);
 
         console.log("Datasets:", response.data);
-        this.datasetColumns = response.data.map((columnName: string) => {
-          const param = params[columnName] || {};
-          return {
+        this.datasetColumns = response.data.map((columnName: string) => ({
             name: columnName,
-            isIncluded: param.role !== 'REJECT' ,
-            role: param.role || 'REJECT',
-            type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
-            preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
-          };
-        });
-        this.selectedTargetVariable = paramsResponse.data.target_column;
-        this.selectedExposureVariable = paramsResponse.data.exposure_column;
-        this.selectedDistributionFunctionString=  paramsResponse.data.distribution_function;
-        this.selectedLinkFunctionString=paramsResponse.data.link_function;
+            isIncluded: false,
+            role: 'Variable',
+            type: 'Categorical',
+            preprocessing: 'Dummy Encode'
+        }));
         console.log("First assignment:", this.datasetColumns);
-      } catch (error) {
-        console.error('Error fetching datasets:', error);
-        this.datasetColumns = [];
-      }
-    }
+        } catch (error) {
+            console.error('Error fetching datasets:', error);
+            this.datasetColumns = [];
+        }
+     }
+     },
+    
     },
 
 async mounted() {
+    API.getModels().then((data: any) => {
+        this.models = data.data;
+        this.modelsString = this.models.map(item => item.name);
+      });
     this.layoutRef = this.$refs.layout as InstanceType<typeof BsLayoutDefault>;
     const savedDistributionFunction = localStorage.getItem('DistributionFunction');
     const savedLinkFunction = localStorage.getItem('linkFunction');
     await this.getDatasetColumns();
+
     
 },
 emits: ['update:modelValue', 'update-models']
