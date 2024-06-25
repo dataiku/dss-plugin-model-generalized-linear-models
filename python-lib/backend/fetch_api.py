@@ -150,10 +150,12 @@ def get_lift_data():
 
     current_app.logger.info(f"Model {full_model_id} is now the active version.")
     
-    
     lift_chart = model_cache[full_model_id].get('lift_chart_data')
-    current_nb_bins = len(lift_chart)
+    
+    current_nb_bins = len(lift_chart[lift_chart['dataset'] == dataset])
     if current_nb_bins != nb_bins:
+        model_deployer.set_new_active_version(full_model_id)
+        model_handler.update_active_version()
         lift_chart = model_handler.get_lift_chart(nb_bins)
         model_cache[full_model_id]['lift_chart_data'] = lift_chart
     
