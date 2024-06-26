@@ -221,6 +221,7 @@ export default defineComponent({
         console.log(this.allData);
         console.log(newValue);
         console.log(newValue.variable);
+        console.log(Array.isArray(this.allData));
         this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
         console.log(this.chartData);
         this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
