@@ -203,6 +203,7 @@ def get_updated_data():
 def get_relativities():
     if is_local:
         return jsonify(dummy_relativites.to_dict('records'))
+    loading_thread.join()
     request_json = request.get_json()
     full_model_id = request_json["id"]
     
@@ -335,6 +336,7 @@ def export_model():
         csv_data = df.to_csv(index=False).encode('utf-8')
     else:
         try:
+            loading_thread.join()
             request_json = request.get_json()
             model = request_json.get("id")
             if not model:
@@ -392,6 +394,7 @@ def export_variable_level_stats():
         csv_data = df.to_csv(index=False).encode('utf-8')
     else:
         try:
+            loading_thread.join()
             request_json = request.get_json()
             full_model_id = request_json["id"]
             
@@ -483,6 +486,7 @@ def train_model():
         saved_model_id = model_details.get("savedModelId")
         
         current_app.logger.info("Model training initiated successfully")
+        loading_thread.join()
         
         if not model_cache:
             model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
