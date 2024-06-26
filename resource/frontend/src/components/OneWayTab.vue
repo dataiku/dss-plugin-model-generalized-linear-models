@@ -266,6 +266,9 @@ export default defineComponent({
               const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
               const dataResponse = await API.getData(modelTrainPoint);
               this.allData = dataResponse?.data;
+              console.log(this.allData);
+              console.log(Array.isArray(this.allData));
+              console.log(typeof this.allData);
               const relativityResponse = await API.getRelativities(model);
               this.relativitiesData = relativityResponse?.data;
               this.selectedModelString = value;
