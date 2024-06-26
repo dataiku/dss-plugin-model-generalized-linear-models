@@ -285,8 +285,6 @@ class ModelHandler:
         step_time = time()
         test_set = self.merge_predictions(test_set, base_data)
         logger.info(f"merged predictions")
-        #test_set = self.data_handler.bin_numeric_columns(test_set, nb_bins_numerical, self.features, self.non_excluded_features)
-        logger.info(f"bin numeric columns")
         predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.non_excluded_features, used_features)
         logger.info(f"calculate weighted aggregations")
         predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
@@ -299,7 +297,6 @@ class ModelHandler:
         step_time = time()
         base_data_train = self.compute_base_predictions_new(train_set, used_features)
         train_set = self.merge_predictions(train_set, base_data_train)
-        #train_set = self.data_handler.bin_numeric_columns(train_set, nb_bins_numerical, self.features, self.non_excluded_features)
         predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.non_excluded_features, used_features)
         predicted_base_train_df = self.data_handler.construct_final_dataframe(predicted_base_train)
         predicted_base_train_df['dataset'] = 'train'
@@ -322,7 +319,6 @@ class ModelHandler:
             pd.DataFrame: The aggregated lift chart data with observed and predicted metrics.
         """
         train_set_df = self.train_set
-        #train_set_df = pd.DataFrame(train_set)
         
         tempdata = self.data_handler.sort_and_cumsum_exposure(train_set_df, self.exposure)
         binned_data = self.data_handler.bin_data(tempdata, nb_bins)
@@ -333,7 +329,6 @@ class ModelHandler:
         lift_chart_data['dataset'] = 'train'
         
         test_set_df = self.test_set
-        #test_set_df = pd.DataFrame(test_set)
         
         tempdata_test = self.data_handler.sort_and_cumsum_exposure(test_set_df, self.exposure)
         binned_data_test = self.data_handler.bin_data(tempdata_test, nb_bins)

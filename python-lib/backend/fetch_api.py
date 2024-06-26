@@ -124,9 +124,6 @@ def get_data():
         predicted_base['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['fittedAverage']]
         predicted_base['Value'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['Value']]
         predicted_base['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['baseLevelPrediction']]
-        print(predicted_base)
-        print(predicted_base[predicted_base['baseLevelPrediction'].isnull()])
-        print(predicted_base.columns)
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
@@ -203,7 +200,6 @@ def get_relativities():
     df = model_cache[full_model_id].get('relativities')
     df.columns = ['variable', 'category', 'relativity']
     current_app.logger.info(f"relativites are {df.head()}")
-    print(df)
     return jsonify(df.to_dict('records'))
 #     local dev
     return jsonify(dummy_relativites.to_dict('records'))
