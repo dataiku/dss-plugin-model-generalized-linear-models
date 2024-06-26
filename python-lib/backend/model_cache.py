@@ -54,7 +54,6 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             # Get relativities
             step_time = time()
             relativities = model_handler.get_relativities_df()
-            print(relativities)
             relativities_dict = model_handler.relativities
             step_elapsed = time() - step_time
             logger.info(f"Step - Get relativities: {step_elapsed:.2f} seconds")

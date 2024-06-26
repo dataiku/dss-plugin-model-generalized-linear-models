@@ -294,6 +294,7 @@ class ModelHandler:
         predicted_base_df['dataset'] = 'test'
         step_elapsed = time() - step_time
         logger.info(f"Step - finalize test predicted base: {step_elapsed:.2f} seconds")
+        print(predicted_base_df)
         
         step_time = time()
         base_data_train = self.compute_base_predictions_new(train_set, used_features)
@@ -304,6 +305,7 @@ class ModelHandler:
         predicted_base_train_df['dataset'] = 'train'
         step_elapsed = time() - step_time
         logger.info(f"Step - same same for train: {step_elapsed:.2f} seconds")
+        print(predicted_base_train_df)
         
         self.predicted_base_df = predicted_base_df.append(predicted_base_train_df)
         return self.predicted_base_df.copy()
