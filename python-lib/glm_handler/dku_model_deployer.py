@@ -43,6 +43,4 @@ class ModelDeployer():
         else:
             self.mltask.redeploy_to_flow(model_id, saved_model_id=self.saved_model_id, activate=True)
             self.deployed_models = self.get_deployed_models()
-            logger.info(f"Model {model_id} activated successfully.")
-        self.mltask.redeploy_to_flow(model_id, saved_model_id=self.saved_model_id, activate=True)
-        logger.info(f"Model {model_id} deployed successfully and set to active version.")
+            logger.info(f"Model {model_id} deployed successfully and set to active version.")

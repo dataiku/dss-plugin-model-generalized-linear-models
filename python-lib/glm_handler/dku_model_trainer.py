@@ -24,7 +24,7 @@ class DataikuMLTask:
         offset_variable (str): Name of the offset variable, if any.
     """
     
-    def __init__(self, input_dataset, prediction_type):
+    def __init__(self, input_dataset, prediction_type, policy, test_dataset_str):
         logger.info("Initializing DataikuMLTask")
         self.client = dataiku.api_client()
 #         self.saved_model_id = saved_model_id
@@ -32,11 +32,17 @@ class DataikuMLTask:
         self.project_key = self.project.project_key 
         logger.info("Dataiku API client initialized")
         self.input_dataset = input_dataset
+        self.test_dataset_str = test_dataset_str
         self.prediction_type = prediction_type
         logger.info(f"input_dataset set to {input_dataset}")
         self.mltask = None
         self.saved_model_id = None
+        self.policy = policy
         logger.info("DataikuMLTask initialized successfully")
+    
+    def refresh_mltask(self):
+        self.mltask.guess()
+        self.mltask.wait_guess_complete()
     
     def setup_using_existing_ml_task(self, analysis_id, saved_model_id):
         self.saved_model_id = saved_model_id
@@ -60,6 +66,32 @@ class DataikuMLTask:
                 return item['snippet'].get('fullModelId')
         return None
     
+    def assign_train_test_policy(self):
+        
+        dku_dataset_selection_params = {'useMemTable': False,
+               'filter': {'distinct': False, 'enabled': False},
+               'partitionSelectionMethod': 'ALL',
+               'latestPartitionsN': 1,
+               'ordering': {'enabled': False, 'rules': []},
+               'samplingMethod': 'FULL',
+               'maxRecords': 100000,
+               'targetRatio': 0.02,
+               'ascending': True,
+               'withinFirstN': -1,
+               'maxReadUncompressedBytes': -1}
+            
+        if self.policy == "explicit_test_set":
+            settings = self.mltask.get_settings()
+            settings.split_params.set_split_explicit(
+                dku_dataset_selection_params, 
+                dku_dataset_selection_params, 
+                dataset_name=self.input_dataset,
+                test_dataset_name=self.test_dataset_str)
+            settings.save()
+              
+        else:
+            return
+        
     def disable_existing_variables(self):
             # First, disable all existing variables
         settings = self.mltask.get_settings()   
@@ -128,6 +160,8 @@ class DataikuMLTask:
         settings.save()
     
     def update_parameters(self, distribution_function, link_function, variables):
+        # pick up any new interaction vars that have been created         
+        self.refresh_mltask()
         
         self.distribution_function = distribution_function.lower()
         logger.info(f"distribution_function set to {self.distribution_function}")
@@ -140,6 +174,7 @@ class DataikuMLTask:
         variable_names = [var['name'] for var in self.variables]
         settings = self.mltask.get_settings()   
         self.existing_variable_names = settings.get_raw()['preprocessing']['per_feature'].keys()
+        
         # Check if any name in variable_names is not in existing_variable_names
         if any(name not in self.existing_variable_names for name in variable_names):
             raise ValueError(
@@ -201,7 +236,7 @@ class DataikuMLTask:
         
         analysis_id = self.mltask.get_settings().analysis_id
         self.rename_analysis(analysis_id)
-       
+        
         
         return self.mltask
         
@@ -212,6 +247,7 @@ class DataikuMLTask:
         """
         
         self.set_target()
+        self.assign_train_test_policy()
         
         # Create a new ML Task to predict the variable from the specified dataset
         if not self.mltask:
@@ -305,6 +341,7 @@ class DataikuMLTask:
         '        self.modalities = np.unique(series)\n'
         '        self.mode_column = series.mode()[0]\n'
         '        self.columns = set(self.modalities)\n'
+        '        self.columns = list(self.columns)\n'
         '        self.columns.remove(self.mode_column)\n'
         '        self.column_name = series.name\n'
         '    def transform(self, series):\n'

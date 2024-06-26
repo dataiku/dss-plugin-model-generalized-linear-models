@@ -4,8 +4,7 @@ import pandas as pd
 import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
-import logging
-from backend.logging_settings import logger
+from logging_assist.logging import logger
 from glm_handler.dku_relativities_handler import RelativitiesHandler
 
 class ModelHandler:
@@ -49,7 +48,6 @@ class ModelHandler:
         
         self.model = dataiku.Model(self.model_id)
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
-        print(self.full_model_id)
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
         self.predictor = self.model_info_handler.get_predictor()
         self.target = self.model_info_handler.get_target_variable()
@@ -132,9 +130,9 @@ class ModelHandler:
     def compute_base_for_numeric_feature(self, feature, train_set):
         """ Computes base values for numeric features without rescaling. """
         if self.exposure is not None:
-            self.base_values[feature] = (train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum()
+            self.base_values[feature] = float('%s' % float('%.3g' % ((train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum())))
         else:
-            self.base_values[feature] = train_set[feature].mean()
+            self.base_values[feature] = float('%s' % float('%.3g' % train_set[feature].mean()))
         self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
 
     def get_relativities_df(self):
@@ -156,6 +154,7 @@ class ModelHandler:
 
     def calculate_relative_predictions(self, sample_train_row, baseline_prediction):
         self.relativities = {'base': {'base': baseline_prediction}}
+        train_set = self.extract_train_set_predictions()
         for feature in self.base_values.keys():
             self.relativities[feature] = {self.base_values[feature]: 1.0}
             if self.features[feature]['type'] == 'CATEGORY':    
@@ -166,8 +165,8 @@ class ModelHandler:
                     self.relativities[feature][modality] = prediction / baseline_prediction
             else:
                 train_row_copy = sample_train_row.copy()
-                min_value, max_value = self.modalities[feature]['min'], self.modalities[feature]['max']
-                for value in np.linspace(min_value, max_value, 10):
+                unique_values = sorted(list(set(train_set[feature])))
+                for value in unique_values:
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
                     self.relativities[feature][value] = prediction / baseline_prediction
@@ -183,16 +182,30 @@ class ModelHandler:
 
     def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
         test_set = self.extract_test_set_predictions()
+        train_set = self.extract_train_set_predictions()
         self.apply_weights_to_data(test_set)
+        self.apply_weights_to_data(train_set)
         base_predictions = self.compute_base_predictions(test_set, feature, class_map)
         predicted_base_df = self.prepare_final_data(test_set, feature, nb_bins_numerical, base_predictions)
-        return predicted_base_df
+        base_predictions_train = self.compute_base_predictions(train_set, feature, class_map)
+        predicted_base_train_df = self.prepare_final_data(train_set, feature, nb_bins_numerical, base_predictions_train)
+        predicted_base_df['dataset'] = 'test'
+        predicted_base_train_df['dataset'] = 'train'
+        print(predicted_base_df)
+        print(predicted_base_df.append(predicted_base_train_df))
+        return predicted_base_df.append(predicted_base_train_df)
 
     def extract_test_set_predictions(self):
         test_set = self.model_info_handler.get_test_df()[0].copy()
         predicted = self.predictor.predict(test_set)
         test_set['predicted'] = predicted
         return test_set
+    
+    def extract_train_set_predictions(self):
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+        predicted = self.predictor.predict(train_set)
+        train_set['predicted'] = predicted
+        return train_set
 
     def apply_weights_to_data(self, test_set):
         used_features = list(self.base_values.keys())
@@ -254,6 +267,15 @@ class ModelHandler:
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
         return test_set
+    
+    def prepare_train_set(self):
+        train_set = self.model_info_handler.get_train_df()[0].copy()
+        predicted = self.predictor.predict(train_set)
+        train_set['predicted'] = predicted
+        train_set['weight'] = 1 if self.exposure is None else train_set[self.exposure]
+        train_set['weighted_target'] = train_set[self.target] * train_set['weight']
+        train_set['weighted_predicted'] = train_set['predicted'] * train_set['weight']
+        return train_set
 
     def compute_base_predictions(self, test_set, used_features, class_map=None):
         base_data = dict()
@@ -277,14 +299,25 @@ class ModelHandler:
     def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
         self.compute_base_values()
         test_set = self.prepare_test_set()
+        train_set = self.prepare_train_set()
         used_features = list(self.base_values.keys())
+        
         base_data = self.compute_base_predictions(test_set, used_features, class_map)
         test_set = self.merge_predictions(test_set, base_data)
         test_set = self.data_handler.bin_numeric_columns(test_set, nb_bins_numerical,self.features, self.non_excluded_features)
         predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.non_excluded_features)
         predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
-        self.predicted_base_df = predicted_base_df
-        return predicted_base_df
+        predicted_base_df['dataset'] = 'test'
+        
+        base_data_train = self.compute_base_predictions(train_set, used_features, class_map)
+        train_set = self.merge_predictions(train_set, base_data)
+        train_set = self.data_handler.bin_numeric_columns(train_set, nb_bins_numerical, self.features, self.non_excluded_features)
+        predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.non_excluded_features)
+        predicted_base_train_df = self.data_handler.construct_final_dataframe(predicted_base_train)
+        predicted_base_train_df['dataset'] = 'train'
+        
+        self.predicted_base_df = predicted_base_df.append(predicted_base_train_df)
+        return self.predicted_base_df
 
 
     def get_model_predictions_on_train(self):
@@ -299,6 +332,19 @@ class ModelHandler:
         train_set['prediction'] = predicted
         
         return train_set
+    
+    def get_model_predictions_on_test(self):
+        """
+        Generates model predictions on the training dataset.
+
+        Returns:
+            pd.DataFrame: A DataFrame of the training dataset with an additional column for predictions.
+        """
+        test_set = self.model_info_handler.get_test_df()[0].copy()
+        predicted = self.predictor.predict(test_set)
+        test_set['prediction'] = predicted
+        
+        return test_set
     
     def get_lift_chart(self, nb_bins):
         """
@@ -320,10 +366,24 @@ class ModelHandler:
         new_data = train_set.join(binned_data[['bin']], how='inner')
         lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
         lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
-        return lift_chart_data
+        lift_chart_data['dataset'] = 'train'
+        
+        test_set = self.get_model_predictions_on_test()
+        test_set_df = pd.DataFrame(test_set)
+        
+        tempdata_test = self.data_handler.sort_and_cumsum_exposure(test_set_df, self.exposure)
+        binned_data_test = self.data_handler.bin_data(tempdata_test, nb_bins)
+        
+        new_data_test = test_set.join(binned_data_test[['bin']], how='inner')
+        lift_chart_data_test = self.data_handler.aggregate_metrics_by_bin(new_data_test, self.exposure, self.target)
+        lift_chart_data_test.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+        lift_chart_data_test['dataset'] = 'test'
+        
+        return lift_chart_data.append(lift_chart_data_test)
 
     def get_variable_level_stats(self):
-        predicted = self.get_predicted_and_base()[['feature', 'category', 'exposure']]
+        predicted_base = self.get_predicted_and_base()
+        predicted = predicted_base[predicted_base['dataset'] == 'train'][['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
         coef_table = self.predictor._clf.coef_table.reset_index()
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
@@ -334,7 +394,7 @@ class ModelHandler:
         coef_table_intercept['value'] = 'base'
         coef_table_intercept['exposure'] = 0
         coef_table_intercept['exposure_pct'] = 0
-        coef_table_intercept['relativity'] = 0
+        coef_table_intercept['relativity'] = relativities[relativities['feature'] == 'base']['relativity'].iloc[0]
 
         variable_stats = coef_table_intercept[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
         

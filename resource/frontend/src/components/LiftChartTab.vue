@@ -1,27 +1,27 @@
 <template>
-<BsTab
-            name="Lift Chart"
-            docTitle="GLM Analyzer"
-            :docIcon="docLogo"
-        >
-            <BsTabIcon>
-                <img :src="liftChartIcon" alt="Target Definition Icon" />
-            </BsTabIcon>
-            <BsHeader>
-                <BsButton
-                    v-if="!layoutRef?.drawerOpen"
-                    flat
-                    round
-                    class="open-side-drawer-btn"
-                    size="15px"
-                    @click="closeSideDrawer"
-                    icon="mdi-arrow-right"
-                >
-                    <BsTooltip>Open sidebar</BsTooltip>
-                </BsButton>
-            </BsHeader>
-            <BsDrawer>
-              <div class="variable-select-container">
+  <BsTab
+      name="Lift Chart"
+      docTitle="GLM Analyzer"
+      :docIcon="docLogo"
+  >
+      <BsTabIcon>
+          <img :src="liftChartIcon" alt="Target Definition Icon" />
+      </BsTabIcon>
+      <BsHeader>
+          <BsButton
+              v-if="!layoutRef?.drawerOpen"
+              flat
+              round
+              class="open-side-drawer-btn"
+              size="15px"
+              @click="closeSideDrawer"
+              icon="mdi-arrow-right"
+          >
+              <BsTooltip>Open sidebar</BsTooltip>
+          </BsButton>
+      </BsHeader>
+      <BsDrawer>
+          <div class="variable-select-container">
               <BsLabel
                   label="Select a model"
                   info-text="Charts will be generated with respect to this model">
@@ -32,36 +32,49 @@
                   @update:modelValue="updateModelString"
                   style="min-width: 250px">
               </BsSelect>
-            </div>
-                <BsButton
-                    flat
-                    round
-                    class="close-side-drawer-btn"
-                    size="15px"
-                    @click="closeSideDrawer"
-                    icon="mdi-arrow-left">
-                    <BsTooltip>Close sidebar</BsTooltip>
-                </BsButton>
-            </BsDrawer>
-            <BsContent>
-              <EmptyState
-                    class="tab-content"
-                    title="Lift Chart"
-                    subtitle="Select model in the left column to create chart"
-                    v-if="chartData.length==0"/>
-                <div class="tab-content" v-else>
-                    <LiftChart
-                      v-if="selectedModel"
-                      :xaxisLabels="chartData.map(item => item.Category)"
-                      :barData="chartData.map(item => item.Value)"
-                      :observedData="chartData.map(item => item.observedAverage)"
-                      :predictedData="chartData.map(item => item.fittedAverage)"
-                      chartTitle="Lift Chart"
-                      />
-                </div>
-            </BsContent>
-        </BsTab>
-    </template>
+              <BsLabel v-if="selectedModelString"
+                  label="Select the number of bins">
+              </BsLabel>
+              <BsSlider v-if="selectedModelString" @update:modelValue="updateNbBins" v-model="nbBins" :min="2" :max="20"/>
+              <BsLabel
+                  v-if="selectedModelString"
+                  label="Run Analysis on">
+              </BsLabel>
+              <BsToggle v-if="selectedModelString" 
+                  @update:modelValue="updateTrainTest"
+                  v-model="trainTest" 
+                  labelRight="Test" 
+                  labelLeft="Train"/>
+          </div>
+          <BsButton
+              flat
+              round
+              class="close-side-drawer-btn"
+              size="15px"
+              @click="closeSideDrawer"
+              icon="mdi-arrow-left">
+              <BsTooltip>Close sidebar</BsTooltip>
+          </BsButton>
+      </BsDrawer>
+      <BsContent>
+          <EmptyState
+              class="tab-content"
+              title="Lift Chart"
+              subtitle="Select model in the left column to create chart"
+              v-if="chartData.length == 0"/>
+          <div class="tab-content" v-else>
+              <LiftChart
+                  v-if="selectedModel"
+                  :xaxisLabels="chartData.map(item => item.Category)"
+                  :barData="chartData.map(item => item.Value)"
+                  :observedData="chartData.map(item => item.observedAverage)"
+                  :predictedData="chartData.map(item => item.fittedAverage)"
+                  chartTitle="Lift Chart"
+              />
+          </div>
+      </BsContent>
+  </BsTab>
+</template>
 
 <script lang="ts">
 import LiftChart from './LiftChart.vue'
@@ -69,10 +82,10 @@ import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import { useLoader } from "../composables/use-loader";
 import * as echarts from "echarts";
-import type { LiftDataPoint, ModelPoint } from '../models';
+import type { LiftDataPoint, ModelPoint, ModelNbBins } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
-import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider } from "quasar-ui-bs";
+import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider, BsToggle } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import liftChartIcon from "../assets/images/lift-chart.svg";
 
@@ -93,6 +106,7 @@ export default defineComponent({
         BsTable,
         BsCheckbox,
         BsSlider,
+        BsToggle
     },
     data() {
         return {
@@ -105,6 +119,8 @@ export default defineComponent({
             docLogo,
             liftChartIcon,
             loading: false,
+            nbBins: 8,
+            trainTest: false
         };
     },
     watch: {
@@ -134,10 +150,29 @@ export default defineComponent({
           this.loading = true;
           this.selectedModelString = value;
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
-          const dataResponse = await API.getLiftData(model);
+          const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name, trainTest: this.trainTest};
+          const dataResponse = await API.getLiftData(modelNbBins);
           this.chartData = dataResponse?.data;
           this.loading = false;
         },
+        async updateNbBins(value: number) {
+          this.loading = true;
+          this.nbBins = value;
+          const model = this.models.filter( (v: ModelPoint) => v.name==this.selectedModelString)[0];
+          const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name, trainTest: this.trainTest};
+          const dataResponse = await API.getLiftData(modelNbBins);
+          this.chartData = dataResponse?.data;
+          this.loading = false;
+        },
+        async updateTrainTest(value: boolean) {
+          this.loading = true;
+          this.trainTest = value;
+          const model = this.models.filter( (v: ModelPoint) => v.name==this.selectedModelString)[0];
+          const modelTrainPoint = { nbBins: this.nbBins, id: model.id, name: model.name, trainTest: this.trainTest};
+          const dataResponse = await API.getLiftData(modelTrainPoint);
+          this.chartData = dataResponse?.data;
+          this.loading = false;
+        }
     },
     mounted() {
       API.getModels().then((data: any) => {

@@ -34,12 +34,14 @@ if not is_local:
     input_dataset = web_app_config.get("training_dataset_string")
     prediction_type = web_app_config.get("prediction_type")
     setup_type = web_app_config.get("setup_type")
+    policy = web_app_config.get("policy")
+    test_dataset_string = web_app_config.get("test_dataset_string")
     
     data_handler = GlmDataHandler()
     
     if setup_type != "new":
         saved_model_id = web_app_config.get("saved_model_id")
-        global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type)
+        global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
         global_DkuMLTask.setup_using_existing_ml_task(existing_analysis_id, saved_model_id)
         print(f'Savemodel id is {saved_model_id}')
         model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
@@ -61,6 +63,7 @@ def get_models():
     
     if is_local:
         return jsonify(dummy_models)
+    
     if global_DkuMLTask.mltask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
@@ -161,10 +164,17 @@ def get_data():
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         full_model_id = request_json["id"]
-        
+        train_test = request_json['trainTest']
+        dataset = 'test' if train_test else 'train'
+
         current_app.logger.info(f"Model ID received: {full_model_id}")
 
         predicted_base = model_cache[full_model_id].get('predicted_and_base')
+        predicted_base = predicted_base[predicted_base['dataset']==dataset]
+        predicted_base['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['observedAverage']]
+        predicted_base['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['fittedAverage']]
+        predicted_base['Value'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['Value']]
+        predicted_base['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['baseLevelPrediction']]
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
@@ -177,10 +187,15 @@ def get_data():
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
     if is_local:
+        dummy_lift_data['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['observedAverage']]
+        dummy_lift_data['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['fittedAverage']]
         return jsonify(dummy_lift_data.to_dict('records'))
     current_app.logger.info("Received a new request for lift chart data.")
     request_json = request.get_json()
     full_model_id = request_json["id"]
+    nb_bins = request_json["nbBins"]
+    train_test = request_json["trainTest"]
+    dataset = 'test' if train_test else 'train'
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
 
@@ -188,7 +203,16 @@ def get_lift_data():
     
     
     lift_chart = model_cache[full_model_id].get('lift_chart_data')
-    lift_chart.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
+    current_nb_bins = len(lift_chart)
+    if current_nb_bins != nb_bins:
+        lift_chart = model_handler.get_lift_chart(nb_bins)
+        model_cache[full_model_id]['lift_chart_data'] = lift_chart
+    
+    lift_chart.columns = ['Value', 'observedAverage', 'fittedAverage', 'Category', 'dataset']
+    lift_chart['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['observedAverage']]
+    lift_chart['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['fittedAverage']]
+    lift_chart['Value'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['Value']]
+    lift_chart = lift_chart[lift_chart['dataset'] == dataset]
     current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
     
     return jsonify(lift_chart.to_dict('records'))
@@ -273,12 +297,14 @@ def get_model_comparison_data():
         
         current_app.logger.info(f"Retrieving {model1} from the cache")
         model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
-        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction']
+        model_1_predicted_base = model_1_predicted_base[model_1_predicted_base['dataset']=='test']
+        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction', 'dataset']
         current_app.logger.info(f"Successfully retrieved {model1} from the cache")
         
         current_app.logger.info(f"Retrieving {model2} from the cache")
         model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
-        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction']
+        model_2_predicted_base = model_2_predicted_base[model_2_predicted_base['dataset']=='test']
+        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction', 'dataset']
         current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
         merge_time = time()
@@ -346,7 +372,6 @@ def export_model():
     else:
         try:
             request_json = request.get_json()
-            print(request_json)
             model = request_json.get("id")
             if not model:
                 current_app.logger.error("error: Model ID not provided")
@@ -392,6 +417,39 @@ def export_model():
     )
 
 
+@fetch_api.route('/export_variable_level_stats', methods=['POST'])
+def export_variable_level_stats():
+
+    if is_local:
+        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+        df = pd.DataFrame(data)
+
+        # Convert DataFrame to CSV format
+        csv_data = df.to_csv(index=False).encode('utf-8')
+    else:
+        try:
+            request_json = request.get_json()
+            full_model_id = request_json["id"]
+            
+            current_app.logger.info(f"Model ID received: {full_model_id}")
+
+            df = model_cache[full_model_id].get('variable_stats')
+            df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
+
+            csv_data = df.to_csv(index=False).encode('utf-8')
+
+        except KeyError as e:
+            current_app.logger.error(f"An error occurred: {str(e)}")
+
+    csv_io = BytesIO(csv_data)
+
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='variable_level_stats.csv'
+    )
 
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
@@ -412,7 +470,7 @@ def train_model():
         prediction_type = web_app_config.get("prediction_type")
         
     except:
-        input_dataset = "claim_train"
+        input_dataset = "train"
         code_env_string="py39_sol"
 
         
@@ -422,6 +480,8 @@ def train_model():
     link_function = request_json.get('model_parameters', {}).get('link_function')
     model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
     variables = request_json.get('variables')
+    policy = web_app_config.get("policy")
+    test_dataset_string = web_app_config.get("test_dataset_string")
 
     current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
     params = {
@@ -439,7 +499,7 @@ def train_model():
     try:
         if not global_DkuMLTask:
             current_app.logger.debug("First time training a model, creating global_DkuMLTask")
-            global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type)
+            global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
             global_DkuMLTask.create_inital_ml_task(target_column)# defaults to target set in web app settings, this is overriden
             
         global_DkuMLTask.update_parameters(distribution_function, link_function, variables)
@@ -483,7 +543,7 @@ def get_dataset_columns():
             web_app_config = get_webapp_config()
             dataset_name = web_app_config.get("training_dataset_string")
         except:
-            dataset_name = "claim_train"
+            dataset_name = "train"
             
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
 

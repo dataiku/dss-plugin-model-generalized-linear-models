@@ -54,6 +54,9 @@
           xAxis: [{
               type: "category",
               data: this.xaxisLabels,
+              axisLabel: {'interval': 0,
+                          'rotate': 45
+              }
           }],
           yAxis: [
                     {

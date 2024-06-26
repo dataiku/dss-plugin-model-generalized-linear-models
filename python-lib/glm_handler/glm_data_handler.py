@@ -14,6 +14,12 @@ class GlmDataHandler():
     def __init__(self):
         pass
     
+    def weighted_qcut(values, weights, q, **kwargs):
+        quantiles = np.linspace(0, 1, q + 1)
+        order = weights.iloc[values.argsort()].cumsum()
+        bins = pd.cut(order / order.iloc[-1], quantiles, **kwargs)
+        return bins.sort_index()
+    
     def bin_data(self, data, nb_bins):
         """
         Bins the data into specified number of bins based on the cumulative sum of exposure.
@@ -64,12 +70,16 @@ class GlmDataHandler():
         grouped = data.groupby(["bin"]).aggregate({
             exposure: 'sum',
             'weighted_target': 'sum',
-            'weighted_prediction': 'sum'
+            'weighted_prediction': 'sum', 
+            'prediction': ['min', 'max']
         })
-        grouped['observedData'] = grouped['weighted_target'] / grouped[exposure]
-        grouped['predictedData'] = grouped['weighted_prediction'] / grouped[exposure]
+        grouped.columns = grouped.columns.map('_'.join)
+        grouped = grouped.reset_index()
+        grouped['observedData'] = grouped['weighted_target_sum'] / grouped[exposure + '_sum']
+        grouped['predictedData'] = grouped['weighted_prediction_sum'] / grouped[exposure + '_sum']
+        grouped['binInterval'] = [('%s' % float('%.3g' % value_min)) + '-' + ('%s' % float('%.3g' % value_max)) for value_min, value_max in zip(grouped['prediction_min'], grouped['prediction_max'])]
         grouped.reset_index(inplace=True)
-        grouped.drop(['weighted_target', 'weighted_prediction'], axis=1, inplace=True)
+        grouped.drop(['index', 'weighted_target_sum', 'weighted_prediction_sum', 'prediction_min', 'prediction_max', 'bin'], axis=1, inplace=True)
         return grouped
     
     def calculate_weighted_aggregations(self, test_set, non_excluded_features):
