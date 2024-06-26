@@ -218,7 +218,6 @@ export default defineComponent({
       },
       selectedVariable(newValue: VariablePoint) {
         console.log("selectedVariable");
-        console.log(this.allData);
         console.log(newValue);
         console.log(newValue.variable);
         console.log(Array.isArray(this.allData));
@@ -252,6 +251,8 @@ export default defineComponent({
           const modelTrainPoint = {id: this.active_model.id, name: this.active_model.name, trainTest: this.trainTest};
           const dataResponse = await API.getData(modelTrainPoint);
           this.allData = dataResponse?.data;
+          console.log(Array.isArray(this.allData));
+          console.log(typeof this.allData);
         },
         async updateModelString(value: string) {
           this.loading = true;
@@ -268,7 +269,6 @@ export default defineComponent({
               const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
               const dataResponse = await API.getData(modelTrainPoint);
               this.allData = dataResponse?.data;
-              console.log(this.allData);
               console.log(Array.isArray(this.allData));
               console.log(typeof this.allData);
               const relativityResponse = await API.getRelativities(model);
