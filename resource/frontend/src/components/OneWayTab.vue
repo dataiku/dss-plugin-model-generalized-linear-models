@@ -217,7 +217,12 @@ export default defineComponent({
           }
       },
       selectedVariable(newValue: VariablePoint) {
+        console.log("selectedVariable");
+        console.log(this.allData);
+        console.log(newValue);
+        console.log(newValue.variable);
         this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
+        console.log(this.chartData);
         this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
         this.relativitiesColumns = columns;
         this.relativities = this.relativitiesTable.map( (point) => {
