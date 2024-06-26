@@ -246,7 +246,9 @@ export default defineComponent({
           this.selectedVariable = value;
         },
         async updateTrainTest(value: boolean) {
+          console.log("update train test");
           this.trainTest = value;
+          console.log(value);
           const modelTrainPoint = {id: this.active_model.id, name: this.active_model.name, trainTest: this.trainTest};
           const dataResponse = await API.getData(modelTrainPoint);
           this.allData = dataResponse?.data;
