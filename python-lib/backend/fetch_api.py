@@ -20,6 +20,7 @@ from time import time
 import traceback
 import dataiku
 from dataiku.customwebapp import get_webapp_config
+import threading
 
 import numpy as np
 
@@ -45,7 +46,13 @@ if not is_local:
         print(f'Savemodel id is {saved_model_id}')
         model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
         model_handler = ModelHandler(saved_model_id, data_handler)
-        model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
+        
+        def setup_cache():
+            global model_cache
+            model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
+        
+        loading_thread = threading.Thread(target=setup_cache)
+        loading_thread.start()
     else:
         global_DkuMLTask = None
         model_cache = None
@@ -85,6 +92,7 @@ def get_variables():
     request_json = request.get_json()
     full_model_id = request_json["id"]
     try:
+        loading_thread.join()
         variables = model_cache[full_model_id].get('features')
         print(f"Model cache for{full_model_id} is {model_cache[full_model_id]}")
         print(variables)
@@ -110,6 +118,7 @@ def get_data():
         time.sleep(1)
         return jsonify(dummy_df_data.to_dict('records'))
     try:
+        loading_thread.join()
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         full_model_id = request_json["id"]
@@ -140,6 +149,7 @@ def get_lift_data():
         dummy_lift_data['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['fittedAverage']]
         return jsonify(dummy_lift_data.to_dict('records'))
     current_app.logger.info("Received a new request for lift chart data.")
+    loading_thread.join()
     request_json = request.get_json()
     full_model_id = request_json["id"]
     nb_bins = request_json["nbBins"]
@@ -217,6 +227,7 @@ def get_variable_level_stats():
                         'relativity': [1, 1.23, 1.077, 1, 0.98]})
         return jsonify(df.to_dict('records'))
     print("variable level stats")
+    loading_thread.join()
     request_json = request.get_json()
     full_model_id = request_json["id"]
     
@@ -242,6 +253,7 @@ def get_model_comparison_data():
         return jsonify(df.to_dict('records'))
 
     try:
+        loading_thread.join()
         current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
@@ -284,6 +296,7 @@ def get_model_metrics():
         print(f"Returned local dummy metrics in {response_time} seconds.")
         return jsonify(dummy_model_metrics)
     
+    loading_thread.join()
     request_json = request.get_json()
     print(request_json)
     
