@@ -93,17 +93,20 @@ def get_latest_mltask_params():
         client = dataiku.api_client()
         mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
         
-        settings = mltask.get_settings()
-        algo_settings = settings.get_algorithm_settings('CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression')
+        model_details = mltask.get_trained_model_details(full_model_id)
+
+        algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
+        algo_settings.get('params').get('exposure_columns')[0]
         exposure_column = algo_settings.get('params').get('exposure_columns')[0]
         distribution_function = algo_settings.get('params').get('family_name')
         link_function = algo_settings.get('params').get(distribution_function+"_link")
-    
-        features = settings.get_raw().get('preprocessing').get('per_feature').keys()
+        preprocessing = model_details.get_preprocessing_settings().get('per_feature')
+        features = preprocessing.keys()
+
 
         features_dict = {}
         for feature in features:
-            feature_settings = global_DkuMLTask.mltask.get_settings().get_feature_preprocessing(feature)
+            feature_settings = preprocessing.get(feature)
             features_dict[feature] = {
                 "role": feature_settings.get('role'),
                  'type': feature_settings.get('type'),
@@ -115,8 +118,6 @@ def get_latest_mltask_params():
             if features_dict[feature]["role"]=="TARGET":
                 features_dict[feature]["role"]=="Target"
                 target_column = feature
-
-    
         setup_params = {
             "target_column": target_column,
             "exposure_column":exposure_column,
