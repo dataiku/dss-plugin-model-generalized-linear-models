@@ -125,6 +125,7 @@ def get_data():
         predicted_base['Value'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['Value']]
         predicted_base['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['baseLevelPrediction']]
         print(predicted_base)
+        print(predicted_base[predicted_base['baseLevelPrediction'].isnull()])
         print(predicted_base.columns)
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         

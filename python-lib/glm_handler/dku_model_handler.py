@@ -298,7 +298,7 @@ class ModelHandler:
         
         step_time = time()
         base_data_train = self.compute_base_predictions_new(train_set, used_features)
-        train_set = self.merge_predictions(train_set, base_data)
+        train_set = self.merge_predictions(train_set, base_data_train)
         #train_set = self.data_handler.bin_numeric_columns(train_set, nb_bins_numerical, self.features, self.non_excluded_features)
         predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.non_excluded_features, used_features)
         predicted_base_train_df = self.data_handler.construct_final_dataframe(predicted_base_train)
