@@ -137,7 +137,7 @@ dummy_setup_params_2 = {
     'type': 'CATEGORY',
     'handling': 'DUMMIFY'},
     'VehPower': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
-    'ClaimNb': {'role': 'Target', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'ClaimNb': {'role': 'TARGET', 'type': 'NUMERIC', 'handling': 'REGULAR'},
     'VehAge': {'role': 'EXPOSURE', 'type': 'NUMERIC', 'handling': 'REGULAR'},
     'VehBrand': {'role': 'INPUT', 'type': 'CATEGORY', 'handling': 'DUMMIFY'},
     '5_Interaction': {'role': 'REJECT',

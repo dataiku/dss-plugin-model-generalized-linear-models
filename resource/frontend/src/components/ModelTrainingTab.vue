@@ -66,7 +66,7 @@
         <BsSelect
             :modelValue="selectedExposureVariable"
             :all-options="exposureVariableOptions"
-            @update: ="value => selectedExposureVariable = value"
+            @update:modelValue="value => selectedExposureVariable = value"
             style="min-width: 150px">
         </BsSelect>
 
@@ -345,7 +345,7 @@ methods: {
         }
     },
     abbreviateColumnName(name:string) {
-        const maxLength = 12; // Maximum length of column name
+        const maxLength = 12 ; // Maximum length of column name
         if (name.length > maxLength) {
         return `${name.substring(0, maxLength - 1)}...`; // 
         }
@@ -420,10 +420,10 @@ methods: {
     async getDatasetColumns(model_value = null) {
     if (model_value) {
       console.log("model_id parameter provided:", model_value);
-        try {
-            const response = await API.getDatasetColumns()
+      try {
+            const response = await API.getDatasetColumns();
             this.selectedModelString = model_value;
-            const model = this.models.filter((v: ModelPoint) => v.name==model_value)[0];
+            const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
             console.log("Making request with model Id :", model);
             const paramsResponse = await API.getLatestMLTaskParams(model);
             const params = paramsResponse.data.params;
@@ -431,26 +431,34 @@ methods: {
 
             console.log("Datasets:", response.data);
             this.datasetColumns = response.data.map((columnName: string) => {
-            const param = params[columnName] || {};
-            return {
-                name: columnName,
-                isIncluded: param.role !== 'REJECT' ,
-                role: param.role || 'REJECT',
-                type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
-                preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
-            };
+                const param = params[columnName] || {};
+                const isTargetColumn = columnName === paramsResponse.data.target_column;
+                const isExposureColumn = columnName === paramsResponse.data.exposure_column;
+
+                // Set the selected target variable if this column is the target column
+                if (isTargetColumn) {
+                    this.selectedTargetVariable = columnName;
+                }
+
+                // Set the selected exposure variable if this column is the exposure column
+                if (isExposureColumn) {
+                    this.selectedExposureVariable = columnName;
+                }
+
+                return {
+                    name: columnName,
+                    isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
+                    role: isTargetColumn ? 'target' : (isExposureColumn ? 'exposure' : (param.role || 'REJECT')),
+                    type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
+                    preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
+                };
             });
-            this.selectedTargetVariable = paramsResponse.data.target_column;
-            this.selectedExposureVariable = paramsResponse.data.exposure_column;
-            this.selectedDistributionFunctionString=  paramsResponse.data.distribution_function;
-            this.selectedLinkFunctionString=paramsResponse.data.link_function;
-            console.log("First assignment:", this.datasetColumns);
+
         } catch (error) {
-            console.error('Error fetching datasets:', error);
-            this.datasetColumns = [];
+            console.error("Error fetching data:", error);
         }
 
-      }
+      } 
     else {
         console.log("No model id provided:");
         try {
