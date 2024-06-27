@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
-
-is_local = False
+import random
+is_local = True 
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -13,7 +13,8 @@ if not is_local:
     
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
-dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, dummy_model_metrics)
+dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, 
+dummy_model_metrics, dummy_setup_params, dummy_setup_params_2)
 from backend.logging_settings import logger
 from io import BytesIO
 from time import time
@@ -75,6 +76,57 @@ def get_models():
         current_app.logger.exception("An error occurred while retrieving models")
         return jsonify({'error': str(e)}), 500
     return jsonify(models)
+
+@fetch_api.route("/get_latest_mltask_params", methods=["POST"])
+def get_latest_mltask_params():
+    
+    request_json = request.get_json()
+    current_app.logger.info(f"Recieved request with payload in ml task params: {request_json}")
+    full_model_id = request_json["id"]
+    current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
+    
+    if is_local:
+        setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
+        current_app.logger.info(f"Returning Params {setup_params}")
+        return jsonify(setup_params)
+    if setup_type != "new":
+        client = dataiku.api_client()
+        mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
+        
+        model_details = mltask.get_trained_model_details(full_model_id)
+
+        algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
+        algo_settings.get('params').get('exposure_columns')[0]
+        exposure_column = algo_settings.get('params').get('exposure_columns')[0]
+        distribution_function = algo_settings.get('params').get('family_name')
+        link_function = algo_settings.get('params').get(distribution_function+"_link")
+        preprocessing = model_details.get_preprocessing_settings().get('per_feature')
+        features = preprocessing.keys()
+
+
+        features_dict = {}
+        for feature in features:
+            feature_settings = preprocessing.get(feature)
+            features_dict[feature] = {
+                "role": feature_settings.get('role'),
+                 'type': feature_settings.get('type'),
+                "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling')
+
+            }
+            if feature == exposure_column:
+                features_dict[feature]["role"]=="Exposure"
+            if features_dict[feature]["role"]=="TARGET":
+                features_dict[feature]["role"]=="Target"
+                target_column = feature
+        setup_params = {
+            "target_column": target_column,
+            "exposure_column":exposure_column,
+            "distribution_function": distribution_function.title(),
+            "link_function":link_function.title(),
+            "params": features_dict
+        }
+    current_app.logger.info(f"Returning setup params {setup_params}")
+    return jsonify(setup_params)
 
 
 
@@ -403,15 +455,14 @@ def export_variable_level_stats():
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
     # Log the receipt of a new training request
+    request_json = request.get_json()
+    current_app.logger.info(f"Received a model training request: {request_json}")
     if is_local:
         import time
         time.sleep(5)
         return jsonify({'message': 'Model training initiated successfully.'}), 200
     global global_DkuMLTask, model_cache, model_deployer, model_handler
-    
-    request_json = request.get_json()
-    current_app.logger.info(f"Received a model training request: {request_json}")
-    
+
     try: 
         web_app_config = get_webapp_config()
         input_dataset = web_app_config.get("training_dataset_string")
@@ -493,7 +544,7 @@ def get_dataset_columns():
             web_app_config = get_webapp_config()
             dataset_name = web_app_config.get("training_dataset_string")
         except:
-            dataset_name = "train"
+            dataset_name = "claim_train"
             
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
 
