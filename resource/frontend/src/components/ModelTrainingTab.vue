@@ -263,17 +263,17 @@ computed:{
 },
 watch: {
     selectedTargetVariable(newValue, oldValue) {
-        console.log(` Attempting to change selectedTargetVariable changed from ${oldValue} to ${newValue}`);
+        console.log(` Attempting to change selectedTargetVariable from ${oldValue} to ${newValue}`);
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
                 column.role = 'Target';
-            } else {
+            } else if (column.role !== 'Exposure') {
                 column.role = 'Variable'; 
-            }
+            }   
         });
     },
     selectedExposureVariable(newValue, oldValue) {
-        console.log(` Attempting to change selectedExposureVariable changed from ${oldValue} to ${newValue}`);
+        console.log(` Attempting to change selectedExposureVariable from ${oldValue} to ${newValue}`);
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
                 column.role = 'Exposure';
@@ -417,48 +417,49 @@ methods: {
         this.$emit("update-models", this.updateModels);
         this.loading = false;
     },  
-    async getDatasetColumns(model_value = null) {
-    if (model_value) {
-      console.log("model_id parameter provided:", model_value);
-      try {
-            const response = await API.getDatasetColumns();
-            this.selectedModelString = model_value;
-            const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
-            console.log("Making request with model Id :", model);
-            const paramsResponse = await API.getLatestMLTaskParams(model);
-            const params = paramsResponse.data.params;
-            console.log("Params are:", params);
+        async getDatasetColumns(model_value = null) {
+        if (model_value) {
+        console.log("model_id parameter provided:", model_value);
+        this.datasetColumns = []
+        try {
+                const response = await API.getDatasetColumns();
+                this.selectedModelString = model_value;
+                const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
+                console.log("Making request with model Id :", model);
+                const paramsResponse = await API.getLatestMLTaskParams(model);
+                const params = paramsResponse.data.params;
 
-            console.log("Datasets:", response.data);
-            this.datasetColumns = response.data.map((columnName: string) => {
-                const param = params[columnName] || {};
-                const isTargetColumn = columnName === paramsResponse.data.target_column;
-                const isExposureColumn = columnName === paramsResponse.data.exposure_column;
+                console.log("paramsResponse:", paramsResponse.data);
+                this.datasetColumns = response.data.map((columnName: string) => {
+                    const param = params[columnName] || {};
+                    const isTargetColumn = columnName === paramsResponse.data.target_column;
+                    const isExposureColumn = columnName === paramsResponse.data.exposure_column;
+                    
+                    // Set the selected target variable if this column is the target column
+                    if (isTargetColumn) {
+                        this.selectedTargetVariable = columnName;
+                    }
 
-                // Set the selected target variable if this column is the target column
-                if (isTargetColumn) {
-                    this.selectedTargetVariable = columnName;
-                }
 
-                // Set the selected exposure variable if this column is the exposure column
-                if (isExposureColumn) {
-                    this.selectedExposureVariable = columnName;
-                }
+                    // Set the selected exposure variable if this column is the exposure column
+                    if (isExposureColumn) {
+                        this.selectedExposureVariable = columnName;
+                    }
 
-                return {
-                    name: columnName,
-                    isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
-                    role: isTargetColumn ? 'target' : (isExposureColumn ? 'exposure' : (param.role || 'REJECT')),
-                    type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
-                    preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
-                };
-            });
+                    return {
+                        name: columnName,
+                        isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
+                        role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
+                        type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
+                        preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
+                    };
+                });
 
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
 
-      } 
+        } 
     else {
         console.log("No model id provided:");
         try {
