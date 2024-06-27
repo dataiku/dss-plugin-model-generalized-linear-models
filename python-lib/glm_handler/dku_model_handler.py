@@ -130,9 +130,13 @@ class ModelHandler:
     def compute_base_for_numeric_feature(self, feature, train_set):
         """ Computes base values for numeric features without rescaling. """
         if self.exposure is not None:
-            self.base_values[feature] = float('%s' % float('%.3g' % ((train_set[feature] * train_set[self.exposure]).sum() / train_set[self.exposure].sum())))
+            feature_exposure = train_set.groupby(feature)[self.exposure].sum().reset_index()
+            base_value = feature_exposure[feature].iloc[feature_exposure[self.exposure].idxmax()]
+            self.base_values[feature] = base_value
         else:
-            self.base_values[feature] = float('%s' % float('%.3g' % train_set[feature].mean()))
+            feature_exposure = train_set[feature].value_counts().reset_index()
+            base_value = feature_exposure['index'].iloc[feature_exposure[feature].idxmax()]
+            self.base_values[feature] = base_value
         self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
 
     def get_relativities_df(self):
