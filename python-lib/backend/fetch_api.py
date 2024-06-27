@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
-
-is_local = False 
+import random
+is_local = True 
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -14,7 +14,7 @@ if not is_local:
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
 dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, 
-dummy_model_metrics, dummy_setup_params)
+dummy_model_metrics, dummy_setup_params, dummy_setup_params_2)
 from backend.logging_settings import logger
 from io import BytesIO
 from time import time
@@ -86,9 +86,9 @@ def get_latest_mltask_params():
     current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
     
     if is_local:
-        
-        current_app.logger.info(f"Returning Params {dummy_setup_params}")
-        return jsonify(dummy_setup_params)
+        setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
+        current_app.logger.info(f"Returning Params {setup_params}")
+        return jsonify(setup_params)
     if setup_type != "new":
         client = dataiku.api_client()
         mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
@@ -544,7 +544,7 @@ def get_dataset_columns():
             web_app_config = get_webapp_config()
             dataset_name = web_app_config.get("training_dataset_string")
         except:
-            dataset_name = "train"
+            dataset_name = "claim_train"
             
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
 

@@ -66,7 +66,7 @@
         <BsSelect
             :modelValue="selectedExposureVariable"
             :all-options="exposureVariableOptions"
-            @update:modelValue="value => selectedExposureVariable = value"
+            @update: ="value => selectedExposureVariable = value"
             style="min-width: 150px">
         </BsSelect>
 
@@ -234,7 +234,7 @@ props: [],
                 'Dummy Encode',
                 'Standard Rescaling',
             ],
-            datasetColumns: [] as Column[], // Populate this based on your actual data
+            datasetColumns: [] as Column[], 
             loading: false,
         };
     },
@@ -255,7 +255,7 @@ computed:{
             return column.name;
             });
         },
-        filteredColumns() {
+    filteredColumns() {
             return this.datasetColumns.filter(column =>
                 column.role !== 'Target' &&
                 column.role !== 'Exposure')
@@ -345,7 +345,7 @@ methods: {
         }
     },
     abbreviateColumnName(name:string) {
-        const maxLength = 10; // Maximum length of column name
+        const maxLength = 12; // Maximum length of column name
         if (name.length > maxLength) {
         return `${name.substring(0, maxLength - 1)}...`; // 
         }
