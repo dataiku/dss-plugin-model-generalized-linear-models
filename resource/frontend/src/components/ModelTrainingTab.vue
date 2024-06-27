@@ -429,6 +429,9 @@ methods: {
                 const paramsResponse = await API.getLatestMLTaskParams(model);
                 const params = paramsResponse.data.params;
 
+                this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
+                this.selectedLinkFunctionString = paramsResponse.data.link_function;
+
                 console.log("paramsResponse:", paramsResponse.data);
                 this.datasetColumns = response.data.map((columnName: string) => {
                     const param = params[columnName] || {};
