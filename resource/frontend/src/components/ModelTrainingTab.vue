@@ -11,6 +11,7 @@
         </BsButton>
     </BsHeader>
     <BsDrawer>
+        <q-scroll-area style="height: calc(100vh - 100px); max-width: 100%">
         <BsCollapsiblePanel
         title="Model Parameters">
         <!-- <h5 class="h5-spacing">Model Parameters</h5> -->
@@ -111,7 +112,7 @@
         
         </div>
         </BsCollapsiblePanel>
-
+    </q-scroll-area>
         <BsButton
             flat
             round
@@ -121,6 +122,7 @@
             icon="mdi-arrow-left">
             <BsTooltip>Close sidebar</BsTooltip>
         </BsButton>
+    
     </BsDrawer>
     <BsContent>
         <q-card-section>
