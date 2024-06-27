@@ -113,14 +113,16 @@ class DataikuMLTask:
     
     def update_mltask_modelling_params(self):
         """
-        Updates the modeling parameters based on the distribution function, link function,
+        Updates the modeling parameters based on the distribution function, link function, elastic net penalty, l1 ratio
         and any special variables like exposure or offset.
         """
         settings = self.mltask.get_settings()
         algo_settings = settings.get_algorithm_settings('CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression')
         algo_settings['params'].update({
             f"{self.distribution_function}_link": self.link_function,
-            "family_name": self.distribution_function
+            "family_name": self.distribution_function,
+            "penalty": [self.elastic_net_penalty],
+            "l1_ratio": [self.l1_ratio]
         })
         
         # Handle exposure and offset variables
@@ -130,8 +132,6 @@ class DataikuMLTask:
                 "offset_columns": [self.offset_variable],
                 "exposure_columns": [self.exposure_variable],
                 "training_dataset": self.input_dataset,
-                'penalty': [0],
-                'l1_ratio': [0]
             })
         elif self.exposure_variable:
             algo_settings['params'].update({
@@ -139,27 +139,21 @@ class DataikuMLTask:
                 "offset_columns": [],
                 "exposure_columns": [self.exposure_variable],
                 "training_dataset": self.input_dataset,
-                'penalty': [0],
-                'l1_ratio': [0]
             })
         elif self.offset_variable:
             algo_settings['params'].update({
                 "offset_mode": "OFFSETS",
                 "offset_columns": [self.offset_variable],
                 "training_dataset": self.input_dataset,
-                'penalty': [0],
-                'l1_ratio': [0]
             })
         else:
             algo_settings['params'].update({
                 "offset_mode": "BASIC",
-                "offset_columns": [0],
-                "training_dataset": [0],
             })
         
         settings.save()
     
-    def update_parameters(self, distribution_function, link_function, variables):
+    def update_parameters(self, distribution_function, link_function, elastic_net_penalty, l1_ratio, variables):
         # pick up any new interaction vars that have been created         
         self.refresh_mltask()
         
@@ -168,6 +162,10 @@ class DataikuMLTask:
 
         self.link_function = link_function.lower()
         logger.info(f"link_function set to {self.link_function}")
+
+        self.elastic_net_penalty = float(elastic_net_penalty)
+
+        self.l1_ratio = float(l1_ratio)
 
         self.variables = [{'name': key, **value} for key, value in variables.items()]
         

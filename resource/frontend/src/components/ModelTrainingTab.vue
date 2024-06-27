@@ -64,6 +64,34 @@
         </div>
         </BsCollapsiblePanel>
         <BsCollapsiblePanel
+        title="Regularization">
+        <div class="variable-select-container">
+        <BsLabel
+                label="Set the Elastic Net Penalty"
+                info-text="The overall level of regularization"
+        ></BsLabel>
+        <BsSlider
+            v-model="selectedElasticNetPenalty"
+            :min="0"
+            :step="0.01"
+            :max="1000"
+            style="min-width: 150px">
+        </BsSlider>
+        <BsLabel
+                label="Set the L1 Ratio"
+                info-text="l1_ratio = 0 means Ridge (only L2), l1_ratio = 1 means LASSO (only L1)"
+        ></BsLabel>
+        <BsSlider
+            v-model="selectedL1Ratio"
+            :min="0"
+            :max="1"
+            :step="0.01"
+            style="min-width: 150px">
+        </BsSlider>
+
+        </div>
+        </BsCollapsiblePanel>
+        <BsCollapsiblePanel
         title="Model Training"
         >
         <div class="model-name-input-container">
@@ -153,7 +181,7 @@ included: boolean;
 }
 import { defineComponent } from "vue";
 import EmptyState from './EmptyState.vue';
-import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip } from "quasar-ui-bs";
+import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import trainingIcon from "../assets/images/training.svg";
 import { API } from '../Api';
@@ -172,7 +200,8 @@ components: {
     BsDrawer,
     BsContent,
     BsTooltip,
-    QRadio
+    QRadio,
+    BsSlider
 
 },
 props: [],
@@ -188,6 +217,8 @@ data() {
         selectedLinkFunctionString: 'Log' as string,
         datasetsString: [] as string[],
         chartData: [],  
+        selectedElasticNetPenalty: 0 as number,
+        selectedL1Ratio: 0 as number,
         layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
         trainingIcon,
         docLogo,
@@ -370,6 +401,8 @@ methods: {
             model_name: this.modelName,
             distribution_function: this.selectedDistributionFunctionString,
             link_function: this.selectedLinkFunctionString,
+            elastic_net_penalty: this.selectedElasticNetPenalty,
+            l1_ratio: this.selectedL1Ratio
         };
 
         // Reduce function to construct Variables object    
