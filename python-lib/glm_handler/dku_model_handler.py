@@ -6,6 +6,7 @@ from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 from logging_assist.logging import logger
 from glm_handler.dku_relativities_handler import RelativitiesHandler
+from time import time
 
 class ModelHandler:
     """
@@ -54,6 +55,8 @@ class ModelHandler:
         self.base_values = dict()
         self.modalities = dict()
         self.compute_features()
+        self.train_set = self.prepare_train_set()
+        self.test_set = self.prepare_test_set()
         self.compute_base_values()
         self.relativities_handler = RelativitiesHandler(self.model_info_handler)
         
@@ -115,10 +118,9 @@ class ModelHandler:
 
     def compute_numerical_features(self):
         """ Computes base values for numerical features not handled in preprocessing. """
-        train_set = self.model_info_handler.get_train_df()[0].copy()
         for feature in self.used_features:
             if feature not in self.base_values:
-                self.compute_base_for_feature(feature, train_set)
+                self.compute_base_for_feature(feature, self.train_set)
 
     def compute_base_for_feature(self, feature, train_set):
         """ Computes base value for a single feature based on its type and rescaling. """
@@ -146,7 +148,7 @@ class ModelHandler:
         return self.construct_relativities_df()
 
     def initialize_baseline(self):
-        train_row = self.model_info_handler.get_train_df()[0].head(1).copy()
+        train_row = self.train_set.head(1).copy()
         for feature in self.base_values.keys():
             train_row[feature] = self.base_values[feature]
         if self.exposure is not None:
@@ -158,7 +160,6 @@ class ModelHandler:
 
     def calculate_relative_predictions(self, sample_train_row, baseline_prediction):
         self.relativities = {'base': {'base': baseline_prediction}}
-        train_set = self.extract_train_set_predictions()
         for feature in self.base_values.keys():
             self.relativities[feature] = {self.base_values[feature]: 1.0}
             if self.features[feature]['type'] == 'CATEGORY':    
@@ -169,7 +170,7 @@ class ModelHandler:
                     self.relativities[feature][modality] = prediction / baseline_prediction
             else:
                 train_row_copy = sample_train_row.copy()
-                unique_values = sorted(list(set(train_set[feature])))
+                unique_values = sorted(list(set(self.train_set[feature])))
                 for value in unique_values:
                     train_row_copy[feature] = value
                     prediction = self.predictor.predict(train_row_copy).iloc[0][0]
@@ -180,36 +181,8 @@ class ModelHandler:
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
                 rel_df = rel_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
-        #rel_df = rel_df.append({'feature': 'base', 'value': 'base', 'relativity': self.relativities['base']['base']}, ignore_index=True)
         rel_df.coluns = ['variable', 'category', 'relativity']
         return rel_df
-
-    def get_predicted_and_base_feature(self, feature, nb_bins_numerical=100000, class_map=None):
-        test_set = self.extract_test_set_predictions()
-        train_set = self.extract_train_set_predictions()
-        self.apply_weights_to_data(test_set)
-        self.apply_weights_to_data(train_set)
-        base_predictions = self.compute_base_predictions(test_set, feature, class_map)
-        predicted_base_df = self.prepare_final_data(test_set, feature, nb_bins_numerical, base_predictions)
-        base_predictions_train = self.compute_base_predictions(train_set, feature, class_map)
-        predicted_base_train_df = self.prepare_final_data(train_set, feature, nb_bins_numerical, base_predictions_train)
-        predicted_base_df['dataset'] = 'test'
-        predicted_base_train_df['dataset'] = 'train'
-        print(predicted_base_df)
-        print(predicted_base_df.append(predicted_base_train_df))
-        return predicted_base_df.append(predicted_base_train_df)
-
-    def extract_test_set_predictions(self):
-        test_set = self.model_info_handler.get_test_df()[0].copy()
-        predicted = self.predictor.predict(test_set)
-        test_set['predicted'] = predicted
-        return test_set
-    
-    def extract_train_set_predictions(self):
-        train_set = self.model_info_handler.get_train_df()[0].copy()
-        predicted = self.predictor.predict(train_set)
-        train_set['predicted'] = predicted
-        return train_set
 
     def apply_weights_to_data(self, test_set):
         used_features = list(self.base_values.keys())
@@ -219,21 +192,6 @@ class ModelHandler:
             test_set['weight'] = test_set[self.exposure]
         test_set['weighted_target'] = test_set[self.target] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
-
-    def compute_base_predictions(self, test_set, feature, class_map):
-        base_data = {}
-        copy_test_df = test_set.copy()
-        used_features = list(self.base_values.keys())
-        for other_feature in [col for col in used_features if col != feature]:
-            copy_test_df[other_feature] = self.base_values[other_feature]
-        predictions = self.predictor.predict(copy_test_df)
-        if class_map is not None:
-            base_data[feature] = pd.Series([class_map[pred] for pred in predictions['prediction']])
-        else:
-            base_data[feature] = predictions
-        base_predictions = pd.concat([base_data[feature]], axis=1)
-        base_predictions.columns = ['base_' + feature]
-        return base_predictions
 
     def prepare_final_data(self, test_set, feature, nb_bins_numerical, base_predictions):
         test_set = pd.concat([test_set, base_predictions], axis=1)
@@ -281,74 +239,77 @@ class ModelHandler:
         train_set['weighted_predicted'] = train_set['predicted'] * train_set['weight']
         return train_set
 
-    def compute_base_predictions(self, test_set, used_features, class_map=None):
+    def compute_base_predictions(self, test_set, used_features):
         base_data = dict()
         for feature in self.non_excluded_features:
             copy_test_df = test_set.copy()
             for other_feature in [col for col in used_features if col != feature]:
                 copy_test_df[other_feature] = self.base_values[other_feature]
             predictions = self.predictor.predict(copy_test_df)
-            if class_map is not None:
-                base_data[feature] = pd.Series([class_map[pred] for pred in predictions['prediction']])
-            else:
-                base_data[feature] = predictions
+            base_data[feature] = predictions
+        return base_data
+    
+    def compute_base_predictions_new(self, test_set, used_features):
+        base_data = dict()
+        for feature in used_features:
+            copy_test_df = test_set.copy()
+            copy_test_df = copy_test_df.groupby(feature, as_index=False).first()
+            copy_test_df[self.exposure] = 1
+            for other_feature in [col for col in used_features if col != feature]:
+                copy_test_df[other_feature] = self.base_values[other_feature]
+            predictions = self.predictor.predict(copy_test_df)
+            base_data[feature] = pd.DataFrame(data={('base_' + feature): predictions['prediction'], feature: copy_test_df[feature]})
         return base_data
 
     def merge_predictions(self, test_set, base_data):
-        base_predictions = pd.concat([base_data[feature] for feature in base_data], axis=1)
-        base_predictions.columns = ['base_' + feature for feature in self.non_excluded_features]
-        return pd.concat([test_set, base_predictions], axis=1)
+        print(base_data)
+        for feature in base_data.keys():
+            test_set = pd.merge(test_set, base_data[feature], how='left', on=feature)
+        return test_set
 
 
-    def get_predicted_and_base(self, nb_bins_numerical=100000, class_map=None):
+    def get_predicted_and_base(self, nb_bins_numerical=100000):
+        step_time = time()
         self.compute_base_values()
-        test_set = self.prepare_test_set()
-        train_set = self.prepare_train_set()
+        step_elapsed = time() - step_time
+        logger.info(f"Step - Compute base values: {step_elapsed:.2f} seconds")
+        
+        step_time = time()
+        test_set = self.test_set
+        train_set = self.train_set
         used_features = list(self.base_values.keys())
+        step_elapsed = time() - step_time
+        logger.info(f"Step - Get datasets: {step_elapsed:.2f} seconds")
         
-        base_data = self.compute_base_predictions(test_set, used_features, class_map)
+        step_time = time()
+        base_data = self.compute_base_predictions_new(test_set, used_features)
+        step_elapsed = time() - step_time
+        logger.info(f"Step - compute base predictions: {step_elapsed:.2f} seconds")
+        
+        step_time = time()
         test_set = self.merge_predictions(test_set, base_data)
-        test_set = self.data_handler.bin_numeric_columns(test_set, nb_bins_numerical,self.features, self.non_excluded_features)
-        predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.non_excluded_features)
+        logger.info(f"merged predictions")
+        predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.non_excluded_features, used_features)
+        logger.info(f"calculate weighted aggregations")
         predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
+        logger.info(f"construct final dataframe")
         predicted_base_df['dataset'] = 'test'
+        step_elapsed = time() - step_time
+        logger.info(f"Step - finalize test predicted base: {step_elapsed:.2f} seconds")
+        print(predicted_base_df)
         
-        base_data_train = self.compute_base_predictions(train_set, used_features, class_map)
-        train_set = self.merge_predictions(train_set, base_data)
-        train_set = self.data_handler.bin_numeric_columns(train_set, nb_bins_numerical, self.features, self.non_excluded_features)
-        predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.non_excluded_features)
+        step_time = time()
+        base_data_train = self.compute_base_predictions_new(train_set, used_features)
+        train_set = self.merge_predictions(train_set, base_data_train)
+        predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.non_excluded_features, used_features)
         predicted_base_train_df = self.data_handler.construct_final_dataframe(predicted_base_train)
         predicted_base_train_df['dataset'] = 'train'
+        step_elapsed = time() - step_time
+        logger.info(f"Step - same same for train: {step_elapsed:.2f} seconds")
+        print(predicted_base_train_df)
         
         self.predicted_base_df = predicted_base_df.append(predicted_base_train_df)
-        return self.predicted_base_df
-
-
-    def get_model_predictions_on_train(self):
-        """
-        Generates model predictions on the training dataset.
-
-        Returns:
-            pd.DataFrame: A DataFrame of the training dataset with an additional column for predictions.
-        """
-        train_set = self.model_info_handler.get_train_df()[0].copy()
-        predicted = self.predictor.predict(train_set)
-        train_set['prediction'] = predicted
-        
-        return train_set
-    
-    def get_model_predictions_on_test(self):
-        """
-        Generates model predictions on the training dataset.
-
-        Returns:
-            pd.DataFrame: A DataFrame of the training dataset with an additional column for predictions.
-        """
-        test_set = self.model_info_handler.get_test_df()[0].copy()
-        predicted = self.predictor.predict(test_set)
-        test_set['prediction'] = predicted
-        
-        return test_set
+        return self.predicted_base_df.copy()
     
     def get_lift_chart(self, nb_bins):
         """
@@ -361,24 +322,22 @@ class ModelHandler:
         Returns:
             pd.DataFrame: The aggregated lift chart data with observed and predicted metrics.
         """
-        train_set = self.get_model_predictions_on_train()
-        train_set_df = pd.DataFrame(train_set)
+        train_set_df = self.train_set
         
         tempdata = self.data_handler.sort_and_cumsum_exposure(train_set_df, self.exposure)
         binned_data = self.data_handler.bin_data(tempdata, nb_bins)
         
-        new_data = train_set.join(binned_data[['bin']], how='inner')
+        new_data = train_set_df.join(binned_data[['bin']], how='inner')
         lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
         lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         lift_chart_data['dataset'] = 'train'
         
-        test_set = self.get_model_predictions_on_test()
-        test_set_df = pd.DataFrame(test_set)
+        test_set_df = self.test_set
         
         tempdata_test = self.data_handler.sort_and_cumsum_exposure(test_set_df, self.exposure)
         binned_data_test = self.data_handler.bin_data(tempdata_test, nb_bins)
         
-        new_data_test = test_set.join(binned_data_test[['bin']], how='inner')
+        new_data_test = test_set_df.join(binned_data_test[['bin']], how='inner')
         lift_chart_data_test = self.data_handler.aggregate_metrics_by_bin(new_data_test, self.exposure, self.target)
         lift_chart_data_test.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         lift_chart_data_test['dataset'] = 'test'
@@ -386,7 +345,7 @@ class ModelHandler:
         return lift_chart_data.append(lift_chart_data_test)
 
     def get_variable_level_stats(self):
-        predicted_base = self.get_predicted_and_base()
+        predicted_base = self.predicted_base_df
         predicted = predicted_base[predicted_base['dataset'] == 'train'][['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
         coef_table = self.predictor._clf.coef_table.reset_index()
@@ -437,32 +396,3 @@ class ModelHandler:
             variable_stats = variable_stats.append(variable_stats_num)
         
         return variable_stats
-        
-    def get_link_function(self):
-        """
-        Retrieves the link function of the original model as a statsmodel object
-        """
-        return self.predictor._model.clf.get_link_function()
-    
-    def get_dataframe(self, dataset_type='test'):
-        """
-        Retrieves the specified dataset as a DataFrame.
-
-        Args:
-            dataset_type (str, optional): The type of dataset to retrieve ('test', 'train', or 'full'). Defaults to 'test'.
-
-        Returns:
-            pd.DataFrame: The requested dataset.
-
-        Raises:
-            ValueError: If an invalid dataset type is provided.
-        """
-        if dataset_type == 'test':
-            return self.model_info_handler.get_test_df()[0]
-        elif dataset_type == 'train':
-            return self.model_info_handler.get_train_df()[0]
-        elif dataset_type == 'full':
-            return self.model_info_handler.get_full_df()[0]
-        else:
-            raise ValueError("Invalid dataset type")
-

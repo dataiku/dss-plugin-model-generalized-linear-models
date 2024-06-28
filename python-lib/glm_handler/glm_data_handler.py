@@ -50,7 +50,7 @@ class GlmDataHandler():
         """
         print(f"Pandas version is {pd.__version__}")
         print(f"data is type {type(data)}")
-        tempdata = data.sort_values(by='prediction', ascending=True)
+        tempdata = data.sort_values(by='predicted', ascending=True)
         tempdata['exposure_cumsum'] = tempdata[exposure].cumsum() / tempdata[exposure].sum()
         return tempdata
     
@@ -65,34 +65,39 @@ class GlmDataHandler():
         Returns:
             pd.DataFrame: A summarized DataFrame with metrics calculated for each bin.
         """
-        data['weighted_prediction'] = data.prediction * data[exposure]
-        data['weighted_target'] = data[target] * data[exposure]
         grouped = data.groupby(["bin"]).aggregate({
             exposure: 'sum',
             'weighted_target': 'sum',
-            'weighted_prediction': 'sum', 
-            'prediction': ['min', 'max']
+            'weighted_predicted': 'sum', 
+            'predicted': ['min', 'max']
         })
         grouped.columns = grouped.columns.map('_'.join)
         grouped = grouped.reset_index()
         grouped['observedData'] = grouped['weighted_target_sum'] / grouped[exposure + '_sum']
-        grouped['predictedData'] = grouped['weighted_prediction_sum'] / grouped[exposure + '_sum']
-        grouped['binInterval'] = [('%s' % float('%.3g' % value_min)) + '-' + ('%s' % float('%.3g' % value_max)) for value_min, value_max in zip(grouped['prediction_min'], grouped['prediction_max'])]
+        grouped['predictedData'] = grouped['weighted_predicted_sum'] / grouped[exposure + '_sum']
+        grouped['binInterval'] = [('%s' % float('%.3g' % value_min)) + '-' + ('%s' % float('%.3g' % value_max)) for value_min, value_max in zip(grouped['predicted_min'], grouped['predicted_max'])]
         grouped.reset_index(inplace=True)
-        grouped.drop(['index', 'weighted_target_sum', 'weighted_prediction_sum', 'prediction_min', 'prediction_max', 'bin'], axis=1, inplace=True)
+        grouped.drop(['index', 'weighted_target_sum', 'weighted_predicted_sum', 'predicted_min', 'predicted_max', 'bin'], axis=1, inplace=True)
         return grouped
     
-    def calculate_weighted_aggregations(self, test_set, non_excluded_features):
+    def calculate_weighted_aggregations(self, test_set, non_excluded_features, used_feature):
         predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
             {'weighted_target': 'sum',
              'weighted_predicted': 'sum',
              'weight': 'sum',
-             'weighted_base': 'sum'}).reset_index()
+             'weighted_base': 'mean'}).reset_index()
+             if feature in used_feature else test_set.groupby([feature]).agg(
+            {'weighted_target': 'sum',
+             'weighted_predicted': 'sum',
+             'weight': 'sum'}).reset_index()
             for feature in non_excluded_features}
         for feature in predicted_base:
             predicted_base[feature]['weighted_target'] /= predicted_base[feature]['weight']
             predicted_base[feature]['weighted_predicted'] /= predicted_base[feature]['weight']
-            predicted_base[feature]['weighted_base'] /= predicted_base[feature]['weight']
+            if feature not in used_feature:
+                predicted_base[feature]['weighted_base'] = predicted_base[feature]['weighted_predicted']
+                #predicted_base[feature]['weighted_base'] /= predicted_base[feature]['weight']
+                #else:
         return predicted_base
     
     def construct_final_dataframe(self, predicted_base):
