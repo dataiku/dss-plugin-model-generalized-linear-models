@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 import random
-is_local = True 
+is_local = False 
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -59,6 +59,12 @@ if not is_local:
         model_cache = None
         model_deployer = None
         model_handler = None
+        
+        def setup_cache():
+            return
+        
+        loading_thread = threading.Thread(target=setup_cache)
+        loading_thread.start()
     
 
 
