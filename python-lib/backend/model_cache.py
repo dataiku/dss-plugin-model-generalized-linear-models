@@ -20,6 +20,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
         
         model_details = global_dku_mltask.get_trained_model_details(model_id)
         is_conform = check_model_conformity(model_details)
+        
         if is_conform:
 
             # Deploy the model
@@ -31,6 +32,9 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             # Update active version
             step_time = time()
             model_handler.update_active_version()
+            features = model_handler.get_features()
+            logger.info(f"Model Features are: {features}")
+            
             step_elapsed = time() - step_time
             logger.info(f"Step - Update active version: {step_elapsed:.2f} seconds")
 

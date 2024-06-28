@@ -269,6 +269,7 @@ class ModelHandler:
 
 
     def get_predicted_and_base(self, nb_bins_numerical=100000):
+        
         step_time = time()
         self.compute_base_values()
         step_elapsed = time() - step_time
@@ -278,6 +279,7 @@ class ModelHandler:
         test_set = self.test_set
         train_set = self.train_set
         used_features = list(self.base_values.keys())
+        logger.info(f"Used features in predicted_vase are {used_features}")
         step_elapsed = time() - step_time
         logger.info(f"Step - Get datasets: {step_elapsed:.2f} seconds")
         
