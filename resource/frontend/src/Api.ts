@@ -93,7 +93,23 @@ interface ErrorPoint {
     error: string;
 }
 
+interface MLTaskParams {
+    target_column: string;
+    exposure_column: string;
+    distribution_function: string;
+    link_function: string;
+    params: {
+        [key: string]: {
+            role: string;
+            type: string;
+            handling: string | null;
+        }
+    };
+}
+
+
 export let API = {
+    getLatestMLTaskParams: (data:any) => axios.post<MLTaskParams>("/api/get_latest_mltask_params", data),
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
     getLiftData: (data: ModelNbBins) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
     updateData: (data: FeatureNbBin) => axios.post<DataPoint[]>("/api/update_bins", data),
