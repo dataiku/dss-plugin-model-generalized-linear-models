@@ -80,6 +80,7 @@ def get_models():
     if global_DkuMLTask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
+        #refresh the ml task        
         current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
         dku_ml_task = global_DkuMLTask.mltask
         models = format_models(dku_ml_task)
@@ -138,8 +139,8 @@ def get_latest_mltask_params():
             "link_function":link_function.title(),
             "params": features_dict
         }
-    current_app.logger.info(f"Returning setup params {setup_params}")
-    return jsonify(setup_params)
+        current_app.logger.info(f"Returning setup params {setup_params}")
+        return jsonify(setup_params)
     except:
         setup_params = {
             "target_column": None,
