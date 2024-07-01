@@ -103,44 +103,43 @@ def get_latest_mltask_params():
         current_app.logger.info(f"Returning Params {setup_params}")
         return jsonify(setup_params)
     try:
-        if setup_type != "new":
-            client = dataiku.api_client()
-            mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
+        client = dataiku.api_client()
+        mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
 
-            model_details = mltask.get_trained_model_details(full_model_id)
+        model_details = mltask.get_trained_model_details(full_model_id)
 
-            algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
-            algo_settings.get('params').get('exposure_columns')[0]
-            exposure_column = algo_settings.get('params').get('exposure_columns')[0]
-            distribution_function = algo_settings.get('params').get('family_name')
-            link_function = algo_settings.get('params').get(distribution_function+"_link")
-            preprocessing = model_details.get_preprocessing_settings().get('per_feature')
-            features = preprocessing.keys()
+        algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
+        algo_settings.get('params').get('exposure_columns')[0]
+        exposure_column = algo_settings.get('params').get('exposure_columns')[0]
+        distribution_function = algo_settings.get('params').get('family_name')
+        link_function = algo_settings.get('params').get(distribution_function+"_link")
+        preprocessing = model_details.get_preprocessing_settings().get('per_feature')
+        features = preprocessing.keys()
 
 
-            features_dict = {}
-            for feature in features:
-                feature_settings = preprocessing.get(feature)
-                features_dict[feature] = {
-                    "role": feature_settings.get('role'),
-                     'type': feature_settings.get('type'),
-                    "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling')
+        features_dict = {}
+        for feature in features:
+            feature_settings = preprocessing.get(feature)
+            features_dict[feature] = {
+                "role": feature_settings.get('role'),
+                 'type': feature_settings.get('type'),
+                "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling')
 
-                }
-                if feature == exposure_column:
-                    features_dict[feature]["role"]=="Exposure"
-                if features_dict[feature]["role"]=="TARGET":
-                    features_dict[feature]["role"]=="Target"
-                    target_column = feature
-            setup_params = {
-                "target_column": target_column,
-                "exposure_column":exposure_column,
-                "distribution_function": distribution_function.title(),
-                "link_function":link_function.title(),
-                "params": features_dict
             }
-        current_app.logger.info(f"Returning setup params {setup_params}")
-        return jsonify(setup_params)
+            if feature == exposure_column:
+                features_dict[feature]["role"]=="Exposure"
+            if features_dict[feature]["role"]=="TARGET":
+                features_dict[feature]["role"]=="Target"
+                target_column = feature
+        setup_params = {
+            "target_column": target_column,
+            "exposure_column":exposure_column,
+            "distribution_function": distribution_function.title(),
+            "link_function":link_function.title(),
+            "params": features_dict
+        }
+    current_app.logger.info(f"Returning setup params {setup_params}")
+    return jsonify(setup_params)
     except:
         setup_params = {
             "target_column": None,
