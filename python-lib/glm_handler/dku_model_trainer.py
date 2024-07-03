@@ -298,7 +298,7 @@ class DataikuMLTask:
         fs['sendToInput'] = 'main'
         return fs
     
-    def update_to_categorical(self, fs, variable_preprocessing_method="CUSTOM"):
+    def update_to_categorical(self, fs, variable_preprocessing_method, base_level=None):
         
         fs['missing_impute_with']= 'MODE'
         fs['type']= 'CATEGORY'
@@ -329,34 +329,64 @@ class DataikuMLTask:
         fs['customHandlingCode'] = ''
         fs['customProcessorWantsMatrix'] = False
         fs['sendToInput'] = 'main'
-        fs['customHandlingCode'] = ('import numpy as np\n'
-        'import pandas as pd\n'
-        'class rebase_mode():\n'
-        '    """This processor applies dummy vectorisation, but drops the dummy column with the mode. Only applies to categorical variables\n'
-        '    """\n'
-        '    def __init__(self):\n'
-        '        self.mode_column = None\n'
-        '    def fit(self, series):\n'
-        '        # identify the mode of the column, returns as a text value\n'
-        '        self.modalities = np.unique(series)\n'
-        '        self.mode_column = series.mode()[0]\n'
-        '        self.columns = set(self.modalities)\n'
-        '        self.columns = list(self.columns)\n'
-        '        self.columns.remove(self.mode_column)\n'
-        '        self.column_name = series.name\n'
-        '    def transform(self, series):\n'
-        '        to_replace={m: self.mode_column for m in np.unique(series) if m not in self.modalities}\n'
-        '        new_series = series.replace(to_replace=to_replace)\n'
-        '        # obtains the dummy encoded dataframe, but drops the dummy column with the mode identified\n'
-        '        df = pd.get_dummies(new_series.values)\n'
-        '        if self.mode_column in df:\n'
-        '            df = df.drop(self.mode_column, axis = 1)\n'
-        '        for c in self.columns:\n'
-        '            if c not in df.columns:\n'
-        '                df[c] = 0\n'
-        '        df = df[self.columns]\n'
-        '        return df\n'
-        'processor = rebase_mode()')
+        if base_level is None:
+            fs['customHandlingCode'] = ('import numpy as np\n'
+            'import pandas as pd\n'
+            'class rebase_mode():\n'
+            '    """This processor applies dummy vectorisation, but drops the dummy column with the mode. Only applies to categorical variables\n'
+            '    """\n'
+            '    def __init__(self):\n'
+            '        self.mode_column = None\n'
+            '    def fit(self, series):\n'
+            '        # identify the mode of the column, returns as a text value\n'
+            '        self.modalities = np.unique(series)\n'
+            '        self.mode_column = series.mode()[0]\n'
+            '        self.columns = set(self.modalities)\n'
+            '        self.columns = list(self.columns)\n'
+            '        self.columns.remove(self.mode_column)\n'
+            '        self.column_name = series.name\n'
+            '    def transform(self, series):\n'
+            '        to_replace={m: self.mode_column for m in np.unique(series) if m not in self.modalities}\n'
+            '        new_series = series.replace(to_replace=to_replace)\n'
+            '        # obtains the dummy encoded dataframe, but drops the dummy column with the mode identified\n'
+            '        df = pd.get_dummies(new_series.values)\n'
+            '        if self.mode_column in df:\n'
+            '            df = df.drop(self.mode_column, axis = 1)\n'
+            '        for c in self.columns:\n'
+            '            if c not in df.columns:\n'
+            '                df[c] = 0\n'
+            '        df = df[self.columns]\n'
+            '        return df\n'
+            'processor = rebase_mode()')
+        else:
+            fs['customHandlingCode'] = ('import numpy as np\n'
+            'import pandas as pd\n'
+            'class rebase_mode():\n'
+            '    """This processor applies dummy vectorisation, but drops the dummy column with the mode. Only applies to categorical variables\n'
+            '    """\n'
+            '    def __init__(self):\n'
+            '        self.mode_column = None\n'
+            '    def fit(self, series):\n'
+            '        # identify the mode of the column, returns as a text value\n'
+            '        self.modalities = np.unique(series)\n'
+            '        self.mode_column = "' + base_level + '"\n'
+            '        self.columns = set(self.modalities)\n'
+            '        self.columns = list(self.columns)\n'
+            '        self.columns.remove(self.mode_column)\n'
+            '        self.column_name = series.name\n'
+            '    def transform(self, series):\n'
+            '        to_replace={m: self.mode_column for m in np.unique(series) if m not in self.modalities}\n'
+            '        new_series = series.replace(to_replace=to_replace)\n'
+            '        # obtains the dummy encoded dataframe, but drops the dummy column with the mode identified\n'
+            '        df = pd.get_dummies(new_series.values)\n'
+            '        if self.mode_column in df:\n'
+            '            df = df.drop(self.mode_column, axis = 1)\n'
+            '        for c in self.columns:\n'
+            '            if c not in df.columns:\n'
+            '                df[c] = 0\n'
+            '        df = df[self.columns]\n'
+            '        return df\n'
+            'processor = rebase_mode()')
         
         return fs
     
@@ -375,8 +405,12 @@ class DataikuMLTask:
                 # Configure categorical variables
                 if variable['type'] == 'categorical':
                     variable_preprocessing_method = variable.get('processing', None)
-                    fs = self.update_to_categorical(fs, variable_preprocessing_method)
-
+                    variable_preprocessing_choose_base_level = variable.get('choose_base_level', None)
+                    variable_preprocessing_base_level = variable.get('base_level', None)
+                    if variable_preprocessing_choose_base_level:
+                        fs = self.update_to_categorical(fs, variable_preprocessing_method, variable_preprocessing_base_level)
+                    else:
+                        fs = self.update_to_categorical(fs, variable_preprocessing_method)
                 
                 # Configure numerical variables with specific processing types
                 elif variable['type'] == 'numerical':
