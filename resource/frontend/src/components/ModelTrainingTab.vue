@@ -115,7 +115,7 @@
                 <div class="checkbox-container">
                     <BsCheckbox v-model="column.isIncluded" label="Include?" class="custom-label-spacing"></BsCheckbox>
                 </div>
-                <div class="radio-group-container" v-if="column.isIncluded">
+                <div class="radio-group-container" :class="{ 'hidden': !column.isIncluded }">
                     <div class="q-gutter-sm row items-center">
                         <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
                     </div>
@@ -124,10 +124,10 @@
                     </div>
                 </div>
                 <div class="choose-base-level">
-                    <div class="q-gutter-sm row items-center" v-if="column.isIncluded && column.type=='categorical'">
+                    <div class="q-gutter-sm row items-center" :class="{ 'hidden': !(column.isIncluded && column.type === 'categorical') }">
                         <BsCheckbox v-model="column.chooseBaseLevel" label="Choose Base Level?"></BsCheckbox>
                     </div>
-                    <div class="q-gutter-sm row items-center" v-if="column.isIncluded && column.type=='categorical' && column.chooseBaseLevel">
+                    <div class="q-gutter-sm row items-center" :class="{ 'hidden': !(column.isIncluded && column.type === 'categorical' && column.chooseBaseLevel) }">
                         <BsSelect
                             :modelValue="column.baseLevel"
                             :all-options="column.options"
@@ -620,12 +620,14 @@ margin-top: 5px;
     margin-left: auto; /* Pushes the container to the right */
     display: flex;
     align-items: center;
+    flex: 1;
 }
 
 .choose-base-level {
-    margin-left: auto; /* Pushes the container to the right */
+    margin-left: auto;
     display: flex;
     align-items: center;
+    flex: 1;
 }
 .checkbox-container {
     margin-left: auto; /* Pushes the container to the right */
