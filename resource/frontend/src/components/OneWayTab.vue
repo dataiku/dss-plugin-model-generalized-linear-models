@@ -222,16 +222,53 @@ export default defineComponent({
           }
       },
       selectedVariable(newValue: VariablePoint) {
-        this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
         this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
         this.relativitiesColumns = columns;
         this.relativities = this.relativitiesTable.map( (point) => {
           const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
           return relativity
         })
+        if (this.rescale) {
+            const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            if (baseCategory) {
+              const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+              if (baseData) {
+                const baseLevelPrediction = baseData.baseLevelPrediction;
+                const fittedAverage = baseData.fittedAverage;
+                const observedAverage = baseData.observedAverage;
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
+                ...item,
+                baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
+                fittedAverage: item.fittedAverage / fittedAverage,
+                observedAverage: item.observedAverage / observedAverage
+              }));
+              }
+            }
+          } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
+          }
       },
       allData(newValue: DataPoint[]) {
          this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+         if (this.rescale) {
+            const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            if (baseCategory) {
+              const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+              if (baseData) {
+                const baseLevelPrediction = baseData.baseLevelPrediction;
+                const fittedAverage = baseData.fittedAverage;
+                const observedAverage = baseData.observedAverage;
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
+                ...item,
+                baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
+                fittedAverage: item.fittedAverage / fittedAverage,
+                observedAverage: item.observedAverage / observedAverage
+              }));
+              }
+            }
+          } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+          }
       }
     },
     methods: {
