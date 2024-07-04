@@ -60,6 +60,10 @@
                               </q-item>
                         </template>
                   </BsSelect>
+                  <BsCheckbox v-model="rescale" 
+                  v-if="selectedModelString"
+                  @update:modelValue="updateRescale" 
+                  label="Rescale?"></BsCheckbox>
                   <BsLabel v-if="selectedModelString"
                     label="Run Analysis on">
                   </BsLabel>
@@ -197,7 +201,8 @@ export default defineComponent({
             includeSuspectVariables: true,
             loading: false,
             active_model:  {} as ModelPoint,
-            trainTest: false
+            trainTest: false,
+            rescale: false
         };
     },
     watch: {
@@ -243,6 +248,27 @@ export default defineComponent({
           const modelTrainPoint = {id: this.active_model.id, name: this.active_model.name, trainTest: this.trainTest};
           const dataResponse = await API.getData(modelTrainPoint);
           this.allData = dataResponse?.data;
+        },
+        async updateRescale(value: boolean) {
+          if (value) {
+            const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            if (baseCategory) {
+              const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+              if (baseData) {
+                const baseLevelPrediction = baseData.baseLevelPrediction;
+                const fittedAverage = baseData.fittedAverage;
+                const observedAverage = baseData.observedAverage;
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
+                ...item,
+                baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
+                fittedAverage: item.fittedAverage / fittedAverage,
+                observedAverage: item.observedAverage / observedAverage
+              }));
+              }
+            }
+          } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+          }
         },
         async updateModelString(value: string) {
           this.loading = true;
