@@ -61,7 +61,7 @@
                         </template>
                   </BsSelect>
                   <BsCheckbox v-model="rescale" 
-                  v-if="selectedModelString"
+                  v-if="selectedVariable.isInModel"
                   @update:modelValue="updateRescale" 
                   label="Rescale?"></BsCheckbox>
                   <BsLabel v-if="selectedModelString"
@@ -242,8 +242,12 @@ export default defineComponent({
                 fittedAverage: item.fittedAverage / fittedAverage,
                 observedAverage: item.observedAverage / observedAverage
               }));
-              }
-            }
+              } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
+          }
+            } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
+          }
           } else {
             this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
           }
@@ -264,8 +268,12 @@ export default defineComponent({
                 fittedAverage: item.fittedAverage / fittedAverage,
                 observedAverage: item.observedAverage / observedAverage
               }));
-              }
-            }
+              } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+          }
+            } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+          }
           } else {
             this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
           }
@@ -301,8 +309,12 @@ export default defineComponent({
                 fittedAverage: item.fittedAverage / fittedAverage,
                 observedAverage: item.observedAverage / observedAverage
               }));
-              }
-            }
+              } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+          }
+            } else {
+            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+          }
           } else {
             this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
           }
