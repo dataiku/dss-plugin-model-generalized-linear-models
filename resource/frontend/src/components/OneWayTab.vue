@@ -226,7 +226,7 @@ export default defineComponent({
         })
       },
       allData(newValue: DataPoint[]) {
-        this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+         this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
       }
     },
     methods: {

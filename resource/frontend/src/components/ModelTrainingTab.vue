@@ -14,8 +14,17 @@
         <q-scroll-area style="height: calc(100vh - 100px); max-width: 100%">
         <BsCollapsiblePanel
         title="Model Parameters">
-        <!-- <h5 class="h5-spacing">Model Parameters</h5> -->
-        <div class="variable-select-container">
+            <div class="variable-select-container">
+            <BsLabel
+                label="Load a previous model"
+                info-text="Charts will be generated with respect to this model">
+            </BsLabel>
+            <BsSelect
+                :modelValue="selectedModelString"
+                :all-options="modelsString"
+                @update:modelValue="value => getDatasetColumns(value)"
+                style="min-width: 250px">
+            </BsSelect>
             <BsLabel
                     label="Select a Distribution Function"
                     info-text="Distribution function for GLM"
@@ -162,6 +171,10 @@ type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFuncti
 interface TypeWithValue {
   value: string;
 }
+interface Model {
+    id: string;
+    name: string;
+}
 interface Column {
         name: string;
         isIncluded: boolean;
@@ -182,6 +195,7 @@ included: boolean;
 };
 }
 import { defineComponent } from "vue";
+import type { ModelPoint } from '../models';
 import EmptyState from './EmptyState.vue';
 import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
@@ -212,6 +226,9 @@ data() {
         updateModels: false,
         modelName: "",   
         errorMessage: "", 
+        selectedModelString: "",
+        models: [] as ModelPoint[],
+        modelsString: [] as string[],
         selectedDatasetString: "",
         selectedTargetVariable: "",
         selectedExposureVariable: "",
@@ -271,35 +288,30 @@ computed:{
             return column.name;
             });
         },
-        filteredColumns() {
+    filteredColumns() {
             return this.datasetColumns.filter(column =>
                 column.role !== 'Target' &&
                 column.role !== 'Exposure')
         }
 },
 watch: {
-
     selectedTargetVariable(newValue, oldValue) {
-        console.log(` Attempting to change selectedTargetVariable changed from ${oldValue} to ${newValue}`);
+        console.log(` Attempting to change selectedTargetVariable from ${oldValue} to ${newValue}`);
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
-                // Set the role of the selected target variable to 'Target'
                 column.role = 'Target';
-            } else {
-                // Reset role for non-target columns if necessary
-                column.role = 'Variable'; // Or any default value you prefer
-            }
+            } else if (column.role !== 'Exposure') {
+                column.role = 'Variable'; 
+            }   
         });
     },
     selectedExposureVariable(newValue, oldValue) {
-        console.log(` Attempting to change selectedExposureVariable changed from ${oldValue} to ${newValue}`);
+        console.log(` Attempting to change selectedExposureVariable from ${oldValue} to ${newValue}`);
         this.datasetColumns.forEach(column => {
             if (column.name === newValue) {
-                // Set the role of the selected target variable to 'Target'
                 column.role = 'Exposure';
             } else if (column.role !== 'Target') {
-                // Reset role for non-target columns if necessary
-                column.role = 'Variable'; // Or any default value you prefer
+                column.role = 'Variable'; 
             }
         });
     },
@@ -320,6 +332,12 @@ watch: {
     
 },
 methods: {
+    async updateModelString(value: string) {
+          this.loading = true;
+          this.selectedModelString = value;
+          const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
+          this.loading = false;
+        },
     validateSubmission() {
         this.errorMessage = ''; // Reset error message before validation
         if (!this.modelName) {
@@ -360,7 +378,7 @@ methods: {
         }
     },
     abbreviateColumnName(name:string) {
-        const maxLength = 10; // Maximum length of column name
+        const maxLength = 12 ; // Maximum length of column name
         if (name.length > maxLength) {
         return `${name.substring(0, maxLength - 1)}...`; // 
         }
@@ -433,9 +451,55 @@ methods: {
         this.updateModels = !this.updateModels;
         this.$emit("update-models", this.updateModels);
         this.loading = false;
-    },
+    },  
+        async getDatasetColumns(model_value = null) {
+        if (model_value) {
+        console.log("model_id parameter provided:", model_value);
+        this.datasetColumns = []
+        try {
+                const response = await API.getDatasetColumns();
+                this.selectedModelString = model_value;
+                const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
+                console.log("Making request with model Id :", model);
+                const paramsResponse = await API.getLatestMLTaskParams(model);
+                const params = paramsResponse.data.params;
 
-    async getDatasetColumns() {
+                this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
+                this.selectedLinkFunctionString = paramsResponse.data.link_function;
+
+                console.log("paramsResponse:", paramsResponse.data);
+                this.datasetColumns = response.data.map((columnName: string) => {
+                    const param = params[columnName] || {};
+                    const isTargetColumn = columnName === paramsResponse.data.target_column;
+                    const isExposureColumn = columnName === paramsResponse.data.exposure_column;
+                    
+                    // Set the selected target variable if this column is the target column
+                    if (isTargetColumn) {
+                        this.selectedTargetVariable = columnName;
+                    }
+
+
+                    // Set the selected exposure variable if this column is the exposure column
+                    if (isExposureColumn) {
+                        this.selectedExposureVariable = columnName;
+                    }
+
+                    return {
+                        name: columnName,
+                        isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
+                        role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
+                        type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
+                        preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
+                    };
+                });
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+
+        } 
+    else {
+        console.log("No model id provided:");
         try {
         const response = await API.getDatasetColumns();
 
@@ -452,13 +516,23 @@ methods: {
             console.error('Error fetching datasets:', error);
             this.datasetColumns = [];
         }
-    },  
-},
+     }
+     },
+    
+    },
+
 async mounted() {
+    API.getModels().then((data: any) => {
+        this.models = data.data;
+        this.modelsString = this.models.map(item => item.name);
+        console.log("Models load are", this.models)
+      });
     this.layoutRef = this.$refs.layout as InstanceType<typeof BsLayoutDefault>;
     const savedDistributionFunction = localStorage.getItem('DistributionFunction');
     const savedLinkFunction = localStorage.getItem('linkFunction');
     await this.getDatasetColumns();
+
+    
 },
 emits: ['update:modelValue', 'update-models']
 })

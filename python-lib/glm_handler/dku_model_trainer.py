@@ -284,7 +284,7 @@ class DataikuMLTask:
         fs['missing_impute_with'] = 'MEAN'
         fs['impute_constant_value'] = 0.0
         fs['keep_regular'] = False
-        fs['rescaling'] = variable_preprocessing_method
+        fs['rescaling'] = "NONE"
         fs['quantile_bin_nb_bins'] = 4
         fs['binarize_threshold_mode'] = 'MEDIAN'
         fs['binarize_constant_threshold'] = 0.0

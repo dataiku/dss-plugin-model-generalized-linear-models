@@ -20,6 +20,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
         
         model_details = global_dku_mltask.get_trained_model_details(model_id)
         is_conform = check_model_conformity(model_details)
+        
         if is_conform:
 
             # Deploy the model
@@ -31,12 +32,16 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             # Update active version
             step_time = time()
             model_handler.update_active_version()
+            features = model_handler.get_features()
+            logger.info(f"Model Features are: {features}")
+            
             step_elapsed = time() - step_time
             logger.info(f"Step - Update active version: {step_elapsed:.2f} seconds")
 
             # Get predicted and base
             step_time = time()
             model1_predicted_base = model_handler.get_predicted_and_base()
+            print(model1_predicted_base)
             logger.info(f"model1_predicted_base colums are: {model1_predicted_base.columns}")
             model1_predicted_base.columns = ['definingVariable', 
                                              'Category', 
@@ -56,9 +61,18 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
             relativities_dict = model_handler.relativities
             step_elapsed = time() - step_time
             logger.info(f"Step - Get relativities: {step_elapsed:.2f} seconds")
-
+            
+            # Get variable level stats
+            step_time = time()
             variable_stats=model_handler.get_variable_level_stats()
+            step_elapsed = time() - step_time
+            logger.info(f"Step - Get variable level stats: {step_elapsed:.2f} seconds")
+            
+            # Get lift chart
+            step_time = time()
             lift_chart_data = model_handler.get_lift_chart(8)
+            step_elapsed = time() - step_time
+            logger.info(f"Step - Get lift chart: {step_elapsed:.2f} seconds")
 
             # Calculate model metrics
             step_time = time()
@@ -89,6 +103,9 @@ def setup_model_cache(global_dku_mltask, model_deployer, model_handler):
     # Print the total setup time for the model cache
     total_setup_time_elapsed = time() - model_cache_setup_time
     print(f"Total model cache set up time: {total_setup_time_elapsed:.2f} seconds")
+    for model_id in model_cache.keys():
+        print(model_id)
+        print(model_cache[model_id]['lift_chart_data'])
     return model_cache
 
 def update_model_cache(global_dku_mltask, model_cache, model_handler):
