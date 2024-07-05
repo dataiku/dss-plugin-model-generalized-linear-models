@@ -488,6 +488,49 @@ def export_variable_level_stats():
         download_name='variable_level_stats.csv'
     )
 
+
+@fetch_api.route('/export_one_way', methods=['POST'])
+def export_one_way():
+
+    if is_local:
+        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+        df = pd.DataFrame(data)
+
+        # Convert DataFrame to CSV format
+        csv_data = df.to_csv(index=False).encode('utf-8')
+    else:
+        try:
+            loading_thread.join()
+            request_json = request.get_json()
+            full_model_id = request_json["id"]
+            variable = request_json["variable"]
+            train_test = request_json["trainTest"]
+            dataset = 'test' if train_test else 'train'
+
+            current_app.logger.info(f"Model ID received: {full_model_id}")
+            current_app.logger.info(f"Variable received: {variable}")
+            current_app.logger.info(f"Train/Test received: {dataset}")
+
+            predicted_base = model_cache[full_model_id].get('predicted_and_base')
+            predicted_base = predicted_base[predicted_base['dataset']==dataset]
+            predicted_base = predicted_base[predicted_base['definingVariable']==variable]
+
+            csv_data = predicted_base.to_csv(index=False).encode('utf-8')
+
+        except KeyError as e:
+            current_app.logger.error(f"An error occurred: {str(e)}")
+
+    csv_io = BytesIO(csv_data)
+
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='variable_level_stats.csv'
+    )
+
+
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
     # Log the receipt of a new training request

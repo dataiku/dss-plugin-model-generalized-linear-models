@@ -36,6 +36,13 @@ export type ModelPoint = {
     name: string;
 }
 
+export type ModelVariablePoint = { 
+    id: string;
+    name: string;
+    variable: string;
+    trainTest: boolean;
+}
+
 export type ModelNbBins = { 
     id: string;
     name: string;
