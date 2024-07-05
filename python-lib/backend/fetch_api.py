@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 import random
+import re
 is_local = False
 
 if not is_local:
@@ -103,54 +104,69 @@ def get_latest_mltask_params():
         setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
         current_app.logger.info(f"Returning Params {setup_params}")
         return jsonify(setup_params)
-    try:
-        client = dataiku.api_client()
-        mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
+    #try:
+    client = dataiku.api_client()
+    mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
 
-        model_details = mltask.get_trained_model_details(full_model_id)
+    model_details = mltask.get_trained_model_details(full_model_id)
 
-        algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
-        algo_settings.get('params').get('exposure_columns')[0]
-        exposure_column = algo_settings.get('params').get('exposure_columns')[0]
-        distribution_function = algo_settings.get('params').get('family_name')
-        link_function = algo_settings.get('params').get(distribution_function+"_link")
-        preprocessing = model_details.get_preprocessing_settings().get('per_feature')
-        features = preprocessing.keys()
+    algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
+    algo_settings.get('params').get('exposure_columns')[0]
+    exposure_column = algo_settings.get('params').get('exposure_columns')[0]
+    distribution_function = algo_settings.get('params').get('family_name')
+    link_function = algo_settings.get('params').get(distribution_function+"_link")
+    elastic_net_penalty = algo_settings.get('params').get('penalty')[0]
+    l1_ratio = algo_settings.get('params').get('l1_ratio')[0]
+    preprocessing = model_details.get_preprocessing_settings().get('per_feature')
+    features = preprocessing.keys()
 
 
-        features_dict = {}
-        for feature in features:
-            feature_settings = preprocessing.get(feature)
-            features_dict[feature] = {
-                "role": feature_settings.get('role'),
-                 'type': feature_settings.get('type'),
-                "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling')
+    features_dict = {}
+    for feature in features:
+        feature_settings = preprocessing.get(feature)
+        choose_base_level = feature_settings.get('category_handling') and not ("series.mode()[0]" in feature_settings.get('customHandlingCode'))
+        base_level = None
+        if choose_base_level:
+            pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
+            # Search for the pattern in the code string
+            match = re.search(pattern, feature_settings.get('customHandlingCode'))
+            # Extract and print the matched value
+            if match:
+                base_level = match.group(1)
+        features_dict[feature] = {
+            "role": feature_settings.get('role'),
+             'type': feature_settings.get('type'),
+            "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling'),
+            "chooseBaseLevel": choose_base_level,
+            "baseLevel": base_level
 
-            }
-            if feature == exposure_column:
-                features_dict[feature]["role"]=="Exposure"
-            if features_dict[feature]["role"]=="TARGET":
-                features_dict[feature]["role"]=="Target"
-                target_column = feature
-        setup_params = {
-            "target_column": target_column,
-            "exposure_column":exposure_column,
-            "distribution_function": distribution_function.title(),
-            "link_function":link_function.title(),
-            "params": features_dict
         }
-        current_app.logger.info(f"Returning setup params {setup_params}")
-        return jsonify(setup_params)
-    except:
-        setup_params = {
-            "target_column": None,
-            "exposure_column":None,
-            "distribution_function": None,
-            "link_function":None,
-            "params": None
-        }
-        current_app.logger.info(f"Failed setup: Returning setup params {setup_params}")
-        return jsonify(setup_params)
+        if feature == exposure_column:
+            features_dict[feature]["role"]=="Exposure"
+        if features_dict[feature]["role"]=="TARGET":
+            features_dict[feature]["role"]=="Target"
+            target_column = feature
+    setup_params = {
+        "target_column": target_column,
+        "exposure_column":exposure_column,
+        "distribution_function": distribution_function.title(),
+        "link_function":link_function.title(),
+        "elastic_net_penalty": elastic_net_penalty,
+        "l1_ratio": l1_ratio,
+        "params": features_dict
+    }
+    current_app.logger.info(f"Returning setup params {setup_params}")
+    return jsonify(setup_params)
+    #except:
+    #    setup_params = {
+    #        "target_column": None,
+    #        "exposure_column":None,
+    #        "distribution_function": None,
+    #        "link_function":None,
+    #        "params": None
+    #    }
+    #    current_app.logger.info(f"Failed setup: Returning setup params {setup_params}")
+    #    return jsonify(setup_params)
 
 
 
