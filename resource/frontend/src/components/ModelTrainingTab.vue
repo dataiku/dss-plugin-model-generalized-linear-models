@@ -487,15 +487,14 @@ methods: {
 
                 this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
                 this.selectedLinkFunctionString = paramsResponse.data.link_function;
-                this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty;
-                this.selectedL1Ratio = paramsResponse.data.l1_ratio;
+                this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
+                this.selectedL1Ratio = paramsResponse.data.l1_ratio ? paramsResponse.data.l1_ratio : 0;
 
                 console.log("paramsResponse:", paramsResponse.data);
                 this.datasetColumns = response.data.map((column: ColumnInput) => {
                     const columnName = column.column;
                     const options = column.options;
                     const param = params[columnName];
-                    const baseLevel = column.baseLevel;
                     const isTargetColumn = columnName === paramsResponse.data.target_column;
                     const isExposureColumn = columnName === paramsResponse.data.exposure_column;
                     
@@ -516,9 +515,9 @@ methods: {
                         role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
                         type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
                         preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
-                        chooseBaseLevel: param.chooseBaseLevel,
+                        chooseBaseLevel: param.chooseBaseLevel ? param.chooseBaseLevel : false,
                         options: options,
-                        baseLevel: param.baseLevel
+                        baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
                     };
                 });
 
