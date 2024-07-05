@@ -19,12 +19,12 @@ def format_models(global_dku_mltask):
 
 def check_model_conformity(model_details):
     is_glm = check_is_glm(model_details)
-    no_regularization = check_no_regularization(model_details)
+    #no_regularization = check_no_regularization(model_details)
     no_offset = check_no_offset(model_details)
     no_weighting = check_no_weighting(model_details)
     train_test_split = check_train_test_split(model_details)
     feature_handling = check_feature_handling(model_details)
-    return all([is_glm, no_regularization, no_offset, no_weighting, train_test_split, feature_handling])
+    return all([is_glm, no_offset, no_weighting, train_test_split, feature_handling])
 
 def check_is_glm(model_details):
     modeling = model_details.details['modeling']

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 import random
-is_local = False 
+is_local = False
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -507,7 +507,7 @@ def train_model():
         prediction_type = web_app_config.get("prediction_type")
         
     except:
-        input_dataset = "train"
+        input_dataset = "claim_train"
         code_env_string="py39_sol"
 
         
@@ -515,16 +515,20 @@ def train_model():
     
     distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
     link_function = request_json.get('model_parameters', {}).get('link_function')
+    elastic_net_penalty = request_json.get('model_parameters', {}).get('elastic_net_penalty')
+    l1_ratio = request_json.get('model_parameters', {}).get('l1_ratio')
     model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
     variables = request_json.get('variables')
     policy = web_app_config.get("policy")
     test_dataset_string = web_app_config.get("test_dataset_string")
 
-    current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
+    current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Elastic Net Penalty: {elastic_net_penalty}, L1 Ratio: {l1_ratio}, Variables: {variables}")
     params = {
         "input_dataset": input_dataset,
         "distribution_function": distribution_function,
         "link_function": link_function,
+        "elastic_net_penalty": elastic_net_penalty,
+        "l1_ratio": l1_ratio,
         "variables": variables,
     }
     missing_params = [key for key, value in params.items() if not value]
@@ -539,7 +543,7 @@ def train_model():
             global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
             global_DkuMLTask.create_inital_ml_task(target_column)# defaults to target set in web app settings, this is overriden
             
-        global_DkuMLTask.update_parameters(distribution_function, link_function, variables)
+        global_DkuMLTask.update_parameters(distribution_function, link_function, elastic_net_penalty, l1_ratio, variables)
         global_DkuMLTask.create_visual_ml_task()
         current_app.logger.debug("Visual ML task created successfully")
 
