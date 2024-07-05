@@ -487,6 +487,8 @@ methods: {
 
                 this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
                 this.selectedLinkFunctionString = paramsResponse.data.link_function;
+                this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty;
+                this.selectedL1Ratio = paramsResponse.data.l1_ratio;
 
                 console.log("paramsResponse:", paramsResponse.data);
                 this.datasetColumns = response.data.map((column: ColumnInput) => {
@@ -514,9 +516,9 @@ methods: {
                         role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
                         type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
                         preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
-                        chooseBaseLevel: false,
+                        chooseBaseLevel: param.chooseBaseLevel,
                         options: options,
-                        baseLevel: baseLevel
+                        baseLevel: param.baseLevel
                     };
                 });
 

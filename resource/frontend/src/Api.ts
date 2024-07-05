@@ -106,11 +106,15 @@ interface MLTaskParams {
     exposure_column: string;
     distribution_function: string;
     link_function: string;
+    elastic_net_penalty: number;
+    l1_ratio: number;
     params: {
         [key: string]: {
             role: string;
             type: string;
             handling: string | null;
+            chooseBaseLevel: boolean;
+            baseLevel: string;
         }
     };
 }
