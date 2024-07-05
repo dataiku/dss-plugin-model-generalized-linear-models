@@ -50,6 +50,13 @@ interface ModelPoint {
     name: string;
 }
 
+interface ModelVariablePoint {
+    id: string;
+    name: string;
+    variable: string;
+    trainTest: boolean;
+}
+
 interface ModelNbBins {
     id: string;
     name: string;
@@ -123,6 +130,7 @@ export let API = {
     getModelMetrics: (data: any) => axios.post<ModelMetrics>("/api/get_model_metrics", data),
     exportModel: (model: ModelPoint) => axios.post<Blob>("/api/export_model", model),
     exportVariableLevelStats: (model: ModelPoint) => axios.post<Blob>("/api/export_variable_level_stats", model),
+    exportOneWay: (model: ModelVariablePoint) => axios.post<Blob>("/api/export_one_way", model),
     getVariableLevelStats: (data: ModelPoint) => axios.post<VariableLevelStatsPoint[]>("/api/get_variable_level_stats", data),
 }
 
