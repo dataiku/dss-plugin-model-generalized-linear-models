@@ -505,15 +505,27 @@ def export_one_way():
             full_model_id = request_json["id"]
             variable = request_json["variable"]
             train_test = request_json["trainTest"]
+            rescale = request_json["rescale"]
             dataset = 'test' if train_test else 'train'
 
             current_app.logger.info(f"Model ID received: {full_model_id}")
             current_app.logger.info(f"Variable received: {variable}")
             current_app.logger.info(f"Train/Test received: {dataset}")
+            current_app.logger.info(f"Rescale received: {rescale}")
 
             predicted_base = model_cache[full_model_id].get('predicted_and_base')
             predicted_base = predicted_base[predicted_base['dataset']==dataset]
             predicted_base = predicted_base[predicted_base['definingVariable']==variable]
+
+            if rescale:
+                relativities = model_cache[full_model_id].get('relativities')
+                relativities.columns = ['variable', 'category', 'relativity']
+                variable_relativities = relativities[relativities["variable"]==variable]
+                base_level = variable_relativities[variable_relativities['relativity']==1]['category'].iloc[0]
+                predicted_base_denominator = predicted_base[predicted_base['Category']==base_level].iloc[0]
+                predicted_base['observedAverage'] = predicted_base['observedAverage'] / predicted_base_denominator['observedAverage']
+                predicted_base['fittedAverage'] = predicted_base['fittedAverage'] / predicted_base_denominator['fittedAverage']
+                predicted_base['baseLevelPrediction'] = predicted_base['baseLevelPrediction'] / predicted_base_denominator['baseLevelPrediction']
 
             csv_data = predicted_base.to_csv(index=False).encode('utf-8')
 

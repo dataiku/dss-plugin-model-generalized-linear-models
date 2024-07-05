@@ -370,11 +370,12 @@ export default defineComponent({
           API.exportOneWay({id: this.active_model.id, 
             name: this.active_model.name, 
             variable: this.selectedVariable.variable, 
-            trainTest: this.trainTest}).then(response => {
+            trainTest: this.trainTest,
+            rescale: this.rescale}).then(response => {
               const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
               const link = document.createElement('a');
               link.href = url;
-              link.setAttribute('download', this.selectedModelString + '_' + this.selectedVariable.variable + '_' + (this.trainTest ? "test" : "train") + '.csv'); // Set the filename for the download
+              link.setAttribute('download', this.selectedModelString + '_' + this.selectedVariable.variable + '_' + (this.trainTest ? "test" : "train") + (this.rescale ? "_rescaled" : "") + '.csv'); // Set the filename for the download
               document.body.appendChild(link);
               link.click();
               window.URL.revokeObjectURL(url); // Clean up
