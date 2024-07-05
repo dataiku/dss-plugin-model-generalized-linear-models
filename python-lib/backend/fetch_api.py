@@ -77,9 +77,10 @@ def get_models():
     if is_local:
         return jsonify(dummy_models)
     
-    if global_DkuMLTask.mltask is None:
+    if global_DkuMLTask is None:
         return jsonify({'error': 'ML task not initialized'}), 500
     try:
+        #refresh the ml task        
         current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
         dku_ml_task = global_DkuMLTask.mltask
         models = format_models(dku_ml_task)
@@ -103,42 +104,41 @@ def get_latest_mltask_params():
         current_app.logger.info(f"Returning Params {setup_params}")
         return jsonify(setup_params)
     try:
-        if setup_type != "new":
-            client = dataiku.api_client()
-            mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
+        client = dataiku.api_client()
+        mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
 
-            model_details = mltask.get_trained_model_details(full_model_id)
+        model_details = mltask.get_trained_model_details(full_model_id)
 
-            algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
-            algo_settings.get('params').get('exposure_columns')[0]
-            exposure_column = algo_settings.get('params').get('exposure_columns')[0]
-            distribution_function = algo_settings.get('params').get('family_name')
-            link_function = algo_settings.get('params').get(distribution_function+"_link")
-            preprocessing = model_details.get_preprocessing_settings().get('per_feature')
-            features = preprocessing.keys()
+        algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
+        algo_settings.get('params').get('exposure_columns')[0]
+        exposure_column = algo_settings.get('params').get('exposure_columns')[0]
+        distribution_function = algo_settings.get('params').get('family_name')
+        link_function = algo_settings.get('params').get(distribution_function+"_link")
+        preprocessing = model_details.get_preprocessing_settings().get('per_feature')
+        features = preprocessing.keys()
 
 
-            features_dict = {}
-            for feature in features:
-                feature_settings = preprocessing.get(feature)
-                features_dict[feature] = {
-                    "role": feature_settings.get('role'),
-                     'type': feature_settings.get('type'),
-                    "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling')
+        features_dict = {}
+        for feature in features:
+            feature_settings = preprocessing.get(feature)
+            features_dict[feature] = {
+                "role": feature_settings.get('role'),
+                 'type': feature_settings.get('type'),
+                "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling')
 
-                }
-                if feature == exposure_column:
-                    features_dict[feature]["role"]=="Exposure"
-                if features_dict[feature]["role"]=="TARGET":
-                    features_dict[feature]["role"]=="Target"
-                    target_column = feature
-            setup_params = {
-                "target_column": target_column,
-                "exposure_column":exposure_column,
-                "distribution_function": distribution_function.title(),
-                "link_function":link_function.title(),
-                "params": features_dict
             }
+            if feature == exposure_column:
+                features_dict[feature]["role"]=="Exposure"
+            if features_dict[feature]["role"]=="TARGET":
+                features_dict[feature]["role"]=="Target"
+                target_column = feature
+        setup_params = {
+            "target_column": target_column,
+            "exposure_column":exposure_column,
+            "distribution_function": distribution_function.title(),
+            "link_function":link_function.title(),
+            "params": features_dict
+        }
         current_app.logger.info(f"Returning setup params {setup_params}")
         return jsonify(setup_params)
     except:
@@ -488,6 +488,49 @@ def export_variable_level_stats():
         download_name='variable_level_stats.csv'
     )
 
+
+@fetch_api.route('/export_one_way', methods=['POST'])
+def export_one_way():
+
+    if is_local:
+        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+        df = pd.DataFrame(data)
+
+        # Convert DataFrame to CSV format
+        csv_data = df.to_csv(index=False).encode('utf-8')
+    else:
+        try:
+            loading_thread.join()
+            request_json = request.get_json()
+            full_model_id = request_json["id"]
+            variable = request_json["variable"]
+            train_test = request_json["trainTest"]
+            dataset = 'test' if train_test else 'train'
+
+            current_app.logger.info(f"Model ID received: {full_model_id}")
+            current_app.logger.info(f"Variable received: {variable}")
+            current_app.logger.info(f"Train/Test received: {dataset}")
+
+            predicted_base = model_cache[full_model_id].get('predicted_and_base')
+            predicted_base = predicted_base[predicted_base['dataset']==dataset]
+            predicted_base = predicted_base[predicted_base['definingVariable']==variable]
+
+            csv_data = predicted_base.to_csv(index=False).encode('utf-8')
+
+        except KeyError as e:
+            current_app.logger.error(f"An error occurred: {str(e)}")
+
+    csv_io = BytesIO(csv_data)
+
+    # Serve the CSV file for download
+    return send_file(
+        csv_io,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='variable_level_stats.csv'
+    )
+
+
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
     # Log the receipt of a new training request
@@ -507,7 +550,7 @@ def train_model():
         prediction_type = web_app_config.get("prediction_type")
         
     except:
-        input_dataset = "train"
+        input_dataset = "claim_train"
         code_env_string="py39_sol"
 
         
@@ -515,16 +558,20 @@ def train_model():
     
     distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
     link_function = request_json.get('model_parameters', {}).get('link_function')
+    elastic_net_penalty = request_json.get('model_parameters', {}).get('elastic_net_penalty')
+    l1_ratio = request_json.get('model_parameters', {}).get('l1_ratio')
     model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
     variables = request_json.get('variables')
     policy = web_app_config.get("policy")
     test_dataset_string = web_app_config.get("test_dataset_string")
 
-    current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Variables: {variables}")
+    current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Elastic Net Penalty: {elastic_net_penalty}, L1 Ratio: {l1_ratio}, Variables: {variables}")
     params = {
         "input_dataset": input_dataset,
         "distribution_function": distribution_function,
         "link_function": link_function,
+        "elastic_net_penalty": elastic_net_penalty,
+        "l1_ratio": l1_ratio,
         "variables": variables,
     }
     missing_params = [key for key, value in params.items() if not value]
@@ -539,7 +586,7 @@ def train_model():
             global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
             global_DkuMLTask.create_inital_ml_task(target_column)# defaults to target set in web app settings, this is overriden
             
-        global_DkuMLTask.update_parameters(distribution_function, link_function, variables)
+        global_DkuMLTask.update_parameters(distribution_function, link_function, elastic_net_penalty, l1_ratio, variables)
         global_DkuMLTask.create_visual_ml_task()
         current_app.logger.debug("Visual ML task created successfully")
 
@@ -571,6 +618,12 @@ def train_model():
         current_app.logger.exception(f"An error occurred during model training {e}")
         return jsonify({'error': str(e)}), 500
 
+
+def np_encode(obj):
+    if isinstance(obj, np.int64):
+        return int(obj)
+    return obj
+
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
 def get_dataset_columns():
     
@@ -584,13 +637,13 @@ def get_dataset_columns():
             dataset_name = "claim_train"
             
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
+        
+        df = dataiku.Dataset(dataset_name).get_dataframe()
+        cols_json = [{'column': col, 'options': sorted([str(val) for val in df[col].unique()]), 'baseLevel': str(df[col].mode().iloc[0])} for col in df.columns]
 
-        cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
-        column_names = [column['name'] for column in cols_dict]
+        current_app.logger.info(f"Successfully retrieved column for dataset '{dataset_name}': {[col['column'] for col in cols_json]}")
 
-        current_app.logger.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
-
-        return jsonify(column_names)
+        return jsonify(cols_json)
     
     except KeyError as e:
         current_app.logger.error(f"Missing key in request: {e}")

@@ -32,6 +32,15 @@
                   @update:modelValue="updateModelString"
                   >
               </BsSelect>
+              <div v-if="selectedModelString" class="button-container">
+              <BsButton
+                  class="bs-primary-button" 
+                  unelevated
+                  dense
+                  no-caps
+                  padding="4"
+                  @click="onClick">Export Full Model</BsButton>
+                </div>
               <BsCheckbox v-if="selectedModelString" v-model="includeSuspectVariables" label="Include Suspect Variables">
               </BsCheckbox>
               <BsLabel v-if="selectedModelString"
@@ -72,14 +81,14 @@
                   @update:modelValue="updateTrainTest"
                   labelRight="Test" 
                   labelLeft="Train"/>
-                  <div v-if="selectedModelString" class="button-container">
-                  <BsButton class="bs-primary-button" 
-                  unelevated
-                  dense
-                  no-caps
-                  padding="4"
-                  @click="onClick">Export</BsButton>
-                </div>
+                  <div v-if="selectedVariable.variable" class="button-container">
+                    <BsButton class="bs-primary-button" 
+                    unelevated
+                    dense
+                    no-caps
+                    padding="4"
+                    @click="onClickOneWay">Export One-Way Data</BsButton>
+                  </div>
                 </div>
                 <BsButton
                     flat
@@ -125,7 +134,7 @@ import BarChart from './BarChart.vue'
 import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import * as echarts from "echarts";
-import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, ModelTrainPoint } from '../models';
+import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, ModelVariablePoint } from '../models';
 import { isErrorPoint } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
@@ -350,6 +359,22 @@ export default defineComponent({
               const link = document.createElement('a');
               link.href = url;
               link.setAttribute('download', this.selectedModelString + '.csv'); // Set the filename for the download
+              document.body.appendChild(link);
+              link.click();
+              window.URL.revokeObjectURL(url); // Clean up
+          }).catch(error => {
+              console.error('Error exporting model:', error);
+          });
+        },
+        onClickOneWay: function() {
+          API.exportOneWay({id: this.active_model.id, 
+            name: this.active_model.name, 
+            variable: this.selectedVariable.variable, 
+            trainTest: this.trainTest}).then(response => {
+              const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', this.selectedModelString + '_' + this.selectedVariable.variable + '_' + (this.trainTest ? "test" : "train") + '.csv'); // Set the filename for the download
               document.body.appendChild(link);
               link.click();
               window.URL.revokeObjectURL(url); // Clean up

@@ -11,6 +11,7 @@
         </BsButton>
     </BsHeader>
     <BsDrawer>
+        <q-scroll-area style="height: calc(100vh - 100px); max-width: 100%">
         <BsCollapsiblePanel
         title="Model Parameters">
             <div class="variable-select-container">
@@ -73,6 +74,34 @@
         </div>
         </BsCollapsiblePanel>
         <BsCollapsiblePanel
+        title="Regularization">
+        <div class="variable-select-container">
+        <BsLabel
+                label="Set the Elastic Net Penalty"
+                info-text="The overall level of regularization"
+        ></BsLabel>
+        <BsSlider
+            v-model="selectedElasticNetPenalty"
+            :min="0"
+            :step="0.01"
+            :max="1000"
+            style="min-width: 150px">
+        </BsSlider>
+        <BsLabel
+                label="Set the L1 Ratio"
+                info-text="l1_ratio = 0 means Ridge (only L2), l1_ratio = 1 means LASSO (only L1)"
+        ></BsLabel>
+        <BsSlider
+            v-model="selectedL1Ratio"
+            :min="0"
+            :max="1"
+            :step="0.01"
+            style="min-width: 150px">
+        </BsSlider>
+
+        </div>
+        </BsCollapsiblePanel>
+        <BsCollapsiblePanel
         title="Model Training"
         >
         <div class="model-name-input-container">
@@ -92,7 +121,7 @@
         
         </div>
         </BsCollapsiblePanel>
-
+    </q-scroll-area>
         <BsButton
             flat
             round
@@ -102,6 +131,7 @@
             icon="mdi-arrow-left">
             <BsTooltip>Close sidebar</BsTooltip>
         </BsButton>
+    
     </BsDrawer>
     <BsContent>
         <q-card-section>
@@ -115,18 +145,26 @@
                 <div class="checkbox-container">
                     <BsCheckbox v-model="column.isIncluded" label="Include?" class="custom-label-spacing"></BsCheckbox>
                 </div>
-                    <div class="radio-group-container">
-                        <!-- <BsLabel
-                            
-                            label="C Type"
-                        ></BsLabel> -->
-                        <div class="q-gutter-sm row items-center">
-                            <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
-                        </div>
-                        <div class="q-gutter-sm row items-center">
-                            <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
-                        </div>
+                <div class="radio-group-container" :class="{ 'hidden': !column.isIncluded }">
+                    <div class="q-gutter-sm row items-center">
+                        <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
                     </div>
+                    <div class="q-gutter-sm row items-center">
+                        <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
+                    </div>
+                </div>
+                <div class="choose-base-level">
+                    <div class="q-gutter-sm row items-center" :class="{ 'hidden': !(column.isIncluded && column.type === 'categorical') }">
+                        <BsCheckbox v-model="column.chooseBaseLevel" label="Choose Base Level?"></BsCheckbox>
+                    </div>
+                    <div class="q-gutter-sm row items-center" :class="{ 'hidden': !(column.isIncluded && column.type === 'categorical' && column.chooseBaseLevel) }">
+                        <BsSelect
+                            :modelValue="column.baseLevel"
+                            :all-options="column.options"
+                            @update:modelValue="value => column.baseLevel = value">
+                        </BsSelect>
+                    </div>
+                </div>
             </div>
         </q-card>
     </BsContent>
@@ -136,7 +174,7 @@
 </template>
 
 <script lang="ts">
-type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing';
+type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing' | 'chooseBaseLevel' | 'baseLevel' | 'options';
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
 interface TypeWithValue {
   value: string;
@@ -151,6 +189,14 @@ interface Column {
         role: string;
         type: string;
         preprocessing: string;
+        chooseBaseLevel: boolean;
+        baseLevel: string;
+        options: Array<string>;
+        }
+interface ColumnInput {
+        column: string;
+        baseLevel: string;
+        options: Array<string>;
         }
 interface SelectionOption {
 label: string;
@@ -162,12 +208,14 @@ role: string;
 type: string;
 processing: string;
 included: boolean;
+choose_base_level: boolean;
+base_level: string;
 };
 }
 import { defineComponent } from "vue";
 import type { ModelPoint } from '../models';
 import EmptyState from './EmptyState.vue';
-import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip } from "quasar-ui-bs";
+import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import trainingIcon from "../assets/images/training.svg";
 import { API } from '../Api';
@@ -186,58 +234,61 @@ components: {
     BsDrawer,
     BsContent,
     BsTooltip,
-    QRadio
+    QRadio,
+    BsSlider
 
 },
 props: [],
-    data() {
-        return {
-            updateModels: false,
-            modelName: "",   
-            errorMessage: "", 
-            selectedModelString: "",
-            models: [] as ModelPoint[],
-            modelsString: [] as string[],
-            selectedDatasetString: "",
-            selectedTargetVariable: "",
-            selectedExposureVariable: "",
-            selectedDistributionFunctionString: 'Gaussian' as string,
-            selectedLinkFunctionString: 'Log' as string,
-            datasetsString: [] as string[],
-            chartData: [],  
-            layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
-            trainingIcon,
-            docLogo,
-            distributionOptions: ['Binomial',
-                'Gamma',
-                'Gaussian',
-                'Inverse Gaussian',
-                'Poisson',
-                'Negative Binomial', 
-                'Tweedie',
-            ],
-            linkOptions: [
-                'CLogLog',
-                'Log',
-                'Logit',
-                'Cauchy',
-                'Identity',
-                'Power',
-                'Inverse Power',
-                'Inverse Squared'
-            ],
-            typeOptions: [
-                'Categorical',
-                'Numerical'
-            ],
-            preprocessingOptions: [
-                'Dummy Encode',
-                'Standard Rescaling',
-            ],
-            datasetColumns: [] as Column[], 
-            loading: false,
-        };
-    },
+data() {
+    return {
+        updateModels: false,
+        modelName: "",   
+        errorMessage: "", 
+        selectedModelString: "",
+        models: [] as ModelPoint[],
+        modelsString: [] as string[],
+        selectedDatasetString: "",
+        selectedTargetVariable: "",
+        selectedExposureVariable: "",
+        selectedDistributionFunctionString: 'Gaussian' as string,
+        selectedLinkFunctionString: 'Log' as string,
+        datasetsString: [] as string[],
+        chartData: [],  
+        selectedElasticNetPenalty: 0 as number,
+        selectedL1Ratio: 0 as number,
+        layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
+        trainingIcon,
+        docLogo,
+        distributionOptions: ['Binomial',
+            'Gamma',
+            'Gaussian',
+            'Inverse Gaussian',
+            'Poisson',
+            'Negative Binomial', 
+            'Tweedie',
+        ],
+        linkOptions: [
+            'CLogLog',
+            'Log',
+            'Logit',
+            'Cauchy',
+            'Identity',
+            'Power',
+            'Inverse Power',
+            'Inverse Squared'
+        ],
+        typeOptions: [
+            'Categorical',
+            'Numerical'
+        ],
+        preprocessingOptions: [
+            'Dummy Encode',
+            'Standard Rescaling',
+        ],
+        datasetColumns: [] as Column[], // Populate this based on your actual data
+        loading: false,
+    };
+},
 computed:{
     targetVariablesOptions(){
         return this.datasetColumns.map(column=>{
@@ -388,15 +439,19 @@ methods: {
             model_name: this.modelName,
             distribution_function: this.selectedDistributionFunctionString,
             link_function: this.selectedLinkFunctionString,
+            elastic_net_penalty: this.selectedElasticNetPenalty,
+            l1_ratio: this.selectedL1Ratio
         };
 
         // Reduce function to construct Variables object    
-        const variableParameters = this.datasetColumns.reduce<AccType>((acc, { name, role, type, preprocessing, isIncluded }) => {
+        const variableParameters = this.datasetColumns.reduce<AccType>((acc, { name, role, type, preprocessing, isIncluded, chooseBaseLevel, baseLevel }) => {
         acc[name] = {
             role: role,
             type: type.toLowerCase(),
             processing: preprocessing == 'Dummy Encode' ? 'CUSTOM' : 'REGULAR',
             included: isIncluded,
+            choose_base_level: chooseBaseLevel,
+            base_level: baseLevel
         };
         return acc;
         }, {});
@@ -418,6 +473,7 @@ methods: {
         this.loading = false;
     },  
         async getDatasetColumns(model_value = null) {
+            console.log(model_value);
         if (model_value) {
         console.log("model_id parameter provided:", model_value);
         this.datasetColumns = []
@@ -433,8 +489,11 @@ methods: {
                 this.selectedLinkFunctionString = paramsResponse.data.link_function;
 
                 console.log("paramsResponse:", paramsResponse.data);
-                this.datasetColumns = response.data.map((columnName: string) => {
-                    const param = params[columnName] || {};
+                this.datasetColumns = response.data.map((column: ColumnInput) => {
+                    const columnName = column.column;
+                    const options = column.options;
+                    const param = params[columnName];
+                    const baseLevel = column.baseLevel;
                     const isTargetColumn = columnName === paramsResponse.data.target_column;
                     const isExposureColumn = columnName === paramsResponse.data.exposure_column;
                     
@@ -454,7 +513,10 @@ methods: {
                         isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
                         role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
                         type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
-                        preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode'
+                        preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
+                        chooseBaseLevel: false,
+                        options: options,
+                        baseLevel: baseLevel
                     };
                 });
 
@@ -468,15 +530,17 @@ methods: {
         try {
         const response = await API.getDatasetColumns();
 
-        console.log("Datasets:", response.data);
-        this.datasetColumns = response.data.map((columnName: string) => ({
-            name: columnName,
+        this.datasetColumns = response.data.map((column: ColumnInput) => ({
+            name: column.column,
             isIncluded: false,
             role: 'Variable',
             type: 'Categorical',
-            preprocessing: 'Dummy Encode'
+            preprocessing: 'Dummy Encode',
+            chooseBaseLevel: false,
+            options: column.options,
+            baseLevel: column.baseLevel
         }));
-        console.log("First assignment:", this.datasetColumns);
+        console.log("First assignment");
         } catch (error) {
             console.error('Error fetching datasets:', error);
             this.datasetColumns = [];
@@ -510,7 +574,7 @@ margin-bottom: 20px; /* Adjust this value as needed */
 display: flex;
 flex-direction: row;
 align-items: center; /* Align items vertically */
-gap: 20px; /* Spacing between each item */
+gap: 10px; /* Spacing between each item */
 justify-content: space-between; 
 }
 .form-group {
@@ -583,7 +647,7 @@ margin-top: 5px;
   margin-top: 10px;
 }
 .custom-label-spacing {
-    margin-right: 150px; /* Adjust the margin as needed */
+    margin-right: 10px; /* Adjust the margin as needed */
     margin-left: 10px; 
     padding: 5px;       /* Adjust padding for better alignment and spacing */
 }
@@ -591,6 +655,14 @@ margin-top: 5px;
     margin-left: auto; /* Pushes the container to the right */
     display: flex;
     align-items: center;
+    flex: 1;
+}
+
+.choose-base-level {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    flex: 1;
 }
 .checkbox-container {
     margin-left: auto; /* Pushes the container to the right */
