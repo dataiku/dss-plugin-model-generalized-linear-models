@@ -342,7 +342,7 @@ watch: {
     },
     loading(newVal) {
         if (newVal) {
-            useLoader("Training model..").show();
+            useLoader("Loading...").show();
         } else {
             useLoader().hide();
         }
@@ -473,57 +473,58 @@ methods: {
         this.loading = false;
     },  
         async getDatasetColumns(model_value = null) {
+            this.loading = true;
             console.log(model_value);
-        if (model_value) {
-        console.log("model_id parameter provided:", model_value);
-        this.datasetColumns = []
-        try {
-                const response = await API.getDatasetColumns();
-                this.selectedModelString = model_value;
-                const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
-                console.log("Making request with model Id :", model);
-                const paramsResponse = await API.getLatestMLTaskParams(model);
-                const params = paramsResponse.data.params;
+            if (model_value) {
+            console.log("model_id parameter provided:", model_value);
+            this.datasetColumns = []
+            try {
+                    const response = await API.getDatasetColumns();
+                    this.selectedModelString = model_value;
+                    const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
+                    console.log("Making request with model Id :", model);
+                    const paramsResponse = await API.getLatestMLTaskParams(model);
+                    const params = paramsResponse.data.params;
 
-                this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
-                this.selectedLinkFunctionString = paramsResponse.data.link_function;
-                this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
-                this.selectedL1Ratio = paramsResponse.data.l1_ratio ? paramsResponse.data.l1_ratio : 0;
+                    this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
+                    this.selectedLinkFunctionString = paramsResponse.data.link_function;
+                    this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
+                    this.selectedL1Ratio = paramsResponse.data.l1_ratio ? paramsResponse.data.l1_ratio : 0;
 
-                console.log("paramsResponse:", paramsResponse.data);
-                this.datasetColumns = response.data.map((column: ColumnInput) => {
-                    const columnName = column.column;
-                    const options = column.options;
-                    const param = params[columnName];
-                    const isTargetColumn = columnName === paramsResponse.data.target_column;
-                    const isExposureColumn = columnName === paramsResponse.data.exposure_column;
-                    
-                    // Set the selected target variable if this column is the target column
-                    if (isTargetColumn) {
-                        this.selectedTargetVariable = columnName;
-                    }
+                    console.log("paramsResponse:", paramsResponse.data);
+                    this.datasetColumns = response.data.map((column: ColumnInput) => {
+                        const columnName = column.column;
+                        const options = column.options;
+                        const param = params[columnName];
+                        const isTargetColumn = columnName === paramsResponse.data.target_column;
+                        const isExposureColumn = columnName === paramsResponse.data.exposure_column;
+                        
+                        // Set the selected target variable if this column is the target column
+                        if (isTargetColumn) {
+                            this.selectedTargetVariable = columnName;
+                        }
 
 
-                    // Set the selected exposure variable if this column is the exposure column
-                    if (isExposureColumn) {
-                        this.selectedExposureVariable = columnName;
-                    }
+                        // Set the selected exposure variable if this column is the exposure column
+                        if (isExposureColumn) {
+                            this.selectedExposureVariable = columnName;
+                        }
 
-                    return {
-                        name: columnName,
-                        isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
-                        role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
-                        type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
-                        preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
-                        chooseBaseLevel: param.chooseBaseLevel ? param.chooseBaseLevel : false,
-                        options: options,
-                        baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
-                    };
-                });
+                        return {
+                            name: columnName,
+                            isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
+                            role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
+                            type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
+                            preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
+                            chooseBaseLevel: param.chooseBaseLevel ? param.chooseBaseLevel : false,
+                            options: options,
+                            baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
+                        };
+                    });
 
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                }
 
         } 
     else {
@@ -547,6 +548,7 @@ methods: {
             this.datasetColumns = [];
         }
      }
+     this.loading = false;
      },
     
     },
