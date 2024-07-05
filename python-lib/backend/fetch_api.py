@@ -618,6 +618,12 @@ def train_model():
         current_app.logger.exception(f"An error occurred during model training {e}")
         return jsonify({'error': str(e)}), 500
 
+
+def np_encode(obj):
+    if isinstance(obj, np.int64):
+        return int(obj)
+    return obj
+
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
 def get_dataset_columns():
     
@@ -631,13 +637,13 @@ def get_dataset_columns():
             dataset_name = "claim_train"
             
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
+        
+        df = dataiku.Dataset(dataset_name).get_dataframe()
+        cols_json = [{'column': col, 'options': sorted([str(val) for val in df[col].unique()]), 'baseLevel': str(df[col].mode().iloc[0])} for col in df.columns]
 
-        cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
-        column_names = [column['name'] for column in cols_dict]
+        current_app.logger.info(f"Successfully retrieved column for dataset '{dataset_name}': {[col['column'] for col in cols_json]}")
 
-        current_app.logger.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
-
-        return jsonify(column_names)
+        return jsonify(cols_json)
     
     except KeyError as e:
         current_app.logger.error(f"Missing key in request: {e}")
