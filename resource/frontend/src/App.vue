@@ -3,37 +3,21 @@
       <ModelTrainingTab
         @update-models="updateModels">
       </ModelTrainingTab>
-      <OneWayTab
+      <ModelVisualizationTab
       :reload-models="reloadModels">
-      </OneWayTab>
-      <VariableLevelStatsTab
-      :reload-models="reloadModels">
-      </VariableLevelStatsTab>
-      <LiftChartTab
-      :reload-models="reloadModels">
-      </LiftChartTab>
-      <ModelComparisonTab
-      :reload-models="reloadModels">
-      </ModelComparisonTab>
-
+      </ModelVisualizationTab>
     </BsLayoutDefault>
 </template>
 
 <script lang="ts">
-import LiftChartTab from './components/LiftChartTab.vue';
 import ModelTrainingTab from './components/ModelTrainingTab.vue';
-import ModelComparisonTab from './components/ModelComparisonTab.vue';
-import OneWayTab from './components/OneWayTab.vue';
-import VariableLevelStatsTab from './components/VariableLevelStatsTab.vue';
+import ModelVisualizationTab from './components/ModelVisualizationTab.vue'
 import { BsLayoutDefault } from "quasar-ui-bs";
 import { defineComponent } from "vue";
 export default defineComponent({
     components: {
         ModelTrainingTab,
-        ModelComparisonTab,
-        OneWayTab,
-        VariableLevelStatsTab,
-        LiftChartTab,
+        ModelVisualizationTab,
     },
     data() {
     return {

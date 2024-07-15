@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 import random
 import re
-is_local = False
+is_local = True
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
