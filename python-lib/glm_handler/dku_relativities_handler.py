@@ -7,7 +7,7 @@ import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 import logging
-from backend.logging_settings import logger
+from backend.logging_assist import logger
 
 class RelativitiesHandler:
     """

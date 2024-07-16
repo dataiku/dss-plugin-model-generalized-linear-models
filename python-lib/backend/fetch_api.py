@@ -2,7 +2,22 @@ from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 import random
 import re
+from logging_assist.logging import logger
+from backend.api_utils import format_models
+from backend.web_app_configuration import WebAppConfiguration
+from backend.local_config import *
+from io import BytesIO
+from time import time
+import traceback
+import dataiku
+from dataiku.customwebapp import get_webapp_config
+import threading
+import numpy as np
+
 is_local = False
+global_DkuMLTask, model_cache, model_deployer, model_handler = None
+
+logger.debug(f"Starting web application with is_local: {is_local}")
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -12,42 +27,14 @@ if not is_local:
     from glm_handler.dku_model_metrics import ModelMetricsCalculator
     from backend.model_cache import setup_model_cache, update_model_cache
     
-from backend.api_utils import format_models
-from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
-dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, 
-dummy_model_metrics, dummy_setup_params, dummy_setup_params_2)
-from backend.logging_settings import logger
-from io import BytesIO
-from time import time
-import traceback
-import dataiku
-from dataiku.customwebapp import get_webapp_config
-import threading
-
-import numpy as np
-
-fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
-client = dataiku.api_client()
-project = client.get_default_project()
-
-if not is_local:   
-    web_app_config = get_webapp_config()
-    existing_analysis_id = web_app_config.get("existing_analysis_id")
-    input_dataset = web_app_config.get("training_dataset_string")
-    prediction_type = web_app_config.get("prediction_type")
-    setup_type = web_app_config.get("setup_type")
-    policy = web_app_config.get("policy")
-    test_dataset_string = web_app_config.get("test_dataset_string")
-    
+    config = WebAppConfig()
     data_handler = GlmDataHandler()
     
-    if setup_type != "new":
-        saved_model_id = web_app_config.get("saved_model_id")
-        global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
-        global_DkuMLTask.setup_using_existing_ml_task(existing_analysis_id, saved_model_id)
-        print(f'Savemodel id is {saved_model_id}')
-        model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
-        model_handler = ModelHandler(saved_model_id, data_handler)
+    if config.setup_type != "new":
+        global_DkuMLTask = DataikuMLTask(config.input_dataset, config.prediction_type, config.policy, config.test_dataset_string)
+        global_DkuMLTask.setup_using_existing_ml_task(config.existing_analysis_id, config.saved_model_id)
+        model_deployer = ModelDeployer(global_DkuMLTask.mltask, config.saved_model_id)
+        model_handler = ModelHandler(config.saved_model_id, data_handler)
         
         def setup_cache():
             global model_cache
@@ -55,21 +42,18 @@ if not is_local:
         
         loading_thread = threading.Thread(target=setup_cache)
         loading_thread.start()
-    else:
-        global_DkuMLTask = None
-        model_cache = None
-        model_deployer = None
-        model_handler = None
+
         
         def setup_cache():
             return
         
         loading_thread = threading.Thread(target=setup_cache)
         loading_thread.start()
-    
 
 
-
+fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
+client = dataiku.api_client()
+project = client.get_default_project()
 
 
 @fetch_api.route("/models", methods=["GET"])
