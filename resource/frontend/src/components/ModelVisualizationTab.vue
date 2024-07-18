@@ -80,7 +80,7 @@
                       <BsLabel v-if="selectedModelString && (tab=='one-way-variable' || tab=='lift-chart')"
                         label="Run Analysis on">
                       </BsLabel>
-                      <BsToggle v-if="selectedModelString" 
+                      <BsToggle v-if="selectedModelString && (tab=='one-way-variable' || tab=='lift-chart')" 
                       v-model="trainTest"
                       @update:modelValue="updateTrainTest"
                       labelRight="Test" 
