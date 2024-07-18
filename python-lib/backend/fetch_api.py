@@ -602,7 +602,8 @@ def train_model():
         "l1_ratio": l1_ratio,
         "variables": variables,
     }
-    missing_params = [key for key, value in params.items() if not value]
+    
+    missing_params = [key for key, value in params.items() if value is None]
     if missing_params:
         missing_str = ", ".join(missing_params)
         current_app.logger.error(f"Missing parameters in the request: {missing_str}")
