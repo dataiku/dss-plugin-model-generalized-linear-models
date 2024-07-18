@@ -1,6 +1,6 @@
 import re
 from flask import current_app
-
+from logging_assist.logging import logger
 pattern = r'\((.*?)\)'
 
 def format_models(global_dku_mltask):
@@ -18,6 +18,8 @@ def format_models(global_dku_mltask):
     return models
 
 def check_model_conformity(model_details):
+    logger.info("Check for Model Conformity")
+    
     is_glm = check_is_glm(model_details)
     #no_regularization = check_no_regularization(model_details)
     no_offset = check_no_offset(model_details)
@@ -27,11 +29,14 @@ def check_model_conformity(model_details):
     return all([is_glm, no_offset, no_weighting, train_test_split, feature_handling])
 
 def check_is_glm(model_details):
+    logger.info("Model Conformity Check: is GLM?")
     modeling = model_details.details['modeling']
     if modeling['algorithm'] != 'CUSTOM_PLUGIN':
         return False
     if modeling['plugin_python_grid']['pluginId'] != 'generalized-linear-models':
+        logger.info("Failed: Model Conformity Check: is GLM?")
         return False
+    logger.info("Passed: Model Conformity Check: is GLM?")
     return True
 
 def check_no_regularization(model_details):
@@ -41,15 +46,21 @@ def check_no_regularization(model_details):
     return True
 
 def check_no_offset(model_details):
+    logger.info("Model Conformity Check: no offsets?")
     offsets = model_details.details['modeling']['plugin_python_grid']['params']['offset_columns']
     if len(offsets) > 0:
         return False
+        logger.info("Failed: Model Conformity Check: no offsets?")
+    logger.info("Passed: Model Conformity Check: no offsets?")
     return True
 
 def check_no_weighting(model_details):
+    logger.info("Model Conformity Check: no weighting?")
     weight_method = model_details.details['coreParams']['weight']['weightMethod']
     if weight_method != 'NO_WEIGHTING':
+        logger.info("FAILED: Model Conformity Check: no weighting?")
         return False
+    logger.info("PASSED: Model Conformity Check: no weighting?")
     return True
 
 def check_train_test_split(model_details):
@@ -70,3 +81,8 @@ def check_feature_handling(model_details):
                 if feature_handling['rescaling'] != 'NONE':
                     return False
     return True
+
+def np_encode(obj):
+    if isinstance(obj, np.int64):
+        return int(obj)
+    return obj

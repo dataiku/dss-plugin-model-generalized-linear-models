@@ -12,9 +12,9 @@ class LazyLogger:
         if not cls._initialized:
             try:
                 webapp_config = get_webapp_config()
-                log_level = webapp_config.get('log_level', 'INFO')
+                log_level = webapp_config.get('log_level', 'DEBUG')
             except Exception as e:
-                log_level = 'INFO'
+                log_level = 'DEBUG'
 
             level = getattr(logging, log_level.upper(), logging.INFO)
             if not isinstance(level, int):

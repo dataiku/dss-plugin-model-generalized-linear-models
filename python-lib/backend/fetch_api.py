@@ -3,182 +3,168 @@ import pandas as pd
 import random
 import re
 from logging_assist.logging import logger
-from backend.api_utils import format_models
-from backend.web_app_configuration import WebAppConfiguration
+from backend.api_utils import format_models, np_encode
 from backend.local_config import *
+from dku_visual_ml.dku_train_model_config import DKUVisualMLConfig
 from io import BytesIO
 from time import time
 import traceback
 import dataiku
-from dataiku.customwebapp import get_webapp_config
 import threading
 import numpy as np
+import time
 
 is_local = False
-global_DkuMLTask, model_cache, model_deployer, model_handler = None
+visual_ml_trainer = model_cache = model_deployer =model_handler = None
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
 if not is_local:
-    from glm_handler.dku_model_trainer import DataikuMLTask
+    from dku_visual_ml.dku_model_trainer import VisualMLModelTrainer
+    from dku_visual_ml.dku_model_retrival import VisualMLModelRetriver
     from glm_handler.dku_model_handler import ModelHandler
     from glm_handler.dku_model_deployer import ModelDeployer
     from glm_handler.glm_data_handler import GlmDataHandler
     from glm_handler.dku_model_metrics import ModelMetricsCalculator
     from backend.model_cache import setup_model_cache, update_model_cache
     
-    config = WebAppConfig()
+    visual_ml_config = DKUVisualMLConfig()
     data_handler = GlmDataHandler()
+    visual_ml_trainer = VisualMLModelTrainer()
     
-    if config.setup_type != "new":
-        global_DkuMLTask = DataikuMLTask(config.input_dataset, config.prediction_type, config.policy, config.test_dataset_string)
-        global_DkuMLTask.setup_using_existing_ml_task(config.existing_analysis_id, config.saved_model_id)
-        model_deployer = ModelDeployer(global_DkuMLTask.mltask, config.saved_model_id)
-        model_handler = ModelHandler(config.saved_model_id, data_handler)
+    if visual_ml_config.setup_type != "new":
+        visual_ml_trainer.setup_using_existing_ml_task(
+            visual_ml_config.existing_analysis_id, 
+            visual_ml_config.saved_model_id
+            )
+        model_deployer = ModelDeployer(
+            visual_ml_trainer.mltask, 
+            visual_ml_config.saved_model_id
+            )
+        model_handler = ModelHandler(
+            visual_ml_config.saved_model_id, 
+            data_handler
+            )
+    
         
-        def setup_cache():
-            global model_cache
-            model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
-        
-        loading_thread = threading.Thread(target=setup_cache)
-        loading_thread.start()
+def setup_cache():
+    global model_cache
+    latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+    model_cache = setup_model_cache(latest_ml_task, model_deployer, model_handler)
 
-        
-        def setup_cache():
-            return
-        
-        loading_thread = threading.Thread(target=setup_cache)
-        loading_thread.start()
+loading_thread = threading.Thread(target=setup_cache)
+loading_thread.start()
 
 
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
 client = dataiku.api_client()
 project = client.get_default_project()
+@fetch_api.route("/train_model", methods=["POST"])
 
-
-@fetch_api.route("/models", methods=["GET"])
-def get_models():
+def train_model():
+    logger.info("Initalising Model Traing")
     
     if is_local:
-        return jsonify(dummy_models)
+        logger.info("Local set up: No model training completed")
+        time.sleep(2)
+        return jsonify({'message': 'Model training initiated successfully.'}), 200
     
-    if global_DkuMLTask is None:
-        return jsonify({'error': 'ML task not initialized'}), 500
-    try:
-        #refresh the ml task        
-        current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
-        dku_ml_task = global_DkuMLTask.mltask
-        models = format_models(dku_ml_task)
-        current_app.logger.info(f"models from global ML task is {models}")
-        return jsonify(models)
-    except Exception as e:
-        current_app.logger.exception("An error occurred while retrieving models")
-        return jsonify({'error': str(e)}), 500
-    return jsonify(models)
+    global visual_ml_trainer, model_cache, model_deployer, model_handler
+    
+    visual_ml_config.update_model_parameters(request.get_json())
 
+    try:
+        ml_task = visual_ml_trainer.get_latest_ml_task()
+        if not ml_task:
+            current_app.logger.debug("First time training a model, creating Visual ML Trainer")
+            visual_ml_trainer = VisualMLModelTrainer(visual_ml_config)
+        
+        visual_ml_trainer.update_visual_ml_config(visual_ml_config)
+        model_details = visual_ml_trainer.train_model(
+            code_env_string=visual_ml_config.code_env_string,
+            session_name=visual_ml_config.model_name_string
+        )
+        
+        saved_model_id = model_details.get("savedModelId")
+        current_app.logger.info("Model training initiated successfully")
+        loading_thread.join()
+        
+        if not model_cache:
+            logger.info("Creating Model cache For the first time")
+            latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+            model_deployer = ModelDeployer(latest_ml_task, saved_model_id)
+            model_handler = ModelHandler(saved_model_id, data_handler)
+            model_cache = setup_model_cache(latest_ml_task, model_deployer, model_handler)
+        
+        model_cache = update_model_cache(latest_ml_task, model_cache, model_handler)
+        
+        logger.info("Model trained and cache updated")
+        return jsonify({'message': 'Model training completed successfully.'}), 200
+    except Exception as e:
+        current_app.logger.exception(f"An error occurred during model training {e}")
+        return jsonify({'error': str(e)}), 500
+    
+    
 @fetch_api.route("/get_latest_mltask_params", methods=["POST"])
 def get_latest_mltask_params():
-    
-    request_json = request.get_json()
-    current_app.logger.info(f"Recieved request with payload in ml task params: {request_json}")
-    full_model_id = request_json["id"]
-    current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
     
     if is_local:
         setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
         current_app.logger.info(f"Returning Params {setup_params}")
         return jsonify(setup_params)
-    #try:
-    client = dataiku.api_client()
-    mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
-
-    model_details = mltask.get_trained_model_details(full_model_id)
-
-    algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
-    algo_settings.get('params').get('exposure_columns')[0]
-    exposure_column = algo_settings.get('params').get('exposure_columns')[0]
-    distribution_function = algo_settings.get('params').get('family_name')
-    link_function = algo_settings.get('params').get(distribution_function+"_link")
-    elastic_net_penalty = algo_settings.get('params').get('penalty')[0]
-    l1_ratio = algo_settings.get('params').get('l1_ratio')[0]
-    preprocessing = model_details.get_preprocessing_settings().get('per_feature')
-    features = preprocessing.keys()
-
-
-    features_dict = {}
-    for feature in features:
-        feature_settings = preprocessing.get(feature)
-        choose_base_level = feature_settings.get('category_handling') and not ("series.mode()[0]" in feature_settings.get('customHandlingCode'))
-        base_level = None
-        if choose_base_level:
-            pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
-            # Search for the pattern in the code string
-            match = re.search(pattern, feature_settings.get('customHandlingCode'))
-            # Extract and print the matched value
-            if match:
-                base_level = match.group(1)
-        features_dict[feature] = {
-            "role": feature_settings.get('role'),
-             'type': feature_settings.get('type'),
-            "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling'),
-            "chooseBaseLevel": choose_base_level,
-            "baseLevel": base_level
-
-        }
-        if feature == exposure_column:
-            features_dict[feature]["role"]=="Exposure"
-        if features_dict[feature]["role"]=="TARGET":
-            features_dict[feature]["role"]=="Target"
-            target_column = feature
-    setup_params = {
-        "target_column": target_column,
-        "exposure_column":exposure_column,
-        "distribution_function": distribution_function.title(),
-        "link_function":link_function.title(),
-        "elastic_net_penalty": elastic_net_penalty,
-        "l1_ratio": l1_ratio,
-        "params": features_dict
-    }
+    
+    request_json = request.get_json()
+    full_model_id = request_json["id"]
+    current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
+    
+    model_retriver = VisualMLModelRetriver(full_model_id)
+    setup_params = model_retriver.get_setup_params()
+   
     current_app.logger.info(f"Returning setup params {setup_params}")
     return jsonify(setup_params)
-    #except:
-    #    setup_params = {
-    #        "target_column": None,
-    #        "exposure_column":None,
-    #        "distribution_function": None,
-    #        "link_function":None,
-    #        "params": None
-    #    }
-    #    current_app.logger.info(f"Failed setup: Returning setup params {setup_params}")
-    #    return jsonify(setup_params)
-
-
-
 
 @fetch_api.route("/variables", methods=["POST"])
 def get_variables():
     if is_local:
         return jsonify(dummy_variables)
+    
     request_json = request.get_json()
     full_model_id = request_json["id"]
     try:
         loading_thread.join()
         variables = model_cache[full_model_id].get('features')
-        print(f"Model cache for{full_model_id} is {model_cache[full_model_id]}")
-        print(variables)
-        if variables is None:
-            raise ValueError("variables returned None.")
+        logger.debug(f"Model cache for{full_model_id} is {model_cache[full_model_id]}")
         
     except ValueError as e:
         current_app.logger.error(f"Validation Error: {e}")
         return jsonify({"error": e})        
     except Exception as e:
         current_app.logger.error(f"An error occurred: {e}")
-    
-    return jsonify(variables)
-# local dev
-    # return jsonify(dummy_variables)
+        return jsonify({"error": e})    
+        
+    if variables is None:
+            raise ValueError("No variables returned.")
+    else: return jsonify(variables)
 
+@fetch_api.route("/models", methods=["GET"])
+def get_models():
+    if is_local:
+        return jsonify(dummy_models)
+    
+    latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+    
+    if latest_ml_task is None:
+        return jsonify({'error': 'ML task not initialized'}), 500
+    try:  
+        current_app.logger.info(f"Mltask has : {len(visual_ml_trainer.mltask.get_trained_models_ids())} Models")
+        
+        models = format_models(latest_ml_task)
+        current_app.logger.info(f"models from global ML task is {models}")
+        return jsonify(models)
+    except Exception as e:
+        current_app.logger.exception("An error occurred while retrieving models")
+        return jsonify({'error': str(e)}), 500
+    return jsonify(models)
 
 
 @fetch_api.route("/data", methods=["POST"])
@@ -287,22 +273,14 @@ def get_relativities():
 
 @fetch_api.route("/get_variable_level_stats", methods=["POST"])
 def get_variable_level_stats():
+    logger.info("Getting Variable Level Stats")
     if is_local:
-        df = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
-                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
-                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
-                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
-                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
-                        'weight': [234, 87, 73, 122, 90], 
-                        'weight_pct': [60, 20, 20, 65, 35], 
-                        'relativity': [1, 1.23, 1.077, 1, 0.98]})
-        return jsonify(df.to_dict('records'))
-    print("variable level stats")
+        return jsonify(dummy_variable_level_stats)
+    
     loading_thread.join()
     request_json = request.get_json()
     full_model_id = request_json["id"]
-    
-    current_app.logger.info(f"Model ID received: {full_model_id}")
+    current_app.logger.info(f"for Model ID: {full_model_id}")
 
 
     df = model_cache[full_model_id].get('variable_stats')
@@ -541,100 +519,6 @@ def export_one_way():
         as_attachment=True,
         download_name='variable_level_stats.csv'
     )
-
-
-@fetch_api.route("/train_model", methods=["POST"])
-def train_model():
-    # Log the receipt of a new training request
-    request_json = request.get_json()
-    current_app.logger.info(f"Received a model training request: {request_json}")
-    if is_local:
-        import time
-        time.sleep(5)
-        return jsonify({'message': 'Model training initiated successfully.'}), 200
-    global global_DkuMLTask, model_cache, model_deployer, model_handler
-
-    try: 
-        web_app_config = get_webapp_config()
-        input_dataset = web_app_config.get("training_dataset_string")
-        code_env_string = web_app_config.get("code_env_string")
-        target_column = web_app_config.get("target_column")
-        prediction_type = web_app_config.get("prediction_type")
-        
-    except:
-        input_dataset = "claim_train"
-        code_env_string="py39_sol"
-
-        
-    current_app.logger.info(f"Training Dataset name selected is: {input_dataset}") 
-    
-    distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
-    link_function = request_json.get('model_parameters', {}).get('link_function')
-    elastic_net_penalty = request_json.get('model_parameters', {}).get('elastic_net_penalty')
-    l1_ratio = request_json.get('model_parameters', {}).get('l1_ratio')
-    model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
-    variables = request_json.get('variables')
-    policy = web_app_config.get("policy")
-    test_dataset_string = web_app_config.get("test_dataset_string")
-
-    current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Elastic Net Penalty: {elastic_net_penalty}, L1 Ratio: {l1_ratio}, Variables: {variables}")
-    params = {
-        "input_dataset": input_dataset,
-        "distribution_function": distribution_function,
-        "link_function": link_function,
-        "elastic_net_penalty": elastic_net_penalty,
-        "l1_ratio": l1_ratio,
-        "variables": variables,
-    }
-    missing_params = [key for key, value in params.items() if not value]
-    if missing_params:
-        missing_str = ", ".join(missing_params)
-        current_app.logger.error(f"Missing parameters in the request: {missing_str}")
-        return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
-
-    try:
-        if not global_DkuMLTask:
-            current_app.logger.debug("First time training a model, creating global_DkuMLTask")
-            global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
-            global_DkuMLTask.create_inital_ml_task(target_column)# defaults to target set in web app settings, this is overriden
-            
-        global_DkuMLTask.update_parameters(distribution_function, link_function, elastic_net_penalty, l1_ratio, variables)
-        global_DkuMLTask.create_visual_ml_task()
-        current_app.logger.debug("Visual ML task created successfully")
-
-        global_DkuMLTask.enable_glm_algorithm()
-        current_app.logger.debug("GLM algorithm enabled successfully")
-
-        settings = global_DkuMLTask.test_settings()
-        settings_new = global_DkuMLTask.configure_variables()
-        current_app.logger.debug("Model settings configured successfully")
-
-        model_details = global_DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
-        current_app.logger.debug(f"Model model_details are {model_details}")
-        saved_model_id = model_details.get("savedModelId")
-        
-        current_app.logger.info("Model training initiated successfully")
-        loading_thread.join()
-        
-        if not model_cache:
-            model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
-            model_handler = ModelHandler(saved_model_id, data_handler)
-            model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
-        
-        model_cache = update_model_cache(global_DkuMLTask.mltask, model_cache, model_handler)
-            
-
-        
-        return jsonify({'message': 'Model training completed successfully.'}), 200
-    except Exception as e:
-        current_app.logger.exception(f"An error occurred during model training {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-def np_encode(obj):
-    if isinstance(obj, np.int64):
-        return int(obj)
-    return obj
 
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
 def get_dataset_columns():

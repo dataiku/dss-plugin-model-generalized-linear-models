@@ -199,3 +199,11 @@ def get_dummy_model_comparison_data():
     df['model2_baseLevelPrediction']= np.random.uniform(0.5, 1, size=11)
     return df
 
+dummy_variable_level_stats = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
+                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
+                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
+                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
+                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
+                        'weight': [234, 87, 73, 122, 90], 
+                        'weight_pct': [60, 20, 20, 65, 35], 
+                        'relativity': [1, 1.23, 1.077, 1, 0.98]}).to_dict('records')
