@@ -1,6 +1,6 @@
 <template>
     <BsTab
-                name="One Way Variable"
+                name="Model Analysis"
                 docTitle="GLM Analyzer"
                 :docIcon="docLogo"
             >
@@ -41,14 +41,14 @@
                       padding="4"
                       @click="onClick">Export Full Model</BsButton>
                     </div>
-                  <BsCheckbox v-if="selectedModelString" v-model="includeSuspectVariables" label="Include Suspect Variables">
+                  <BsCheckbox v-if="selectedModelString && tab=='one-way-variable'" v-model="includeSuspectVariables" label="Include Suspect Variables">
                   </BsCheckbox>
-                  <BsLabel v-if="selectedModelString"
+                  <BsLabel v-if="selectedModelString && tab=='one-way-variable'"
                       label="Select a Variable"
                       info-text="Charts will be generated with respect to this variable">
                    </BsLabel>
                     <BsSelect
-                      v-if="selectedModelString"
+                      v-if="selectedModelString && tab=='one-way-variable'"
                           v-model="selectedVariable"
                           :all-options="variablePoints"
                           @update:modelValue="updateVariable">
@@ -70,10 +70,14 @@
                             </template>
                       </BsSelect>
                       <BsCheckbox v-model="rescale" 
-                      v-if="selectedVariable.isInModel"
+                      v-if="selectedVariable.isInModel && tab=='one-way-variable'"
                       @update:modelValue="updateRescale" 
                       label="Rescale?"></BsCheckbox>
-                      <BsLabel v-if="selectedModelString"
+                      <BsLabel v-if="selectedModelString && tab=='lift-chart'"
+                        label="Select the number of bins">
+                    </BsLabel>
+                    <BsSlider v-if="selectedModelString && tab=='lift-chart'" @update:modelValue="updateNbBins" v-model="nbBins" :min="2" :max="20"/>
+                      <BsLabel v-if="selectedModelString && (tab=='one-way-variable' || tab=='lift-chart')"
                         label="Run Analysis on">
                       </BsLabel>
                       <BsToggle v-if="selectedModelString" 
@@ -81,7 +85,7 @@
                       @update:modelValue="updateTrainTest"
                       labelRight="Test" 
                       labelLeft="Train"/>
-                      <div v-if="selectedVariable.variable" class="button-container">
+                      <div v-if="selectedVariable.variable && tab=='one-way-variable'" class="button-container">
                         <BsButton class="bs-primary-button" 
                         unelevated
                         dense
@@ -89,6 +93,14 @@
                         padding="4"
                         @click="onClickOneWay">Export One-Way Data</BsButton>
                       </div>
+                      <div v-if="selectedModelString && tab=='variable-level-stats'" class="button-container">
+                        <BsButton class="bs-primary-button" 
+                        unelevated
+                        dense
+                        no-caps
+                        padding="4"
+                        @click="onClickStats">Export</BsButton>
+                        </div>
                     </div>
                     <BsButton
                         flat
@@ -136,8 +148,9 @@
                             </q-tab-panel>
                     
                             <q-tab-panel name="lift-chart">
-                                <div class="bs-font-medium-3-bold">Movies</div>
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                                <LiftChartTabContent
+                                :chart-data=liftChartData
+                                ></LiftChartTabContent>
                             </q-tab-panel>
                             </q-tab-panels>
                         </div>
@@ -152,6 +165,7 @@
     import EmptyState from './EmptyState.vue';
     import OneWayTabContent from './OneWayTabContent.vue'
     import VariableLevelStatsTabContent from './VariableLevelStatsTabContent.vue'
+    import LiftChartTabContent from './LiftChartTabContent.vue'
     import * as echarts from "echarts";
     import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, VariableLevelStatsPoint, LiftDataPoint } from '../models';
     import { isErrorPoint } from '../models';
@@ -221,7 +235,8 @@
             BsSlider,
             BsToggle,
             OneWayTabContent,
-            VariableLevelStatsTabContent
+            VariableLevelStatsTabContent,
+            LiftChartTabContent
         },
         data() {
             return {
@@ -251,7 +266,8 @@
                 rescale: false,
                 tab: "one-way-variable",
                 variableLevelStatsData: [] as VariableLevelStatsPoint[],
-                variableLevelStatsColumns: variableLevelStatsColumns
+                variableLevelStatsColumns: variableLevelStatsColumns,
+                nbBins: 8 as number
             };
         },
         watch: {
@@ -342,6 +358,9 @@
               const modelTrainPoint = {id: this.active_model.id, name: this.active_model.name, trainTest: this.trainTest};
               const dataResponse = await API.getData(modelTrainPoint);
               this.allData = dataResponse?.data;
+              const modelLiftPoint = { nbBins: this.nbBins, id: modelTrainPoint.id, name: modelTrainPoint.name, trainTest: this.trainTest};
+              const liftDataResponse = await API.getLiftData(modelLiftPoint);
+              this.liftChartData = liftDataResponse?.data;
             },
             async updateRescale(value: boolean) {
               if (value) {
@@ -410,6 +429,15 @@
               this.loading = false;
             }
             },
+            async updateNbBins(value: number) {
+                this.loading = true;
+                this.nbBins = value;
+                const model = this.models.filter( (v: ModelPoint) => v.name==this.selectedModelString)[0];
+                const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name, trainTest: this.trainTest};
+                const dataResponse = await API.getLiftData(modelNbBins);
+                this.liftChartData = dataResponse?.data;
+                this.loading = false;
+            },
             onClick: function() {
               API.exportModel(this.active_model).then(response => {
                   const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
@@ -439,6 +467,19 @@
               }).catch(error => {
                   console.error('Error exporting model:', error);
               });
+            },
+            onClickStats: function() {
+                API.exportVariableLevelStats(this.active_model).then(response => {
+                    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', 'variable_level_stats.csv'); // Set the filename for the download
+                    document.body.appendChild(link);
+                    link.click();
+                    window.URL.revokeObjectURL(url); // Clean up
+                }).catch(error => {
+                    console.error('Error exporting model:', error);
+                });
             },
             notifyError(msg: string) {
                 useNotification("negative", msg);
