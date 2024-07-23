@@ -91,7 +91,7 @@ dummy_relativites= pd.DataFrame({'variable': ['Variable1','Variable1','Variable1
                         'category': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'December', 'Other','January', 'February', 'March', 'April'],
                         'relativity': [1.0, 1.087324, 0.98091882, 0.7929717, 1.087324, 0.98091882, 0.7929717, 0.992374, 1.087324, 0.98091882, 0.7929717, 0.992374, 1.0, 0.992374, 1.19274, 1.052333]})
 
-dummy_model_metrics ={
+dummy_model_metrics_old ={
         "models": {
             "Model_1": {
             "AIC": 100,
@@ -105,6 +105,19 @@ dummy_model_metrics ={
             }
         }
         }
+
+dummy_model_metrics ={
+            "AIC": 100,
+            "BIC": 120,
+            "Deviance": 5.5
+        }
+
+dummy_model_metrics2 ={
+            "AIC": 323,
+            "BIC": 992,
+            "Deviance": 18881
+        }
+
 dummy_setup_params = {
     "target_column": "ClaimAmount",
     "exposure_column":"Exposure",

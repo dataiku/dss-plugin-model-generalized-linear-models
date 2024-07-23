@@ -45,6 +45,16 @@
       type: Array,
       required: true
     },
+    fittedAverageLine2: {
+      type: Array,
+      required: false,
+      default: null
+    },
+    baseLevelPredictionLine2: {
+      type: Array,
+      required: false,
+      default: null
+    },
     chartTitle:{
         type: String,
         required: true,
@@ -58,6 +68,90 @@
   },
   methods: {
     createChartData() {
+
+      const series: any[] = [
+        {
+          name: "Weights",
+          type: "bar",
+          yAxisIndex: 1, // Assign to the right Y-axis
+          itemStyle: {
+            color: "#D9D8D6",
+            opacity: 0.7, // Semi-transparent or different color
+          },
+          z: 1, // Lower z-index for background
+          data: this.barData
+        },
+        {
+          name: "Observed Average",
+          type: "line",
+          yAxisIndex: 0, // Assign to the left Y-axis
+          itemStyle: {
+            color: "#A77BCA",
+            opacity: 0.7,
+          },
+          z: 3, // Higher z-index for main bars
+          data: this.observedAverageLine,
+        },
+        {
+            name: "Fitted Average",
+            type: "line",
+            yAxisIndex: 0, // Assign to the left Y-axis
+            itemStyle: {
+                color: "#008675",
+                opacity: 0.7,
+            },
+            z: 3, // Higher z-index for main bars
+            data: this.fittedAverageLine,
+        },
+        {
+            name: "Base Level Prediction",
+            type: "line",
+            yAxisIndex: 0, // Assign to the left Y-axis
+            itemStyle: {
+                color: "#26d07c",
+                opacity: 0.7,
+            },
+            z: 3, // Higher z-index for main bars
+            data: this.baseLevelPredictionLine,
+        },
+      ];
+
+      console.log(this.fittedAverageLine2);
+
+      if (this.fittedAverageLine2) {
+        series.push({
+          name: "Fitted Average 2",
+          type: "line",
+          yAxisIndex: 0, // Assign to the left Y-axis
+          itemStyle: {
+            color: "#008675",
+            opacity: 0.7
+          },
+          lineStyle: {
+            type: 'dashed' // Make the line dashed
+          },
+          z: 3, // Higher z-index for main bars
+          data: this.fittedAverageLine2,
+        });
+      }
+
+      if (this.baseLevelPredictionLine2) {
+        series.push({
+          name: "Base Level Prediction 2",
+          type: "line",
+          yAxisIndex: 0, // Assign to the left Y-axis
+          itemStyle: {
+            color: "#26d07c",
+            opacity: 0.7,
+          },
+          lineStyle: {
+            type: 'dashed' // Make the line dashed
+          },
+          z: 3, // Higher z-index for main bars
+          data: this.baseLevelPredictionLine2,
+        });
+      }
+
       this.chartOption = {
           xAxis: [{
               type: this.xaxisType==="categorical" ? "category" : null,
@@ -86,54 +180,7 @@
                     right: 0,
                     containLabel: true,
                 },
-                series: [
-                    {
-                        name: "Weights",
-                        type: "bar",
-                        yAxisIndex: 1, // Assign to the right Y-axis
-                        itemStyle: {
-                            color: "#D9D8D6",
-                            // color: "gray",
-                            opacity: 0.7, // Semi-transparent or different color
-                        },
-                        z: 1, // Lower z-index for background
-                        data: this.barData
-                    },
-                    {
-                        name: "Observed Average",
-                        type: "line",
-                        yAxisIndex: 0, // Assign to the left Y-axis
-                        itemStyle: {
-                            color: "#A77BCA",
-
-                            opacity: 0.7,
-                        },
-                        z: 3, // Higher z-index for main bars
-                        data: this.observedAverageLine,
-                    },
-                    {
-                        name: "Fitted Average",
-                        type: "line",
-                        yAxisIndex: 0, // Assign to the left Y-axis
-                        itemStyle: {
-                            color: "#008675",
-                            opacity: 0.7,
-                        },
-                        z: 3, // Higher z-index for main bars
-                        data: this.fittedAverageLine,
-                    },
-                    {
-                        name: "Base Level Prediction",
-                        type: "line",
-                        yAxisIndex: 0, // Assign to the left Y-axis
-                        itemStyle: {
-                            color: "#26d07c",
-                            opacity: 0.7,
-                        },
-                        z: 3, // Higher z-index for main bars
-                        data: this.baseLevelPredictionLine,
-                    },
-                ],
+                series: series,
                 legend: {
                   // Try 'horizontal'
                   // orient: 'vertical',

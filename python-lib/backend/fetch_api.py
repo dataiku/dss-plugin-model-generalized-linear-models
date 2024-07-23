@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 import random
 import re
-is_local = False
+is_local = True
 
 if not is_local:
     from glm_handler.dku_model_trainer import DataikuMLTask
@@ -15,7 +15,7 @@ if not is_local:
 from backend.api_utils import format_models
 from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
 dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, 
-dummy_model_metrics, dummy_setup_params, dummy_setup_params_2)
+dummy_model_metrics, dummy_model_metrics2, dummy_setup_params, dummy_setup_params_2)
 from backend.logging_settings import logger
 from io import BytesIO
 from time import time
@@ -374,8 +374,8 @@ def get_model_comparison_data():
 
 
 
-@fetch_api.route("/get_model_metrics", methods=["POST"])
-def get_model_metrics():
+@fetch_api.route("/get_model_metrics_old", methods=["POST"])
+def get_model_metrics_old():
     start_time = time()
     
     if is_local:
@@ -401,13 +401,40 @@ def get_model_metrics():
             },
             "Model_2": {
                 "AIC": model_2_metrics.get('AIC'),
-                "BIC": model_2_metrics.get('AIC'),
-                "Deviance": model_2_metrics.get('AIC'),
+                "BIC": model_2_metrics.get('BIC'),
+                "Deviance": model_2_metrics.get('Deviance'),
             }
         }
     }
     return jsonify(metrics)
 
+
+@fetch_api.route("/get_model_metrics", methods=["POST"])
+def get_model_metrics():
+    start_time = time()
+    
+    if is_local:
+        response_time = time() - start_time
+        print(f"Returned local dummy metrics in {response_time} seconds.")
+        if random.random()>0.5:
+            return jsonify(dummy_model_metrics)
+        else:
+            return jsonify(dummy_model_metrics2)
+    
+    loading_thread.join()
+    request_json = request.get_json()
+    print(request_json)
+    
+    model = request_json["model"]
+    
+    model_metrics = model_cache.get(model).get('model_metrics')
+    
+    metrics = {
+                "AIC": model_metrics.get('AIC'),
+                "BIC": model_metrics.get('BIC'),
+                "Deviance": model_metrics.get('Deviance')
+            }
+    return jsonify(metrics)
 
 
 

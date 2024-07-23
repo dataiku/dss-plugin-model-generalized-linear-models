@@ -101,6 +101,16 @@
                         padding="4"
                         @click="onClickStats">Export</BsButton>
                         </div>
+                        <BsLabel v-if="selectedModelString && tab!='variable-level-stats'"
+                          label="Compare with model"
+                          info-text="Second model to compare with the first one">
+                      </BsLabel>
+                      <BsSelect v-if="selectedModelString && tab=='one-way-variable'"
+                          :modelValue="selectedModelString2"
+                          :all-options="modelsString"
+                          @update:modelValue="updateModelString2"
+                          >
+                      </BsSelect>
                     </div>
                     <BsButton
                         flat
@@ -113,6 +123,22 @@
                     </BsButton>
                 </BsDrawer>
                 <BsContent>
+                  <div class="card-container">
+                    <BsCard v-if="selectedModelString" :title=selectedModelString style="width: 600px">
+                        <template #content>
+                            <BsCardColItems
+                            :items=modelMetrics1
+                            ></BsCardColItems>
+                        </template>
+                      </BsCard>
+                      <BsCard v-if="selectedModelString2" :title=selectedModelString2 style="width: 600px">
+                        <template #content>
+                            <BsCardColItems
+                            :items=modelMetrics2
+                            ></BsCardColItems>
+                        </template>
+                      </BsCard>
+                    </div>
                     <div class="tab-content">
                         <div class="q-pa-lg">
                             <q-tabs
@@ -134,6 +160,7 @@
                             <q-tab-panel name="one-way-variable">
                                 <OneWayTabContent
                                 :chart-data=chartData
+                                :chart-data2=chartData2
                                 :selected-variable=selectedVariable
                                 :relativities=relativities
                                 :relativities-columns=relativitiesColumns
@@ -167,7 +194,7 @@
     import VariableLevelStatsTabContent from './VariableLevelStatsTabContent.vue'
     import LiftChartTabContent from './LiftChartTabContent.vue'
     import * as echarts from "echarts";
-    import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, VariableLevelStatsPoint, LiftDataPoint } from '../models';
+    import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, VariableLevelStatsPoint, LiftDataPoint, ModelMetrics, ModelMetricsDataPoint } from '../models';
     import { isErrorPoint } from '../models';
     import { defineComponent } from "vue";
     import { API } from '../Api';
@@ -217,6 +244,13 @@
         }
       ]
     
+    const tableColumns: QTableColumn[] = [
+        { name: 'model', align: 'left', label: 'Model', field: 'model', sortable: true },
+        { name: 'AIC', align: 'left', label: 'AIC', field: 'AIC', sortable: true },
+        { name: 'BIC', align: 'left', label: 'BIC', field: 'BIC', sortable: true },
+        { name: 'Deviance', align: 'left', label: 'Deviance', field: 'Deviance', sortable: true },
+    ];
+    
     export default defineComponent({
         props: {
           reloadModels: {
@@ -241,6 +275,7 @@
         data() {
             return {
                 chartData: [] as DataPoint[],
+                chartData2: [] as DataPoint[],
                 liftChartData: [] as LiftDataPoint[],
                 allData: [] as DataPoint[],
                 relativitiesData: [] as RelativityPoint[],
@@ -249,6 +284,7 @@
                 selectedModel: {} as ModelPoint,
                 modelsString: [] as string[],
                 selectedModelString: "",
+                selectedModelString2: "",
                 layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
                 docLogo,
                 oneWayIcon,
@@ -267,7 +303,16 @@
                 tab: "one-way-variable",
                 variableLevelStatsData: [] as VariableLevelStatsPoint[],
                 variableLevelStatsColumns: variableLevelStatsColumns,
-                nbBins: 8 as number
+                nbBins: 8 as number,
+                comparisonChartTitle: "Model Metrics",
+                tableColumns: tableColumns,
+                modelMetrics1: {} as ModelMetricsDataPoint,
+                comparedModel:  {} as ModelPoint,
+                allData2: [] as DataPoint[],
+                modelMetrics2: {} as ModelMetricsDataPoint,
+                variableLevelStatsData2: [] as VariableLevelStatsPoint[],
+                relativitiesData2: [] as RelativityPoint[],
+
             };
         },
         watch: {
@@ -287,61 +332,87 @@
               }
           },
           selectedVariable(newValue: VariablePoint) {
-            this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
-            this.relativitiesColumns = columns;
-            this.relativities = this.relativitiesTable.map( (point) => {
-              const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
-              return relativity
-            })
-            if (this.rescale) {
-                const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
-                if (baseCategory) {
-                  const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
-                  if (baseData) {
-                    const baseLevelPrediction = baseData.baseLevelPrediction;
-                    const fittedAverage = baseData.fittedAverage;
-                    const observedAverage = baseData.observedAverage;
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
-                    ...item,
-                    baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
-                    fittedAverage: item.fittedAverage / fittedAverage,
-                    observedAverage: item.observedAverage / observedAverage
-                  }));
-                  } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
-              }
-                } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
-              }
-              } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
-              }
+            this.selectedVariable = newValue;
+            this.updateChartData(this.selectedVariable, this.rescale, this.selectedModelString, this.selectedModelString);
+          //   this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
+          //   this.relativitiesColumns = columns;
+          //   this.relativities = this.relativitiesTable.map( (point) => {
+          //     const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
+          //     return relativity
+          //   })
+          //   if (this.rescale) {
+          //       const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+          //       if (baseCategory) {
+          //         const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+          //         if (baseData) {
+          //           const baseLevelPrediction = baseData.baseLevelPrediction;
+          //           const fittedAverage = baseData.fittedAverage;
+          //           const observedAverage = baseData.observedAverage;
+          //       this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
+          //           ...item,
+          //           baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
+          //           fittedAverage: item.fittedAverage / fittedAverage,
+          //           observedAverage: item.observedAverage / observedAverage
+          //           }));
+          //         } else {
+          //       this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
+          //       }
+          //       if (this.selectedModelString2) {
+          //         const baseData2 = this.allData2.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+          //         if (baseData2) {
+          //           const baseLevelPrediction = baseData2.baseLevelPrediction;
+          //           const fittedAverage = baseData2.fittedAverage;
+          //           const observedAverage = baseData2.observedAverage;
+          //       this.chartData2 = this.allData2.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
+          //           ...item,
+          //           baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
+          //           fittedAverage: item.fittedAverage / fittedAverage,
+          //           observedAverage: item.observedAverage / observedAverage
+          //           }));
+          //         } else {
+          //       this.chartData2 = this.allData2.filter(item => item.definingVariable === newValue.variable);
+          //       }
+          //       }
+
+          //     } else {
+          //       this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
+          //       if (this.selectedModelString2) {
+          //         this.chartData2 = this.allData2.filter(item => item.definingVariable === newValue.variable);
+          //       }
+          //     }
+          //   } else {
+          //       this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
+          //       if (this.selectedModelString2) {
+          //         this.chartData2 = this.allData2.filter(item => item.definingVariable === newValue.variable);
+          //       }
+          // }
           },
           allData(newValue: DataPoint[]) {
-             this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-             if (this.rescale) {
-                const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
-                if (baseCategory) {
-                  const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
-                  if (baseData) {
-                    const baseLevelPrediction = baseData.baseLevelPrediction;
-                    const fittedAverage = baseData.fittedAverage;
-                    const observedAverage = baseData.observedAverage;
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
-                    ...item,
-                    baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
-                    fittedAverage: item.fittedAverage / fittedAverage,
-                    observedAverage: item.observedAverage / observedAverage
-                  }));
-                  } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-              }
-                } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-              }
-              } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-              }
+            this.updateChartData(this.selectedVariable, this.rescale, this.selectedModelString, this.selectedModelString);
+            //  this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+            //  if (this.rescale) {
+            //     const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            //     if (baseCategory) {
+            //       const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+            //       if (baseData) {
+            //         const baseLevelPrediction = baseData.baseLevelPrediction;
+            //         const fittedAverage = baseData.fittedAverage;
+            //         const observedAverage = baseData.observedAverage;
+            //     this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
+            //         ...item,
+            //         baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
+            //         fittedAverage: item.fittedAverage / fittedAverage,
+            //         observedAverage: item.observedAverage / observedAverage
+            //       }));
+            //       } else {
+            //     this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+            //   }
+            //     } else {
+            //     this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+            //   }
+            //   } else {
+            //     this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
+            //   }
           }
         },
         methods: {
@@ -349,6 +420,60 @@
                 if(this.layoutRef){
                     this.layoutRef.drawerOpen = !this.layoutRef.drawerOpen;
                 }
+            },
+            async updateChartData(variable: VariablePoint, rescale: boolean, modelString1: string, modelString2: string | null) {
+              this.relativitiesTable = this.relativitiesData.filter(item => item.variable === variable.variable);
+            this.relativitiesColumns = columns;
+            this.relativities = this.relativitiesTable.map( (point) => {
+              const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
+              return relativity
+            })
+            if (rescale) {
+                const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+                if (baseCategory) {
+                  const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+                  if (baseData) {
+                    const baseLevelPrediction = baseData.baseLevelPrediction;
+                    const fittedAverage = baseData.fittedAverage;
+                    const observedAverage = baseData.observedAverage;
+                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
+                    ...item,
+                    baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
+                    fittedAverage: item.fittedAverage / fittedAverage,
+                    observedAverage: item.observedAverage / observedAverage
+                    }));
+                  } else {
+                this.chartData = this.allData.filter(item => item.definingVariable === variable.variable);
+                }
+                if (modelString2) {
+                  const baseData2 = this.allData2.find(item => item.Category === baseCategory.category && item.definingVariable === variable.variable);
+                  if (baseData2) {
+                    const baseLevelPrediction = baseData2.baseLevelPrediction;
+                    const fittedAverage = baseData2.fittedAverage;
+                    const observedAverage = baseData2.observedAverage;
+                this.chartData2 = this.allData2.filter(item => item.definingVariable === variable.variable).map(item => ({
+                    ...item,
+                    baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
+                    fittedAverage: item.fittedAverage / fittedAverage,
+                    observedAverage: item.observedAverage / observedAverage
+                    }));
+                  } else {
+                this.chartData2 = this.allData2.filter(item => item.definingVariable === variable.variable);
+                }
+                }
+
+              } else {
+                this.chartData = this.allData.filter(item => item.definingVariable === variable.variable);
+                if (modelString2) {
+                  this.chartData2 = this.allData2.filter(item => item.definingVariable === variable.variable);
+                }
+              }
+            } else {
+                this.chartData = this.allData.filter(item => item.definingVariable === variable.variable);
+                if (modelString2) {
+                  this.chartData2 = this.allData2.filter(item => item.definingVariable === variable.variable);
+                }
+          }
             },
             async updateVariable(value: VariablePoint) {
               this.selectedVariable = value;
@@ -363,29 +488,8 @@
               this.liftChartData = liftDataResponse?.data;
             },
             async updateRescale(value: boolean) {
-              if (value) {
-                const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
-                if (baseCategory) {
-                  const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
-                  if (baseData) {
-                    const baseLevelPrediction = baseData.baseLevelPrediction;
-                    const fittedAverage = baseData.fittedAverage;
-                    const observedAverage = baseData.observedAverage;
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
-                    ...item,
-                    baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
-                    fittedAverage: item.fittedAverage / fittedAverage,
-                    observedAverage: item.observedAverage / observedAverage
-                  }));
-                  } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-              }
-                } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-              }
-              } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-              }
+              this.rescale = value;
+              this.updateChartData(this.selectedVariable, this.rescale, this.selectedModelString, this.selectedModelString);
             },
             async updateModelString(value: string) {
               this.loading = true;
@@ -393,21 +497,19 @@
                 this.selectedVariable = {} as VariablePoint;
                 const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
                 this.active_model = model
-                // if (this.tab == "one-way-variable") {
                 const variableResponse = await API.getVariables(model)
                 if (isErrorPoint(variableResponse?.data)) {
-                this.handleError(variableResponse?.data.error);
+                  this.handleError(variableResponse?.data.error);
                 } else {
-                this.variablePoints = variableResponse?.data;
-                this.allVariables = this.variablePoints.map(item => item.variable);
-                const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
-                const dataResponse = await API.getData(modelTrainPoint);
-                this.allData = dataResponse?.data;
-                const relativityResponse = await API.getRelativities(model);
-                this.relativitiesData = relativityResponse?.data;
-                this.selectedModelString = value;
+                  this.variablePoints = variableResponse?.data;
+                  this.allVariables = this.variablePoints.map(item => item.variable);
+                  const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
+                  const dataResponse = await API.getData(modelTrainPoint);
+                  this.allData = dataResponse?.data;
+                  const relativityResponse = await API.getRelativities(model);
+                  this.relativitiesData = relativityResponse?.data;
+                  this.selectedModelString = value;
                 }
-                // } else if (this.tab == "variable-level-stats") {
                 const variableLevelStatsResponse = await API.getVariableLevelStats(model);
                 this.variableLevelStatsData = variableLevelStatsResponse?.data.map( (point) => {
                     const variableLevelStats = {'variable': point.variable, 'value': point.value, 
@@ -422,12 +524,44 @@
                 const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name, trainTest: this.trainTest};
                 const dataResponse = await API.getLiftData(modelNbBins);
                 this.liftChartData = dataResponse?.data;
-                // }
+                const ModelMetricsResponse = await API.getModelMetrics(model);
+                this.modelMetrics1 = ModelMetricsResponse?.data as ModelMetricsDataPoint;
             } catch (err) {
                 this.handleError(err);
             } finally {
               this.loading = false;
             }
+            },
+            async updateModelString2(value: string) {
+              this.loading = true;
+              try {
+                this.selectedVariable = {} as VariablePoint;
+                const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
+                this.comparedModel = model;
+                const modelTrainPoint = {id: model.id, name: model.name, trainTest: this.trainTest};
+                const dataResponse = await API.getData(modelTrainPoint);
+                this.allData2 = dataResponse?.data;
+                const relativityResponse = await API.getRelativities(model);
+                this.relativitiesData2 = relativityResponse?.data;
+                this.selectedModelString2 = value;
+                const variableLevelStatsResponse = await API.getVariableLevelStats(model);
+                this.variableLevelStatsData2 = variableLevelStatsResponse?.data.map( (point) => {
+                    const variableLevelStats = {'variable': point.variable, 'value': point.value, 
+                                                'coefficient': round_decimals(point.coefficient),
+                                                'standard_error': round_decimals(point.standard_error), 
+                                                'standard_error_pct': round_decimals(point.standard_error_pct),
+                                                'weight': round_decimals(point.weight), 
+                                                'weight_pct': round_decimals(point.weight_pct), 
+                                                'relativity': round_decimals(point.relativity)};
+                    return variableLevelStats
+                });
+                const ModelMetricsResponse = await API.getModelMetrics(model);
+                this.modelMetrics2 = ModelMetricsResponse?.data as ModelMetricsDataPoint;
+              } catch (err) {
+                  this.handleError(err);
+              } finally {
+                this.loading = false;
+              }
             },
             async updateNbBins(value: number) {
                 this.loading = true;
@@ -490,6 +624,27 @@
                 this.notifyError(msg);
             },
         },
+        computed: {
+            tableData() {
+                if (!this.modelMetrics1) {
+                return []; // Return an empty array if the data is not (yet) available
+                    }
+                const modelsArray = Object.keys([this.modelMetrics1]).map(modelKey => {
+                const modelMetrics = this.modelMetrics1;
+                console.log("Model Metrics", modelMetrics);
+                return {
+                    model: this.active_model.name, // This will be "Model_1", "Model_2", etc.
+                    AIC: modelMetrics.AIC,
+                    BIC: modelMetrics.BIC,
+                    Deviance: modelMetrics.Deviance
+                    };
+                });
+
+                return modelsArray;
+            
+
+        },
+        },
         mounted() {
           API.getModels().then((data: any) => {
             this.models = data.data;
@@ -536,6 +691,19 @@
       margin-top: 12px
     }
     
+    .q-pa-lg {
+        padding: 0
+    }
+
+    .card-container {
+      display: flex;
+      gap: 20px; /* Adjust the gap value as needed */
+    }
+
+    .bs-card {
+      max-width: 440px;
+    }
+
     @media (min-width: 1024px) {
       header {
         display: flex;
@@ -567,4 +735,12 @@
         top: 4px;
     }
     </style>
+
+function updateChartData(selectedVariable: any, rescale: any, selectedModelString: any, selectedModelString1: any) {
+  throw new Error('Function not implemented.');
+}
+
+function updateChartData(selectedVariable: any, rescale: any, selectedModelString: any, selectedModelString1: any) {
+  throw new Error('Function not implemented.');
+}
     

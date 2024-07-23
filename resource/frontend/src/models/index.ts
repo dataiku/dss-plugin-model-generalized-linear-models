@@ -65,6 +65,17 @@ export type ErrorPoint = {
     error: string;
 }
 
+export type ModelMetricsDataPoint = {
+    AIC: number;
+    BIC: number;
+    Deviance: number;
+}
+
+export type ModelMetrics = {
+    [models: string]: ModelMetricsDataPoint;
+}
+
+
 export function isErrorPoint(obj: any): obj is ErrorPoint {
     return typeof obj === 'object' && obj !== null && 'error' in obj && typeof obj.error === 'string';
 }

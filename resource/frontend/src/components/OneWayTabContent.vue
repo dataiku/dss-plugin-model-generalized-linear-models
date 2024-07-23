@@ -13,6 +13,8 @@
                       :observedAverageLine="chartData.map(item => item.observedAverage)"
                       :fittedAverageLine="chartData.map(item => item.fittedAverage)"
                       :baseLevelPredictionLine="chartData.map(item => item.baseLevelPrediction)"
+                      :fittedAverageLine2="chartData2.map(item => item.fittedAverage)"
+                      :baseLevelPredictionLine2="chartData2.map(item => item.baseLevelPrediction)"
                       :chartTitle="selectedVariable.variable"
                       />
                     <BsTable v-if="selectedVariable.isInModel"
@@ -73,6 +75,10 @@ export default defineComponent({
         default: false
       },
       chartData: {
+        type: Array<DataPoint>,
+        default: []
+      },
+      chartData2: {
         type: Array<DataPoint>,
         default: []
       },
