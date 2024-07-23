@@ -8,7 +8,7 @@ from logging_assist.logging import logger
 from glm_handler.glm_data_handler import GlmDataHandler
 from dku_visual_ml.dku_model_retrival import VisualMLModelRetriver
 from chart_formatters.lift_chart import LiftChartFormatter
-
+from chart_formatters.variable_level_stats import VariableLevelStatsFormatter
 data_handler = GlmDataHandler()
 
 
@@ -88,7 +88,10 @@ def setup_model_cache(global_dku_mltask, model_deployer):
 
                 # Get variable level stats
                 step_time = time()
-                variable_stats=relativities_calculator.get_variable_level_stats()
+                variable_level_stats = VariableLevelStatsFormatter(
+                    model_retriever, data_handler, relativities_calculator
+                )
+                variable_stats=variable_level_stats.get_variable_level_stats()
                 step_elapsed = time() - step_time
                 logger.info(f"Step - Get variable level stats: {step_elapsed:.2f} seconds")
 
@@ -164,7 +167,10 @@ def update_model_cache(global_dku_mltask, model_cache):
             features = relativities_calculator.get_features()
             relativities = relativities_calculator.get_relativities_df()
             relativities_dict = relativities_calculator.relativities
-            variable_stats = relativities_calculator.get_variable_level_stats()
+            variable_level_stats = VariableLevelStatsFormatter(
+                model_retriever, data_handler, relativities_calculator
+            )
+            variable_stats=variable_level_stats.get_variable_level_stats()
             lift_chart = LiftChartFormatter(
                      model_retriever,
                      data_handler,

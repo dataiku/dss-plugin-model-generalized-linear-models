@@ -290,9 +290,6 @@ def get_variable_level_stats():
 
 
     df = model_cache[full_model_id].get('variable_stats')
-    df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
-    df.fillna(0, inplace=True)
-    df.replace([np.inf, -np.inf], 0, inplace=True)
     return jsonify(df.to_dict('records'))
 
 
