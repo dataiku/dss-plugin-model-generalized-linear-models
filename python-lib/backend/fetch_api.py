@@ -13,6 +13,7 @@ import dataiku
 import threading
 import numpy as np
 import time
+from chart_formatters.lift_chart import LiftChartFormatter
 
 is_local = False
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
@@ -201,11 +202,12 @@ def get_data():
 
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
+    
     if is_local:
-        dummy_lift_data['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['observedAverage']]
-        dummy_lift_data['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['fittedAverage']]
         return jsonify(dummy_lift_data.to_dict('records'))
+    
     current_app.logger.info("Received a new request for lift chart data.")
+    
     loading_thread.join()
     request_json = request.get_json()
     full_model_id = request_json["id"]
@@ -214,31 +216,31 @@ def get_lift_data():
     dataset = 'test' if train_test else 'train'
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
-
-    current_app.logger.info(f"Model {full_model_id} is now the active version.")
     
-    lift_chart = model_cache[full_model_id].get('lift_chart_data')
+    lift_chart_data = model_cache[full_model_id].get('lift_chart_data')
     
-    current_nb_bins = len(lift_chart[lift_chart['dataset'] == dataset])
+    current_nb_bins = len(lift_chart_data[lift_chart_data['dataset'] == dataset])
+    
     if current_nb_bins != nb_bins:
         model_deployer.set_new_active_version(full_model_id)
-        model_retriever = ModelRetriever(full_model_id)
+        model_retriever = VisualMLModelRetriver(full_model_id)
         relativites_calculator = RelativitiesCalculator(
             data_handler,
             model_retriever)
-        lift_chart = relativities_calculator.get_lift_chart(nb_bins)
-        model_cache[full_model_id]['lift_chart_data'] = lift_chart
+        
+        lift_chart = LiftChartFormatter(
+                 model_retriever,
+                 data_handler,
+                 relativities_calculator
+        ) 
+        lift_chart_data = lift_chart.get_lift_chart(nb_bins)
+        model_cache[full_model_id]['lift_chart_data'] = lift_chart_data
     
-    lift_chart.columns = ['Value', 'observedAverage', 'fittedAverage', 'Category', 'dataset']
-    lift_chart['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['observedAverage']]
-    lift_chart['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['fittedAverage']]
-    lift_chart['Value'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['Value']]
-    lift_chart = lift_chart[lift_chart['dataset'] == dataset]
-    current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
+    lift_chart_data = lift_chart_data[lift_chart_data['dataset'] == dataset]
+    current_app.logger.info(f"Successfully generated Lift chart data")
     
-    return jsonify(lift_chart.to_dict('records'))
-#     local dev
-    return jsonify(dummy_lift_data.to_dict('records'))
+    return jsonify(lift_chart_data.to_dict('records'))
+
 
 
 @fetch_api.route("/update_bins", methods=["POST"])
