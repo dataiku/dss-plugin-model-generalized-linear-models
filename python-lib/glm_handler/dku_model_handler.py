@@ -18,16 +18,13 @@ class RelativitiesCalculator:
         model_info_handler (PredictionModelInformationHandler): Handler for model information.
     """
 
-    def __init__(self, model_id, data_handler, model_retriever):
+    def __init__(self,data_handler, model_retriever):
         """
         Initializes the ModelHandler with a specific model ID.
 
         Args:
             model_id (str): The ID of the model to handle.
         """
-        self.model_id = model_id
-        logger.info(f"Initializing ModelHandler for model ID: {model_id}")
-        self.model = dataiku.Model(model_id)
         self.data_handler = data_handler
         self.base_values = {}
         self.modalities = {}
@@ -37,56 +34,6 @@ class RelativitiesCalculator:
         self.compute_base_values()
         logger.info("ModelHandler initialized.")
     
-
-    def update_active_version(self):
-        logger.info("Updating active model version.")
-        
-#         self.model = dataiku.Model(self.model_id)
-#         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
-#         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
-#         self.predictor = self.model_info_handler.get_predictor()
-#         self.target = self.model_info_handler.get_target_variable()
-        self.base_values = dict()
-        self.modalities = dict()
-        
-        logger.info(f"Active version updated: {self.full_model_id}")
-#         self.compute_features()
-
-
-        
-    def get_model_versions(self):
-        logger.info("Retrieving model versions.")
-        versions = self.model.list_versions()
-        fmi_name = {version['snippet']['fullModelId']: version['snippet']['userMeta']['name'] for version in versions}
-        logger.info(f"Model versions retrieved: {fmi_name}")
-        return fmi_name
-   
-    
-#     def compute_features(self):
-#         """
-#         Main method to compute feature configurations.
-#         """
-#         logger.info("Computing features.")
-#         self.compute_column_roles()
-#         self.filter_features()
-#         logger.info("Features computed.")
-
-
-#     def compute_column_roles(self):
-#         """
-#         Computes special columns like exposure and offset columns from modeling params.
-#         """
-#         logger.info("Computing column roles.")
-#         modeling_params = self.model_info_handler.get_modeling_params()
-#         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
-#         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
-#         if len(self.exposure_columns) > 0:
-#             self.exposure = self.exposure_columns[0]  # assumes there is only one exposure column
-
-#         logger.info(f"Column roles computed: offset_columns={self.offset_columns}, exposure_columns={self.exposure_columns}")
-
-
-
 
     def compute_base_values(self):
         """

@@ -11,8 +11,8 @@ data_handler = GlmDataHandler()
 
 
 
-def setup_model_cache(global_dku_mltask, model_deployer, relativities_calculator):
-    if global_dku_mltask is None or model_deployer is None or relativities_calculator is None:
+def setup_model_cache(global_dku_mltask, model_deployer):
+    if global_dku_mltask is None or model_deployer is None:
         logger.warning("One or more input parameters are None. Exiting setup_model_cache.")
         return
 
@@ -51,7 +51,6 @@ def setup_model_cache(global_dku_mltask, model_deployer, relativities_calculator
                     model_id
                 )
                 relativities_calculator = RelativitiesCalculator(
-                    model_id,
                     data_handler,
                     model_retriever
                 )
@@ -130,7 +129,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, relativities_calculator
             logger.info(model_id)
         return model_cache
 
-def update_model_cache(global_dku_mltask, model_cache, relativities_calculator):
+def update_model_cache(global_dku_mltask, model_cache):
     logger.info("Updating model cache")
     
     model_id_list = global_dku_mltask.get_trained_models_ids()
@@ -144,7 +143,6 @@ def update_model_cache(global_dku_mltask, model_cache, relativities_calculator):
                 model_id
             )
             relativities_calculator = RelativitiesCalculator(
-                model_id,
                 model_retriever,
                 data_handler
             )

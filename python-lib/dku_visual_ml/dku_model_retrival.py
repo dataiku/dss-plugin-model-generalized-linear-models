@@ -31,24 +31,13 @@ class VisualMLModelRetriver(DataikuClientProject):
         self.exposure_columns = self.get_exposure_columns()
         self.target_column = self.get_target_column() 
         self.predictor = self.get_predictor()
-        self.filter_features()
+        self.get_used_features()
         logger.info(f"Model retriever intialised for model ID {full_model_id}")
               
     def get_offset_columns(self):
         return self.algo_settings['params']['offset_columns']
     
-    def filter_features(self):
-        """
-        Filters features based on their importance and role in the model.
-        """
-        logger.info("Filtering features.")
-        important_columns = []
-        important_columns += [self.offset_columns, self.exposure_columns, self.target_column]
-        self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
-        self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'INPUT']
-        self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
-        logger.info(f"Features filtered: non_excluded_features={self.non_excluded_features}, used_features={self.used_features}, candidate_features={self.candidate_features}")
-    
+
     def get_coefficients(self):
         """
         Retrieves the coefficients of the model predictor.
@@ -97,8 +86,8 @@ class VisualMLModelRetriver(DataikuClientProject):
     def _get_excluded_features(self):
         logger.debug(f"Excluding features exposure {self.exposure_columns}")
         logger.debug(f"Excluding features target {self.target_column}")
-        important_columns = [self.exposure_columns]
-        important_columns.append(self.target_column)
+        important_columns = []
+        important_columns += [self.offset_columns, self.exposure_columns, self.target_column]
         
         return important_columns
     
@@ -111,7 +100,17 @@ class VisualMLModelRetriver(DataikuClientProject):
         logger.debug(f"Found Included features as {self.non_excluded_features }")
         
         return self.non_excluded_features
+    
+    def get_used_features(self):
+        """
+        Filters features based on their importance and role in the model.
+        """
 
+        self.non_excluded_features = self._get_included_features()
+        self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'INPUT']
+        self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
+        logger.info(f"Features filtered: non_excluded_features={self.non_excluded_features}, used_features={self.used_features}, candidate_features={self.candidate_features}")
+    
 
     def get_features_used_in_modelling(self):
         """

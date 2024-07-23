@@ -43,7 +43,6 @@ if not is_local:
         saved_model_id = visual_ml_trainer.get_latest_model()
         model_retriever = VisualMLModelRetriver(saved_model_id)
         relativities_calculator = RelativitiesCalculator(
-            visual_ml_config.saved_model_id, 
             data_handler,
             model_retriever
             )
@@ -52,7 +51,7 @@ if not is_local:
 def setup_cache():
     global model_cache
     latest_ml_task = visual_ml_trainer.get_latest_ml_task()
-    model_cache = setup_model_cache(latest_ml_task, model_deployer, relativities_calculator)
+    model_cache = setup_model_cache(latest_ml_task, model_deployer)
 
 loading_thread = threading.Thread(target=setup_cache)
 loading_thread.start()
@@ -95,10 +94,10 @@ def train_model():
             logger.info("Creating Model cache For the first time")
             latest_ml_task = visual_ml_trainer.get_latest_ml_task()
             model_deployer = ModelDeployer(latest_ml_task, saved_model_id)
-            relativities_calculator = RelativitiesCalculator(saved_model_id, data_handler, model_retriever)
+            relativities_calculator = RelativitiesCalculator(data_handler, model_retriever)
             model_cache = setup_model_cache(latest_ml_task, model_deployer, relativities_calculator)
         
-        model_cache = update_model_cache(latest_ml_task, model_cache, relativities_calculator)
+        model_cache = update_model_cache(latest_ml_task, model_cache)
         
         logger.info("Model trained and cache updated")
         return jsonify({'message': 'Model training completed successfully.'}), 200
@@ -225,7 +224,6 @@ def get_lift_data():
         model_deployer.set_new_active_version(full_model_id)
         model_retriever = ModelRetriever(full_model_id)
         relativites_calculator = RelativitiesCalculator(
-            visual_ml_config.saved_model_id, 
             data_handler,
             model_retriever)
         lift_chart = relativities_calculator.get_lift_chart(nb_bins)
