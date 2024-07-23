@@ -372,43 +372,6 @@ def get_model_comparison_data():
         current_app.logger.error(f"An error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
-
-@fetch_api.route("/get_model_metrics_old", methods=["POST"])
-def get_model_metrics_old():
-    start_time = time()
-    
-    if is_local:
-        response_time = time() - start_time
-        print(f"Returned local dummy metrics in {response_time} seconds.")
-        return jsonify(dummy_model_metrics)
-    
-    loading_thread.join()
-    request_json = request.get_json()
-    print(request_json)
-    
-    model1, model2 = request_json["model1"], request_json["model2"]
-    
-    model_1_metrics = model_cache.get(model1).get('model_metrics')
-    model_2_metrics = model_cache.get(model2).get('model_metrics')
-    
-    metrics = {
-        "models": {
-            "Model_1": {
-                "AIC": model_1_metrics.get('AIC'),
-                "BIC": model_1_metrics.get('BIC'),
-                "Deviance": model_1_metrics.get('Deviance')
-            },
-            "Model_2": {
-                "AIC": model_2_metrics.get('AIC'),
-                "BIC": model_2_metrics.get('BIC'),
-                "Deviance": model_2_metrics.get('Deviance'),
-            }
-        }
-    }
-    return jsonify(metrics)
-
-
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
     start_time = time()

@@ -101,7 +101,7 @@
                         padding="4"
                         @click="onClickStats">Export</BsButton>
                         </div>
-                        <BsLabel v-if="selectedModelString && tab!='variable-level-stats'"
+                        <BsLabel v-if="selectedModelString && tab=='one-way-variable'"
                           label="Compare with model"
                           info-text="Second model to compare with the first one">
                       </BsLabel>
@@ -334,85 +334,9 @@
           selectedVariable(newValue: VariablePoint) {
             this.selectedVariable = newValue;
             this.updateChartData(this.selectedVariable, this.rescale, this.selectedModelString, this.selectedModelString);
-          //   this.relativitiesTable = this.relativitiesData.filter(item => item.variable === newValue.variable);
-          //   this.relativitiesColumns = columns;
-          //   this.relativities = this.relativitiesTable.map( (point) => {
-          //     const relativity = {'class': point.category, 'relativity': Math.round(point.relativity*1000)/1000};
-          //     return relativity
-          //   })
-          //   if (this.rescale) {
-          //       const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
-          //       if (baseCategory) {
-          //         const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
-          //         if (baseData) {
-          //           const baseLevelPrediction = baseData.baseLevelPrediction;
-          //           const fittedAverage = baseData.fittedAverage;
-          //           const observedAverage = baseData.observedAverage;
-          //       this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
-          //           ...item,
-          //           baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
-          //           fittedAverage: item.fittedAverage / fittedAverage,
-          //           observedAverage: item.observedAverage / observedAverage
-          //           }));
-          //         } else {
-          //       this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
-          //       }
-          //       if (this.selectedModelString2) {
-          //         const baseData2 = this.allData2.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
-          //         if (baseData2) {
-          //           const baseLevelPrediction = baseData2.baseLevelPrediction;
-          //           const fittedAverage = baseData2.fittedAverage;
-          //           const observedAverage = baseData2.observedAverage;
-          //       this.chartData2 = this.allData2.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
-          //           ...item,
-          //           baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
-          //           fittedAverage: item.fittedAverage / fittedAverage,
-          //           observedAverage: item.observedAverage / observedAverage
-          //           }));
-          //         } else {
-          //       this.chartData2 = this.allData2.filter(item => item.definingVariable === newValue.variable);
-          //       }
-          //       }
-
-          //     } else {
-          //       this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
-          //       if (this.selectedModelString2) {
-          //         this.chartData2 = this.allData2.filter(item => item.definingVariable === newValue.variable);
-          //       }
-          //     }
-          //   } else {
-          //       this.chartData = this.allData.filter(item => item.definingVariable === newValue.variable);
-          //       if (this.selectedModelString2) {
-          //         this.chartData2 = this.allData2.filter(item => item.definingVariable === newValue.variable);
-          //       }
-          // }
           },
           allData(newValue: DataPoint[]) {
             this.updateChartData(this.selectedVariable, this.rescale, this.selectedModelString, this.selectedModelString);
-            //  this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-            //  if (this.rescale) {
-            //     const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
-            //     if (baseCategory) {
-            //       const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
-            //       if (baseData) {
-            //         const baseLevelPrediction = baseData.baseLevelPrediction;
-            //         const fittedAverage = baseData.fittedAverage;
-            //         const observedAverage = baseData.observedAverage;
-            //     this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
-            //         ...item,
-            //         baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
-            //         fittedAverage: item.fittedAverage / fittedAverage,
-            //         observedAverage: item.observedAverage / observedAverage
-            //       }));
-            //       } else {
-            //     this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-            //   }
-            //     } else {
-            //     this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-            //   }
-            //   } else {
-            //     this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
-            //   }
           }
         },
         methods: {
