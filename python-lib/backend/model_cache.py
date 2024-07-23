@@ -64,12 +64,9 @@ def setup_model_cache(global_dku_mltask, model_deployer):
 
                 # Get predicted and base
                 step_time = time()
-                model1_predicted_base = relativities_calculator.get_predicted_and_base()
+                model1_predicted_base = relativities_calculator.get_formated_predicted_base()
                 logger.debug(f"Predicted and base data for {model_id}: {model1_predicted_base.head()}")
                 
-                model1_predicted_base.columns = ['definingVariable', 
-                                                 'Category', 
-                                                 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction', 'dataset']
                 step_elapsed = time() - step_time
                 logger.info(f"Step - Get predicted and base: {step_elapsed:.2f} seconds")
 
@@ -157,12 +154,9 @@ def update_model_cache(global_dku_mltask, model_cache):
                 model_retriever,
                 data_handler
             )
-            model1_predicted_base = relativities_calculator.get_predicted_and_base()
+            model1_predicted_base = relativities_calculator.get_formated_predicted_base()
 
-            model1_predicted_base.columns = ['definingVariable', 
-                                             'Category', 
-                                             'observedAverage', 
-                                             'fittedAverage', 'Value', 'baseLevelPrediction', 'dataset']
+ 
             
             features = relativities_calculator.get_features()
             relativities = relativities_calculator.get_relativities_df()

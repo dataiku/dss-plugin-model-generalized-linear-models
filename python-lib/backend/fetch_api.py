@@ -109,6 +109,7 @@ def train_model():
     
 @fetch_api.route("/get_latest_mltask_params", methods=["POST"])
 def get_latest_mltask_params():
+    logger.info("Getting Latest ML task set up parameters")
     
     if is_local:
         setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
@@ -187,10 +188,7 @@ def get_data():
 
         predicted_base = model_cache[full_model_id].get('predicted_and_base')
         predicted_base = predicted_base[predicted_base['dataset']==dataset]
-        predicted_base['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['observedAverage']]
-        predicted_base['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['fittedAverage']]
-        predicted_base['Value'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['Value']]
-        predicted_base['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['baseLevelPrediction']]
+
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
@@ -297,40 +295,34 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
-    start_time = time()
-    
+    logger.info("Getting Model Comparison Data")
     if is_local:
         df = get_dummy_model_comparison_data()
-        current_app.logger.info(f"Data fetched locally in {time() - start_time} seconds.")
         return jsonify(df.to_dict('records'))
 
     try:
         loading_thread.join()
-        current_app.logger.info("Received a new request for data prediction.")
+        
+        current_app.logger.info("Received a new Model comparison data")
         request_json = request.get_json()
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
         
         current_app.logger.info(f"Retrieving {model1} from the cache")
         model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
         model_1_predicted_base = model_1_predicted_base[model_1_predicted_base['dataset']=='test']
-        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction', 'dataset']
         current_app.logger.info(f"Successfully retrieved {model1} from the cache")
         
         current_app.logger.info(f"Retrieving {model2} from the cache")
         model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
         model_2_predicted_base = model_2_predicted_base[model_2_predicted_base['dataset']=='test']
-        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction', 'dataset']
         current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
-        merge_time = time()
         merged_model_stats = pd.merge(model_1_predicted_base, model_2_predicted_base, 
                                       on=['definingVariable', 'Category', 'Value'], 
                                       how='outer')
-        merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
-        current_app.logger.info(f"Merged data in {time() - merge_time} seconds. Sample: {merged_model_stats.head().to_string()}")
         
-        total_time = time() - start_time
-        current_app.logger.info(f"Total execution time: {total_time} seconds.")
+        merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
+        logger.info("Returning Merged Model stats")
         return jsonify(merged_model_stats.to_dict('records'))
     
     except Exception as e:
@@ -341,11 +333,8 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-    start_time = time()
-    
+    logger.info("Getting Model Metrics") 
     if is_local:
-        response_time = time() - start_time
-        logger.info(f"Returned local dummy metrics in {response_time} seconds.")
         return jsonify(dummy_model_metrics)
     
     loading_thread.join()

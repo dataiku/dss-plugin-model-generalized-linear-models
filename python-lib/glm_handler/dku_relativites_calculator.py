@@ -40,9 +40,12 @@ class RelativitiesCalculator:
         Main method to initialize and compute base values.
         """
         logger.info("Computing base values.")
+        step_time = time()
+        step_elapsed = time() - step_time
+        
         self.handle_preprocessing()
         self.compute_numerical_features()
-        logger.info(f"Base values computed: {self.base_values}")
+        logger.info(f"Compute base values: {step_elapsed:.2f} seconds")
 
 
     def handle_preprocessing(self):
@@ -250,6 +253,7 @@ class RelativitiesCalculator:
     
     def compute_base_predictions_new(self, test_set, used_features):
         logger.info("Computing base Predictions")
+        step_time = time()
         base_data = dict()
         for feature in used_features:
             copy_test_df = test_set.copy()
@@ -259,7 +263,8 @@ class RelativitiesCalculator:
                 copy_test_df[other_feature] = self.base_values[other_feature]
             predictions = self.model_retriever.predictor.predict(copy_test_df)
             base_data[feature] = pd.DataFrame(data={('base_' + feature): predictions['prediction'], feature: copy_test_df[feature]})
-        logger.info("successfully computed base Predictions")
+        step_elapsed = time() - step_time
+        logger.info(f"Step - compute base predictions: {step_elapsed:.2f} seconds")
         return base_data
 
     def merge_predictions(self, test_set, base_data):
@@ -270,49 +275,42 @@ class RelativitiesCalculator:
         return test_set
 
 
+    def get_formated_predicted_base(self):
+        self.get_predicted_and_base()
+        df = self.predicted_base_df.copy()
+        df.columns = ['definingVariable', 
+                                             'Category', 
+                                             'observedAverage', 
+                                             'fittedAverage', 'Value', 'baseLevelPrediction', 'dataset']
+        df['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in  df['observedAverage']]
+        df['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in df['fittedAverage']]
+        df['Value'] = [float('%s' % float('%.3g' % x)) for x in  df['Value']]
+        df['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in  df['baseLevelPrediction']]
+        return df
+        
     def get_predicted_and_base(self, nb_bins_numerical=100000):
         logger.info("Getting Predicted and base")
         
-        step_time = time()
         self.compute_base_values()
-        step_elapsed = time() - step_time
-        logger.info(f"Step - Compute base values: {step_elapsed:.2f} seconds")
         
-        step_time = time()
         test_set = self.test_set
         train_set = self.train_set
         used_features = list(self.base_values.keys())
-        logger.info(f"Used features in predicted_vase are {used_features}")
-        step_elapsed = time() - step_time
-        logger.info(f"Step - Get datasets: {step_elapsed:.2f} seconds")
-        
-        step_time = time()
         base_data = self.compute_base_predictions_new(test_set, used_features)
-        step_elapsed = time() - step_time
-        logger.info(f"Step - compute base predictions: {step_elapsed:.2f} seconds")
-        
-        step_time = time()
         test_set = self.merge_predictions(test_set, base_data)
-        logger.info(f"merged predictions")
         predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.model_retriever.non_excluded_features, used_features)
-        logger.info(f"calculate weighted aggregations")
         predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
-        logger.info(f"construct final dataframe")
         predicted_base_df['dataset'] = 'test'
-        step_elapsed = time() - step_time
-        logger.info(f"Step - finalize test predicted base: {step_elapsed:.2f} seconds")
-        
-        step_time = time()
         base_data_train = self.compute_base_predictions_new(train_set, used_features)
         train_set = self.merge_predictions(train_set, base_data_train)
         predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.model_retriever.non_excluded_features, used_features)
         predicted_base_train_df = self.data_handler.construct_final_dataframe(predicted_base_train)
         predicted_base_train_df['dataset'] = 'train'
-        step_elapsed = time() - step_time
-        logger.info(f"Step - same same for train: {step_elapsed:.2f} seconds")
 
         
         self.predicted_base_df = predicted_base_df.append(predicted_base_train_df)
+        
+
         logger.info("Successfully got Predicted and base")
         return self.predicted_base_df.copy()
     
