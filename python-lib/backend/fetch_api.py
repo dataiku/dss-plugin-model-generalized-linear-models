@@ -25,7 +25,6 @@ if not is_local:
     from glm_handler.dku_model_handler import RelativitiesCalculator
     from glm_handler.dku_model_deployer import ModelDeployer
     from glm_handler.glm_data_handler import GlmDataHandler
-    from glm_handler.dku_model_metrics import ModelMetricsCalculator
     from backend.model_cache import setup_model_cache, update_model_cache
     
     visual_ml_config = DKUVisualMLConfig()
@@ -41,6 +40,8 @@ if not is_local:
             visual_ml_trainer.mltask, 
             visual_ml_config.saved_model_id
             )
+        saved_model_id = visual_ml_trainer.get_latest_model()
+        model_retriever = VisualMLModelRetriver(saved_model_id)
         relativities_calculator = RelativitiesCalculator(
             visual_ml_config.saved_model_id, 
             data_handler,
@@ -222,7 +223,11 @@ def get_lift_data():
     current_nb_bins = len(lift_chart[lift_chart['dataset'] == dataset])
     if current_nb_bins != nb_bins:
         model_deployer.set_new_active_version(full_model_id)
-        relativities_calculator.update_active_version()
+        model_retriever = ModelRetriever(full_model_id)
+        relativites_calculator = RelativitiesCalculator(
+            visual_ml_config.saved_model_id, 
+            data_handler,
+            model_retriever)
         lift_chart = relativities_calculator.get_lift_chart(nb_bins)
         model_cache[full_model_id]['lift_chart_data'] = lift_chart
     

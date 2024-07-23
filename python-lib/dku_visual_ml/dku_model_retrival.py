@@ -26,11 +26,43 @@ class VisualMLModelRetriver(DataikuClientProject):
         self.model_details = self.task.get_trained_model_details(full_model_id) 
         self.algo_settings = self.model_details.get_modeling_settings().get('plugin_python_grid')
         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+        self.offset_columns = self.get_offset_columns()
         self.features = self.model_info_handler.get_per_feature()
-        self.exposure_column = self.get_exposure_column()
-        self.target_column = self.get_target_column()    
+        self.exposure_columns = self.get_exposure_columns()
+        self.target_column = self.get_target_column() 
+        self.predictor = self.get_predictor()
+        self.filter_features()
         logger.info(f"Model retriever intialised for model ID {full_model_id}")
               
+    def get_offset_columns(self):
+        return self.algo_settings['params']['offset_columns']
+    
+    def filter_features(self):
+        """
+        Filters features based on their importance and role in the model.
+        """
+        logger.info("Filtering features.")
+        important_columns = []
+        important_columns += [self.offset_columns, self.exposure_columns, self.target_column]
+        self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
+        self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'INPUT']
+        self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
+        logger.info(f"Features filtered: non_excluded_features={self.non_excluded_features}, used_features={self.used_features}, candidate_features={self.candidate_features}")
+    
+    def get_coefficients(self):
+        """
+        Retrieves the coefficients of the model predictor.
+
+        Returns:
+            dict: A dictionary mapping variable names to their coefficients.
+        """
+        logger.info("Retrieving model coefficients.")
+        
+        coefficients = self.get_predictor()
+        variable_names = predictor._model.clf.column_labels
+        logger.info(f"Model coefficients retrieved: {coefficients_dict}")
+        return dict(zip(variable_names, coefficients))
+    
     def get_features(self):
         logger.info(f"Getting features for model ID {self.full_model_id}")
         return self.features
@@ -63,9 +95,9 @@ class VisualMLModelRetriver(DataikuClientProject):
 
     
     def _get_excluded_features(self):
-        logger.debug(f"Excluding features exposure {self.exposure_column}")
+        logger.debug(f"Excluding features exposure {self.exposure_columns}")
         logger.debug(f"Excluding features target {self.target_column}")
-        important_columns = [self.exposure_column]
+        important_columns = [self.exposure_columns]
         important_columns.append(self.target_column)
         
         return important_columns
@@ -80,13 +112,27 @@ class VisualMLModelRetriver(DataikuClientProject):
         
         return self.non_excluded_features
 
+
     def get_features_used_in_modelling(self):
-        logger.debug(f"Getting features used in modelling")
-        non_excluded_features = self._get_included_features()
-        self.used_features = [feature for feature in non_excluded_features if self.features[feature]['role'] == 'INPUT']
-        logger.debug(f"Modelling features are {self.used_features}")
-        return self.used_features
-        
+        """
+        Retrieves the features used in the model.
+
+        Returns:
+            list: A list of dictionaries with feature details.
+        """
+        logger.info("Retrieving model features.")
+        self._get_included_features()
+        features_list = [
+            {'variable': feature, 
+             'isInModel': self.features[feature]['role'] == 'INPUT', 
+             'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} 
+            for feature in self.non_excluded_features
+        ]
+
+        logger.info(f"Features retrieved: {features_list}")
+        return features_list
+    
+    
     def get_rejected_features(self):
         logger.debug(f"Getting Rejected Features")
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
@@ -119,7 +165,7 @@ class VisualMLModelRetriver(DataikuClientProject):
     def get_features_dict(self):
         
         logger.info("Model getting features")
-        exposure_column = self.get_exposure_column()
+        exposure_columns = self.get_exposure_columns()
         
         preprocessing = self.model_details.get_preprocessing_settings().get('per_feature')
         features = preprocessing.keys()
@@ -146,7 +192,7 @@ class VisualMLModelRetriver(DataikuClientProject):
                 "baseLevel": base_level
 
             }
-            if feature == exposure_column:
+            if feature == exposure_columns:
                 features_dict[feature]["role"]=="Exposure"
             if features_dict[feature]["role"]=="TARGET":
                 features_dict[feature]["role"]=="Target"
@@ -156,16 +202,16 @@ class VisualMLModelRetriver(DataikuClientProject):
         logger.debug(f"Features are:{features_dict}")
         return features_dict
     
-    def get_exposure_column(self):
+    def get_exposure_columns(self):
         try:
-            if self.exposure_column:
-                return self.exposure_column
+            if self.exposure_columns:
+                return self.exposure_columns
             else:
-                self.exposure_column = self.algo_settings.get('params').get('exposure_columns')[0]
-                return self.exposure_column
+                self.exposure_columns = self.algo_settings.get('params').get('exposure_columns')[0]
+                return self.exposure_columns
         except:
-            self.exposure_column = self.algo_settings.get('params').get('exposure_columns')[0]
-            return self.exposure_column
+            self.exposure_columns = self.algo_settings.get('params').get('exposure_columns')[0]
+            return self.exposure_columns
 
     def get_elastic_net_penalty(self):
         return self.algo_settings.get('params').get('penalty')[0]

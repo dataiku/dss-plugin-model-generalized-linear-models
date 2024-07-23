@@ -5,7 +5,6 @@ import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 from logging_assist.logging import logger
-from glm_handler.dku_relativities_handler import RelativitiesHandler
 from time import time
 
 class RelativitiesCalculator:
@@ -32,42 +31,28 @@ class RelativitiesCalculator:
         self.data_handler = data_handler
         self.base_values = {}
         self.modalities = {}
-        self.model_retriever
-        
+        self.model_retriever = model_retriever
+        self.train_set = self.prepare_train_set()
+        self.test_set = self.prepare_test_set()
+        self.compute_base_values()
         logger.info("ModelHandler initialized.")
     
-    def get_coefficients(self):
-        """
-        Retrieves the coefficients of the model predictor.
 
-        Returns:
-            dict: A dictionary mapping variable names to their coefficients.
-        """
-        logger.info("Retrieving model coefficients.")
-        
-        coefficients = self.predictor._model.clf.coef_
-        variable_names = self.predictor._model.clf.column_labels
-        logger.info(f"Model coefficients retrieved: {coefficients_dict}")
-        return dict(zip(variable_names, coefficients))
-
-    
     def update_active_version(self):
         logger.info("Updating active model version.")
         
-        self.model = dataiku.Model(self.model_id)
-        self.full_model_id = extract_active_fullModelId(self.model.list_versions())
-        self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
-        self.predictor = self.model_info_handler.get_predictor()
-        self.target = self.model_info_handler.get_target_variable()
+#         self.model = dataiku.Model(self.model_id)
+#         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
+#         self.model_info_handler = PredictionModelInformationHandler.from_full_model_id(self.full_model_id)
+#         self.predictor = self.model_info_handler.get_predictor()
+#         self.target = self.model_info_handler.get_target_variable()
         self.base_values = dict()
         self.modalities = dict()
         
         logger.info(f"Active version updated: {self.full_model_id}")
-        self.compute_features()
-        self.train_set = self.prepare_train_set()
-        self.test_set = self.prepare_test_set()
-        self.compute_base_values()
-        self.relativities_handler = RelativitiesHandler(self.model_info_handler)
+#         self.compute_features()
+
+
         
     def get_model_versions(self):
         logger.info("Retrieving model versions.")
@@ -75,69 +60,33 @@ class RelativitiesCalculator:
         fmi_name = {version['snippet']['fullModelId']: version['snippet']['userMeta']['name'] for version in versions}
         logger.info(f"Model versions retrieved: {fmi_name}")
         return fmi_name
+   
     
-    def get_features(self):
-        """
-        Retrieves the features used in the model.
-
-        Returns:
-            list: A list of dictionaries with feature details.
-        """
-        logger.info("Retrieving model features.")
-        features_list = [
-            {'variable': feature, 
-             'isInModel': self.features[feature]['role'] == 'INPUT', 
-             'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} 
-            for feature in self.non_excluded_features
-        ]
-
-        logger.info(f"Features retrieved: {features_list}")
-        return features_list
-    
-    
-    def compute_features(self):
-        """
-        Main method to compute feature configurations.
-        """
-        logger.info("Computing features.")
-        self.initialize_feature_variables()
-        self.compute_column_roles()
-        self.filter_features()
-        logger.info("Features computed.")
-
-    def initialize_feature_variables(self):
-        """
-        Initializes basic variables related to features.
-        """
-        logger.info("Initializing feature variables.")
-        self.exposure = None
-        self.features = self.model_info_handler.get_per_feature()
-        logger.info(f"Feature variables initialized: {self.features}")
-
-    def compute_column_roles(self):
-        """
-        Computes special columns like exposure and offset columns from modeling params.
-        """
-        logger.info("Computing column roles.")
-        modeling_params = self.model_info_handler.get_modeling_params()
-        self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
-        self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
-        if len(self.exposure_columns) > 0:
-            self.exposure = self.exposure_columns[0]  # assumes there is only one exposure column
-
-        logger.info(f"Column roles computed: offset_columns={self.offset_columns}, exposure_columns={self.exposure_columns}")
+#     def compute_features(self):
+#         """
+#         Main method to compute feature configurations.
+#         """
+#         logger.info("Computing features.")
+#         self.compute_column_roles()
+#         self.filter_features()
+#         logger.info("Features computed.")
 
 
-    def filter_features(self):
-        """
-        Filters features based on their importance and role in the model.
-        """
-        logger.info("Filtering features.")
-        important_columns = self.offset_columns + self.exposure_columns + [self.target]
-        self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
-        self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'INPUT']
-        self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
-        logger.info(f"Features filtered: non_excluded_features={self.non_excluded_features}, used_features={self.used_features}, candidate_features={self.candidate_features}")
+#     def compute_column_roles(self):
+#         """
+#         Computes special columns like exposure and offset columns from modeling params.
+#         """
+#         logger.info("Computing column roles.")
+#         modeling_params = self.model_info_handler.get_modeling_params()
+#         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
+#         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
+#         if len(self.exposure_columns) > 0:
+#             self.exposure = self.exposure_columns[0]  # assumes there is only one exposure column
+
+#         logger.info(f"Column roles computed: offset_columns={self.offset_columns}, exposure_columns={self.exposure_columns}")
+
+
+
 
     def compute_base_values(self):
         """
@@ -154,7 +103,7 @@ class RelativitiesCalculator:
         Processes each step in the preprocessing pipeline.
         """
         logger.info("Handling preprocessing steps.")
-        preprocessing = self.predictor.get_preprocessing()
+        preprocessing = self.model_retriever.predictor.get_preprocessing()
         for step in preprocessing.pipeline.steps:
             self.process_preprocessing_step(step)
         logger.info("Preprocessing handled.")
@@ -179,7 +128,8 @@ class RelativitiesCalculator:
         Computes base values for numerical features not handled in preprocessing.
         """
         logger.info("Computing numerical features.")
-        for feature in self.used_features:
+#         used_features = self.model_retriever.get
+        for feature in self.model_retriever.used_features:
             if feature not in self.base_values:
                 self.compute_base_for_feature(feature, self.train_set)
         logger.info(f"Numerical features computed: {self.base_values}")
@@ -193,10 +143,10 @@ class RelativitiesCalculator:
             feature (str): The feature to compute the base value for.
             train_set (pd.DataFrame): The training dataset.
         """
-        if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
+        if self.model_retriever.features[feature]['type'] == 'NUMERIC' and self.model_retriever.features[feature]['rescaling'] == 'NONE':
             self.compute_base_for_numeric_feature(feature, train_set)
         else:
-            error_msg = "feature should be handled numerically without rescaling or categorically with the custom preprocessor"
+            error_msg = f"feature should be handled numerically without rescaling or categorically with the custom preprocessor for model {self.model_retriever.full_model_id}"
             logger.error(error_msg)
             raise Exception(error_msg)
 
@@ -211,9 +161,9 @@ class RelativitiesCalculator:
             train_set (pd.DataFrame): The training dataset.
         """
         logger.info(f"Computing base value for numeric feature: {feature}")
-        if self.exposure is not None:
-            feature_exposure = train_set.groupby(feature)[self.exposure].sum().reset_index()
-            base_value = feature_exposure[feature].iloc[feature_exposure[self.exposure].idxmax()]
+        if self.model.retriever.exposure_columns is not None:
+            feature_exposure = train_set.groupby(feature)[self.model_retriever.exposure_columns].sum().reset_index()
+            base_value = feature_exposure[feature].iloc[feature_exposure[self.model_retriever.exposure_columns].idxmax()]
         else:
             feature_exposure = train_set[feature].value_counts().reset_index()
             base_value = feature_exposure['index'].iloc[feature_exposure[feature].idxmax()]
@@ -243,32 +193,32 @@ class RelativitiesCalculator:
         train_row = self.train_set.head(1).copy()
         for feature in self.base_values.keys():
             train_row[feature] = self.base_values[feature]
-        if self.exposure is not None:
-            train_row[self.exposure] = 1
+        if self.model_retriever.exposure_columns is not None:
+            train_row[self.model_retriever.exposure_columns] = 1
         logger.info("Successfully initialize_baseline")
         return train_row
 
     def calculate_baseline_prediction(self, sample_train_row):
         logger.info("Calculating baseline prediction")
-        return self.predictor.predict(sample_train_row).iloc[0][0]
+        return self.model_retriever.predictor.predict(sample_train_row).iloc[0][0]
 
     def calculate_relative_predictions(self, sample_train_row, baseline_prediction):
         logger.info("Calculating relativity prediction")
         self.relativities = {'base': {'base': baseline_prediction}}
         for feature in self.base_values.keys():
             self.relativities[feature] = {self.base_values[feature]: 1.0}
-            if self.features[feature]['type'] == 'CATEGORY':    
+            if self.model_retriever.features[feature]['type'] == 'CATEGORY':    
                 for modality in self.modalities[feature]:
                     train_row_copy = sample_train_row.copy()
                     train_row_copy[feature] = modality
-                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+                    prediction = self.model_retriever.predictor.predict(train_row_copy).iloc[0][0]
                     self.relativities[feature][modality] = prediction / baseline_prediction
             else:
                 train_row_copy = sample_train_row.copy()
                 unique_values = sorted(list(set(self.train_set[feature])))
                 for value in unique_values:
                     train_row_copy[feature] = value
-                    prediction = self.predictor.predict(train_row_copy).iloc[0][0]
+                    prediction = self.model_retriever.predictor.predict(train_row_copy).iloc[0][0]
                     self.relativities[feature][value] = prediction / baseline_prediction
 
     def construct_relativities_df(self):
@@ -282,11 +232,11 @@ class RelativitiesCalculator:
 
     def apply_weights_to_data(self, test_set):
         used_features = list(self.base_values.keys())
-        if self.exposure is None:
+        if self.model_retriever.exposure_columns is None:
             test_set['weight'] = 1
         else:
-            test_set['weight'] = test_set[self.exposure]
-        test_set['weighted_target'] = test_set[self.target] * test_set['weight']
+            test_set['weight'] = test_set[self.model_retriever.exposure]
+        test_set['weighted_target'] = test_set[self.model_retriever.target_columns] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
 
     def prepare_final_data(self, test_set, feature, nb_bins_numerical, base_predictions):
@@ -325,11 +275,11 @@ class RelativitiesCalculator:
             pd.DataFrame: The training dataset.
         """
         logger.info("Preparing training dataset.")
-        train_set = self.model_info_handler.get_train_df()[0].copy()
-        predicted = self.predictor.predict(train_set)
+        train_set = self.model_retriever.model_info_handler.get_train_df()[0].copy()
+        predicted = self.model_retriever.predictor.predict(train_set)
         train_set['predicted'] = predicted
-        train_set['weight'] = 1 if self.exposure is None else train_set[self.exposure]
-        train_set['weighted_target'] = train_set[self.target] * train_set['weight']
+        train_set['weight'] = 1 if self.model_retriever.exposure_columns is None else train_set[self.model_retriever.exposure_columns]
+        train_set['weighted_target'] = train_set[self.model_retriever.target_column] * train_set['weight']
         train_set['weighted_predicted'] = train_set['predicted'] * train_set['weight']
         logger.info(f"Training dataset prepared: {train_set.shape}")
         return train_set
@@ -342,11 +292,11 @@ class RelativitiesCalculator:
             pd.DataFrame: The test dataset.
         """
         logger.info("Preparing test dataset.")
-        test_set = self.model_info_handler.get_test_df()[0].copy()
-        predicted = self.predictor.predict(test_set)
+        test_set = self.model_retriever.model_info_handler.get_test_df()[0].copy()
+        predicted = self.model_retriever.predictor.predict(test_set)
         test_set['predicted'] = predicted
-        test_set['weight'] = 1 if self.exposure is None else test_set[self.exposure]
-        test_set['weighted_target'] = test_set[self.target] * test_set['weight']
+        test_set['weight'] = 1 if self.model_retriever.exposure_columns is None else test_set[self.model_retriever.exposure_columns]
+        test_set['weighted_target'] = test_set[self.model_retriever.target_column] * test_set['weight']
         test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
         logger.info(f"Test dataset prepared: {test_set.shape}")
         return test_set
@@ -357,10 +307,10 @@ class RelativitiesCalculator:
         for feature in used_features:
             copy_test_df = test_set.copy()
             copy_test_df = copy_test_df.groupby(feature, as_index=False).first()
-            copy_test_df[self.exposure] = 1
+            copy_test_df[self.model_retriever.exposure_columns] = 1
             for other_feature in [col for col in used_features if col != feature]:
                 copy_test_df[other_feature] = self.base_values[other_feature]
-            predictions = self.predictor.predict(copy_test_df)
+            predictions = self.model_retriever.predictor.predict(copy_test_df)
             base_data[feature] = pd.DataFrame(data={('base_' + feature): predictions['prediction'], feature: copy_test_df[feature]})
         logger.info("successfully computed base Predictions")
         return base_data
@@ -397,7 +347,7 @@ class RelativitiesCalculator:
         step_time = time()
         test_set = self.merge_predictions(test_set, base_data)
         logger.info(f"merged predictions")
-        predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.non_excluded_features, used_features)
+        predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.model_retriever.non_excluded_features, used_features)
         logger.info(f"calculate weighted aggregations")
         predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
         logger.info(f"construct final dataframe")
@@ -408,7 +358,7 @@ class RelativitiesCalculator:
         step_time = time()
         base_data_train = self.compute_base_predictions_new(train_set, used_features)
         train_set = self.merge_predictions(train_set, base_data_train)
-        predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.non_excluded_features, used_features)
+        predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.model_retriever.non_excluded_features, used_features)
         predicted_base_train_df = self.data_handler.construct_final_dataframe(predicted_base_train)
         predicted_base_train_df['dataset'] = 'train'
         step_elapsed = time() - step_time
@@ -432,21 +382,21 @@ class RelativitiesCalculator:
         """
         train_set_df = self.train_set
         
-        tempdata = self.data_handler.sort_and_cumsum_exposure(train_set_df, self.exposure)
+        tempdata = self.data_handler.sort_and_cumsum_exposure(train_set_df, self.model_retriever.exposure_columns)
         binned_data = self.data_handler.bin_data(tempdata, nb_bins)
         
         new_data = train_set_df.join(binned_data[['bin']], how='inner')
-        lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.exposure, self.target)
+        lift_chart_data = self.data_handler.aggregate_metrics_by_bin(new_data, self.model_retriever.exposure_columns, self.model_retriever.target_column)
         lift_chart_data.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         lift_chart_data['dataset'] = 'train'
         
         test_set_df = self.test_set
         
-        tempdata_test = self.data_handler.sort_and_cumsum_exposure(test_set_df, self.exposure)
+        tempdata_test = self.data_handler.sort_and_cumsum_exposure(test_set_df, self.model_retriever.exposure_columns)
         binned_data_test = self.data_handler.bin_data(tempdata_test, nb_bins)
         
         new_data_test = test_set_df.join(binned_data_test[['bin']], how='inner')
-        lift_chart_data_test = self.data_handler.aggregate_metrics_by_bin(new_data_test, self.exposure, self.target)
+        lift_chart_data_test = self.data_handler.aggregate_metrics_by_bin(new_data_test,self.model_retriever.exposure_columns, self.model_retriever.target_column)
         lift_chart_data_test.columns = ['Category', 'Value', 'observedAverage', 'fittedAverage']
         lift_chart_data_test['dataset'] = 'test'
         
@@ -456,9 +406,9 @@ class RelativitiesCalculator:
         predicted_base = self.predicted_base_df
         predicted = predicted_base[predicted_base['dataset'] == 'train'][['feature', 'category', 'exposure']]
         relativities = self.get_relativities_df()
-        coef_table = self.predictor._clf.coef_table.reset_index()
+        coef_table = self.model_retriever.predictor._clf.coef_table.reset_index()
         coef_table['se_pct'] = coef_table['se']/abs(coef_table['coef'])*100
-        features = self.get_features()
+        features = self.model_retriever.get_features_used_in_modelling()
         
         coef_table_intercept = coef_table[coef_table['index'] == 'intercept']
         coef_table_intercept['feature'] = 'base'

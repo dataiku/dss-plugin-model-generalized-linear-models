@@ -5,7 +5,9 @@ from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from backend.api_utils import check_model_conformity
 from time import time
 from logging_assist.logging import logger
-
+from glm_handler.glm_data_handler import GlmDataHandler
+from dku_visual_ml.dku_model_retrival import VisualMLModelRetriver
+data_handler = GlmDataHandler()
 
 
 
@@ -45,8 +47,15 @@ def setup_model_cache(global_dku_mltask, model_deployer, relativities_calculator
 
                 # Update active version
                 step_time = time()
-                relativities_calculator.update_active_version()
-                features = relativities_calculator.get_features()
+                model_retriever = VisualMLModelRetriver(
+                    model_id
+                )
+                relativities_calculator = RelativitiesCalculator(
+                    model_id,
+                    data_handler,
+                    model_retriever
+                )
+                features = relativities_calculator.model_retriever.get_features()
                 logger.info(f"Model Features for {model_id}: {features}")
 
                 step_elapsed = time() - step_time
@@ -65,7 +74,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, relativities_calculator
 
                 # Get features
                 step_time = time()
-                features = relativities_calculator.get_features()
+                features = relativities_calculator.model_retriever.get_features_used_in_modelling()
                 step_elapsed = time() - step_time
                 logger.info(f"Step - Get features: {step_elapsed:.2f} seconds")
 
@@ -90,7 +99,7 @@ def setup_model_cache(global_dku_mltask, model_deployer, relativities_calculator
 
                 # Calculate model metrics
                 step_time = time()
-                mmc = ModelMetricsCalculator(relativities_calculator)
+                mmc = ModelMetricsCalculator(model_retriever)
                 model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
                 step_elapsed = time() - step_time
                 logger.info(f"Step - Calculate model metrics: {step_elapsed:.2f} seconds")
@@ -131,7 +140,14 @@ def update_model_cache(global_dku_mltask, model_cache, relativities_calculator):
         if model_id not in model_cache.keys():
             logger.debug(f"Model ID {model_id} not found in cache. Updating cache.")
 
-            relativities_calculator.update_active_version()
+            model_retriever = VisualMLModelRetriver(
+                model_id
+            )
+            relativities_calculator = RelativitiesCalculator(
+                model_id,
+                model_retriever,
+                data_handler
+            )
             model1_predicted_base = relativities_calculator.get_predicted_and_base()
 
             model1_predicted_base.columns = ['definingVariable', 
@@ -144,7 +160,7 @@ def update_model_cache(global_dku_mltask, model_cache, relativities_calculator):
             relativities_dict = relativities_calculator.relativities
             variable_stats = relativities_calculator.get_variable_level_stats()
             lift_chart_data = relativities_calculator.get_lift_chart(8)
-            mmc = ModelMetricsCalculator(relativities_calculator)
+            mmc = ModelMetricsCalculator(model_retriever)
             model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
 
             model_cache[model_id] = {
