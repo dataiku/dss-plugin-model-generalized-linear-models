@@ -7,8 +7,9 @@ import random
 import string
 from logging_assist.logging import logger
 from dku_visual_ml.custom_configurations import dku_dataset_selection_params, custom_base_none
+from dku_visual_ml.dku_base import DataikuClientProject
 
-class VisualMLModelTrainer:
+class VisualMLModelTrainer(DataikuClientProject):
     """
     A class to manage interacting with the Visual ML in dataiku when training Models.
     
@@ -18,16 +19,13 @@ class VisualMLModelTrainer:
     """
     
     def __init__(self, visual_ml_config=None):
-        logger.info("Initializing a Visual ML interaction task")
-        
+        super().__init__()
+        logger.info("Initializing a Visual ML training task")
         self.visual_ml_config = visual_ml_config
-        self.client = dataiku.api_client()
-        self.project = self.client.get_default_project()
-        self.project_key = self.project.project_key 
         self.mltask = None
         self.saved_model_id = None
 
-        logger.info("Initalized a Visual ML interaction task successfully")
+        logger.info("Initalized a Visual ML training task successfully")
         if visual_ml_config:
             logger.debug(f"With config {self.visual_ml_config.log_configuration()}")
     

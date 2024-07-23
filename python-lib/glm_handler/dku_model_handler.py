@@ -8,7 +8,7 @@ from logging_assist.logging import logger
 from glm_handler.dku_relativities_handler import RelativitiesHandler
 from time import time
 
-class ModelHandler:
+class RelativitiesCalculator:
     """
     A class to handle interactions with a Dataiku model.
 
@@ -19,7 +19,7 @@ class ModelHandler:
         model_info_handler (PredictionModelInformationHandler): Handler for model information.
     """
 
-    def __init__(self, model_id, data_handler):
+    def __init__(self, model_id, data_handler, model_retriever):
         """
         Initializes the ModelHandler with a specific model ID.
 
@@ -27,11 +27,14 @@ class ModelHandler:
             model_id (str): The ID of the model to handle.
         """
         self.model_id = model_id
+        logger.info(f"Initializing ModelHandler for model ID: {model_id}")
         self.model = dataiku.Model(model_id)
         self.data_handler = data_handler
         self.base_values = {}
         self.modalities = {}
+        self.model_retriever
         
+        logger.info("ModelHandler initialized.")
     
     def get_coefficients(self):
         """
@@ -40,12 +43,16 @@ class ModelHandler:
         Returns:
             dict: A dictionary mapping variable names to their coefficients.
         """
+        logger.info("Retrieving model coefficients.")
+        
         coefficients = self.predictor._model.clf.coef_
         variable_names = self.predictor._model.clf.column_labels
+        logger.info(f"Model coefficients retrieved: {coefficients_dict}")
         return dict(zip(variable_names, coefficients))
 
     
     def update_active_version(self):
+        logger.info("Updating active model version.")
         
         self.model = dataiku.Model(self.model_id)
         self.full_model_id = extract_active_fullModelId(self.model.list_versions())
@@ -54,6 +61,8 @@ class ModelHandler:
         self.target = self.model_info_handler.get_target_variable()
         self.base_values = dict()
         self.modalities = dict()
+        
+        logger.info(f"Active version updated: {self.full_model_id}")
         self.compute_features()
         self.train_set = self.prepare_train_set()
         self.test_set = self.prepare_test_set()
@@ -61,104 +70,190 @@ class ModelHandler:
         self.relativities_handler = RelativitiesHandler(self.model_info_handler)
         
     def get_model_versions(self):
+        logger.info("Retrieving model versions.")
         versions = self.model.list_versions()
         fmi_name = {version['snippet']['fullModelId']: version['snippet']['userMeta']['name'] for version in versions}
+        logger.info(f"Model versions retrieved: {fmi_name}")
         return fmi_name
     
     def get_features(self):
-        return [{'variable': feature, 
-          'isInModel': self.features[feature]['role']=='INPUT', 
-          'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} for feature in self.non_excluded_features]
+        """
+        Retrieves the features used in the model.
+
+        Returns:
+            list: A list of dictionaries with feature details.
+        """
+        logger.info("Retrieving model features.")
+        features_list = [
+            {'variable': feature, 
+             'isInModel': self.features[feature]['role'] == 'INPUT', 
+             'variableType': 'categorical' if self.features[feature]['type'] == 'CATEGORY' else 'numeric'} 
+            for feature in self.non_excluded_features
+        ]
+
+        logger.info(f"Features retrieved: {features_list}")
+        return features_list
+    
     
     def compute_features(self):
-        """ Main method to compute feature configurations. """
+        """
+        Main method to compute feature configurations.
+        """
+        logger.info("Computing features.")
         self.initialize_feature_variables()
         self.compute_column_roles()
         self.filter_features()
+        logger.info("Features computed.")
 
     def initialize_feature_variables(self):
-        """ Initializes basic variables related to features. """
+        """
+        Initializes basic variables related to features.
+        """
+        logger.info("Initializing feature variables.")
         self.exposure = None
         self.features = self.model_info_handler.get_per_feature()
+        logger.info(f"Feature variables initialized: {self.features}")
 
     def compute_column_roles(self):
-        """ Computes special columns like exposure and offset columns from modeling params. """
+        """
+        Computes special columns like exposure and offset columns from modeling params.
+        """
+        logger.info("Computing column roles.")
         modeling_params = self.model_info_handler.get_modeling_params()
         self.offset_columns = modeling_params['plugin_python_grid']['params']['offset_columns']
         self.exposure_columns = modeling_params['plugin_python_grid']['params']['exposure_columns']
         if len(self.exposure_columns) > 0:
             self.exposure = self.exposure_columns[0]  # assumes there is only one exposure column
 
+        logger.info(f"Column roles computed: offset_columns={self.offset_columns}, exposure_columns={self.exposure_columns}")
+
+
     def filter_features(self):
-        """ Filters features based on their importance and role in the model. """
+        """
+        Filters features based on their importance and role in the model.
+        """
+        logger.info("Filtering features.")
         important_columns = self.offset_columns + self.exposure_columns + [self.target]
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in important_columns]
         self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'INPUT']
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
+        logger.info(f"Features filtered: non_excluded_features={self.non_excluded_features}, used_features={self.used_features}, candidate_features={self.candidate_features}")
 
     def compute_base_values(self):
-        """ Main method to initialize and compute base values. """
+        """
+        Main method to initialize and compute base values.
+        """
+        logger.info("Computing base values.")
         self.handle_preprocessing()
         self.compute_numerical_features()
+        logger.info(f"Base values computed: {self.base_values}")
 
 
     def handle_preprocessing(self):
-        """ Processes each step in the preprocessing pipeline. """
+        """
+        Processes each step in the preprocessing pipeline.
+        """
+        logger.info("Handling preprocessing steps.")
         preprocessing = self.predictor.get_preprocessing()
         for step in preprocessing.pipeline.steps:
             self.process_preprocessing_step(step)
+        logger.info("Preprocessing handled.")
 
     def process_preprocessing_step(self, step):
-        """ Processes a single preprocessing step to extract base values and modalities. """
+        """
+        Processes a single preprocessing step to extract base values and modalities.
+
+        Args:
+            step: A preprocessing step in the pipeline.
+        """
         try:
+            logger.info(f"Processing preprocessing step: {step}")
             self.base_values[step.input_col] = step.processor.mode_column
             self.modalities[step.input_col] = step.processor.modalities
+            logger.info(f"Step processed: {step}")
         except AttributeError:
-            pass
+            logger.info(f"Step processing failed (AttributeError): {step}")
 
     def compute_numerical_features(self):
-        """ Computes base values for numerical features not handled in preprocessing. """
+        """
+        Computes base values for numerical features not handled in preprocessing.
+        """
+        logger.info("Computing numerical features.")
         for feature in self.used_features:
             if feature not in self.base_values:
                 self.compute_base_for_feature(feature, self.train_set)
-
+        logger.info(f"Numerical features computed: {self.base_values}")
+        
+        
     def compute_base_for_feature(self, feature, train_set):
-        """ Computes base value for a single feature based on its type and rescaling. """
+        """
+        Computes base value for a single feature based on its type and rescaling.
+
+        Args:
+            feature (str): The feature to compute the base value for.
+            train_set (pd.DataFrame): The training dataset.
+        """
         if self.features[feature]['type'] == 'NUMERIC' and self.features[feature]['rescaling'] == 'NONE':
             self.compute_base_for_numeric_feature(feature, train_set)
         else:
-            raise Exception("feature should be handled numerically without rescaling or categorically with the custom preprocessor")
+            error_msg = "feature should be handled numerically without rescaling or categorically with the custom preprocessor"
+            logger.error(error_msg)
+            raise Exception(error_msg)
 
+
+ 
     def compute_base_for_numeric_feature(self, feature, train_set):
-        """ Computes base values for numeric features without rescaling. """
+        """
+        Computes base values for numeric features without rescaling.
+
+        Args:
+            feature (str): The numeric feature to compute the base value for.
+            train_set (pd.DataFrame): The training dataset.
+        """
+        logger.info(f"Computing base value for numeric feature: {feature}")
         if self.exposure is not None:
             feature_exposure = train_set.groupby(feature)[self.exposure].sum().reset_index()
             base_value = feature_exposure[feature].iloc[feature_exposure[self.exposure].idxmax()]
-            self.base_values[feature] = base_value
         else:
             feature_exposure = train_set[feature].value_counts().reset_index()
             base_value = feature_exposure['index'].iloc[feature_exposure[feature].idxmax()]
-            self.base_values[feature] = base_value
+
+        self.base_values[feature] = base_value
         self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
+        logger.info(f"Base value computed for numeric feature: {feature}, base_value: {base_value}")
 
     def get_relativities_df(self):
+        """
+        Computes and returns the relativities DataFrame for the model.
+
+        Returns:
+            pd.DataFrame: The relativities DataFrame.
+        """
+        logger.info("Computing relativities DataFrame.")
         sample_train_row = self.initialize_baseline()
         baseline_prediction = self.calculate_baseline_prediction(sample_train_row)
         self.calculate_relative_predictions(sample_train_row, baseline_prediction)
-        return self.construct_relativities_df()
+        relativities_df = self.construct_relativities_df()
+
+        logger.info(f"Relativities DataFrame computed: {relativities_df}")
+        return relativities_df
 
     def initialize_baseline(self):
+        logger.info("initialize_baseline")
         train_row = self.train_set.head(1).copy()
         for feature in self.base_values.keys():
             train_row[feature] = self.base_values[feature]
         if self.exposure is not None:
             train_row[self.exposure] = 1
+        logger.info("Successfully initialize_baseline")
         return train_row
 
     def calculate_baseline_prediction(self, sample_train_row):
+        logger.info("Calculating baseline prediction")
         return self.predictor.predict(sample_train_row).iloc[0][0]
 
     def calculate_relative_predictions(self, sample_train_row, baseline_prediction):
+        logger.info("Calculating relativity prediction")
         self.relativities = {'base': {'base': baseline_prediction}}
         for feature in self.base_values.keys():
             self.relativities[feature] = {self.base_values[feature]: 1.0}
@@ -177,6 +272,7 @@ class ModelHandler:
                     self.relativities[feature][value] = prediction / baseline_prediction
 
     def construct_relativities_df(self):
+        logger.info("constructing relativites DF")
         rel_df = pd.DataFrame(columns=['feature', 'value', 'relativity'])
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
@@ -221,35 +317,42 @@ class ModelHandler:
         return self.predicted_base_df
 
 
-    def prepare_test_set(self):
-        test_set = self.model_info_handler.get_test_df()[0].copy()
-        predicted = self.predictor.predict(test_set)
-        test_set['predicted'] = predicted
-        test_set['weight'] = 1 if self.exposure is None else test_set[self.exposure]
-        test_set['weighted_target'] = test_set[self.target] * test_set['weight']
-        test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
-        return test_set
-    
     def prepare_train_set(self):
+        """
+        Prepares and returns the training dataset.
+
+        Returns:
+            pd.DataFrame: The training dataset.
+        """
+        logger.info("Preparing training dataset.")
         train_set = self.model_info_handler.get_train_df()[0].copy()
         predicted = self.predictor.predict(train_set)
         train_set['predicted'] = predicted
         train_set['weight'] = 1 if self.exposure is None else train_set[self.exposure]
         train_set['weighted_target'] = train_set[self.target] * train_set['weight']
         train_set['weighted_predicted'] = train_set['predicted'] * train_set['weight']
+        logger.info(f"Training dataset prepared: {train_set.shape}")
         return train_set
 
-    def compute_base_predictions(self, test_set, used_features):
-        base_data = dict()
-        for feature in self.non_excluded_features:
-            copy_test_df = test_set.copy()
-            for other_feature in [col for col in used_features if col != feature]:
-                copy_test_df[other_feature] = self.base_values[other_feature]
-            predictions = self.predictor.predict(copy_test_df)
-            base_data[feature] = predictions
-        return base_data
+    def prepare_test_set(self):
+        """
+        Prepares and returns the test dataset.
+
+        Returns:
+            pd.DataFrame: The test dataset.
+        """
+        logger.info("Preparing test dataset.")
+        test_set = self.model_info_handler.get_test_df()[0].copy()
+        predicted = self.predictor.predict(test_set)
+        test_set['predicted'] = predicted
+        test_set['weight'] = 1 if self.exposure is None else test_set[self.exposure]
+        test_set['weighted_target'] = test_set[self.target] * test_set['weight']
+        test_set['weighted_predicted'] = test_set['predicted'] * test_set['weight']
+        logger.info(f"Test dataset prepared: {test_set.shape}")
+        return test_set
     
     def compute_base_predictions_new(self, test_set, used_features):
+        logger.info("Computing base Predictions")
         base_data = dict()
         for feature in used_features:
             copy_test_df = test_set.copy()
@@ -259,16 +362,19 @@ class ModelHandler:
                 copy_test_df[other_feature] = self.base_values[other_feature]
             predictions = self.predictor.predict(copy_test_df)
             base_data[feature] = pd.DataFrame(data={('base_' + feature): predictions['prediction'], feature: copy_test_df[feature]})
+        logger.info("successfully computed base Predictions")
         return base_data
 
     def merge_predictions(self, test_set, base_data):
-        print(base_data)
+        logger.info("Merging Base predictions")
         for feature in base_data.keys():
             test_set = pd.merge(test_set, base_data[feature], how='left', on=feature)
+        logger.info("Successfully Merged Base predictions")
         return test_set
 
 
     def get_predicted_and_base(self, nb_bins_numerical=100000):
+        logger.info("Getting Predicted and base")
         
         step_time = time()
         self.compute_base_values()
@@ -298,7 +404,6 @@ class ModelHandler:
         predicted_base_df['dataset'] = 'test'
         step_elapsed = time() - step_time
         logger.info(f"Step - finalize test predicted base: {step_elapsed:.2f} seconds")
-        print(predicted_base_df)
         
         step_time = time()
         base_data_train = self.compute_base_predictions_new(train_set, used_features)
@@ -308,9 +413,10 @@ class ModelHandler:
         predicted_base_train_df['dataset'] = 'train'
         step_elapsed = time() - step_time
         logger.info(f"Step - same same for train: {step_elapsed:.2f} seconds")
-        print(predicted_base_train_df)
+
         
         self.predicted_base_df = predicted_base_df.append(predicted_base_train_df)
+        logger.info("Successfully got Predicted and base")
         return self.predicted_base_df.copy()
     
     def get_lift_chart(self, nb_bins):

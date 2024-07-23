@@ -15,14 +15,14 @@ import numpy as np
 import time
 
 is_local = False
-visual_ml_trainer = model_cache = model_deployer =model_handler = None
+visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
 if not is_local:
     from dku_visual_ml.dku_model_trainer import VisualMLModelTrainer
     from dku_visual_ml.dku_model_retrival import VisualMLModelRetriver
-    from glm_handler.dku_model_handler import ModelHandler
+    from glm_handler.dku_model_handler import RelativitiesCalculator
     from glm_handler.dku_model_deployer import ModelDeployer
     from glm_handler.glm_data_handler import GlmDataHandler
     from glm_handler.dku_model_metrics import ModelMetricsCalculator
@@ -41,16 +41,17 @@ if not is_local:
             visual_ml_trainer.mltask, 
             visual_ml_config.saved_model_id
             )
-        model_handler = ModelHandler(
+        relativities_calculator = RelativitiesCalculator(
             visual_ml_config.saved_model_id, 
-            data_handler
+            data_handler,
+            model_retriever
             )
     
         
 def setup_cache():
     global model_cache
     latest_ml_task = visual_ml_trainer.get_latest_ml_task()
-    model_cache = setup_model_cache(latest_ml_task, model_deployer, model_handler)
+    model_cache = setup_model_cache(latest_ml_task, model_deployer, relativities_calculator)
 
 loading_thread = threading.Thread(target=setup_cache)
 loading_thread.start()
@@ -69,7 +70,7 @@ def train_model():
         time.sleep(2)
         return jsonify({'message': 'Model training initiated successfully.'}), 200
     
-    global visual_ml_trainer, model_cache, model_deployer, model_handler
+    global visual_ml_trainer, model_cache, model_deployer, relativites_calculator
     
     visual_ml_config.update_model_parameters(request.get_json())
 
@@ -93,10 +94,10 @@ def train_model():
             logger.info("Creating Model cache For the first time")
             latest_ml_task = visual_ml_trainer.get_latest_ml_task()
             model_deployer = ModelDeployer(latest_ml_task, saved_model_id)
-            model_handler = ModelHandler(saved_model_id, data_handler)
-            model_cache = setup_model_cache(latest_ml_task, model_deployer, model_handler)
+            relativities_calculator = RelativitiesCalculator(saved_model_id, data_handler, model_retriever)
+            model_cache = setup_model_cache(latest_ml_task, model_deployer, relativities_calculator)
         
-        model_cache = update_model_cache(latest_ml_task, model_cache, model_handler)
+        model_cache = update_model_cache(latest_ml_task, model_cache, relativities_calculator)
         
         logger.info("Model trained and cache updated")
         return jsonify({'message': 'Model training completed successfully.'}), 200
@@ -221,8 +222,8 @@ def get_lift_data():
     current_nb_bins = len(lift_chart[lift_chart['dataset'] == dataset])
     if current_nb_bins != nb_bins:
         model_deployer.set_new_active_version(full_model_id)
-        model_handler.update_active_version()
-        lift_chart = model_handler.get_lift_chart(nb_bins)
+        relativities_calculator.update_active_version()
+        lift_chart = relativities_calculator.get_lift_chart(nb_bins)
         model_cache[full_model_id]['lift_chart_data'] = lift_chart
     
     lift_chart.columns = ['Value', 'observedAverage', 'fittedAverage', 'Category', 'dataset']
@@ -245,7 +246,7 @@ def get_updated_data():
 
     feature = request_json["feature"]
     nb_bins = request_json["nbBin"]
-    predicted_base = model_handler.get_predicted_and_base_feature(feature, nb_bins)
+    predicted_base = relativities_calculator.get_predicted_and_base_feature(feature, nb_bins)
     df = predicted_base.copy()
     df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
     
@@ -342,12 +343,12 @@ def get_model_metrics():
     
     if is_local:
         response_time = time() - start_time
-        print(f"Returned local dummy metrics in {response_time} seconds.")
+        logger.info(f"Returned local dummy metrics in {response_time} seconds.")
         return jsonify(dummy_model_metrics)
     
     loading_thread.join()
     request_json = request.get_json()
-    print(request_json)
+
     
     model1, model2 = request_json["model1"], request_json["model2"]
     
