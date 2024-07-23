@@ -1,4 +1,4 @@
-from glm_handler.dku_model_handler import RelativitiesCalculator
+from glm_handler.dku_relativites_calculator import RelativitiesCalculator
 from glm_handler.dku_model_deployer import ModelDeployer
 from glm_handler.glm_data_handler import GlmDataHandler
 from glm_handler.dku_model_metrics import ModelMetricsCalculator
@@ -7,6 +7,8 @@ from time import time
 from logging_assist.logging import logger
 from glm_handler.glm_data_handler import GlmDataHandler
 from dku_visual_ml.dku_model_retrival import VisualMLModelRetriver
+from chart_formatters.lift_chart import LiftChartFormatter
+
 data_handler = GlmDataHandler()
 
 
@@ -92,7 +94,13 @@ def setup_model_cache(global_dku_mltask, model_deployer):
 
                 # Get lift chart
                 step_time = time()
-                lift_chart_data = relativities_calculator.get_lift_chart(8)
+                lift_chart = LiftChartFormatter(
+                         model_retriever,
+                         data_handler,
+                         relativities_calculator
+                ) 
+                lift_chart_data = lift_chart.get_lift_chart(8)
+                
                 step_elapsed = time() - step_time
                 logger.info(f"Step - Get lift chart: {step_elapsed:.2f} seconds")
 
@@ -157,7 +165,12 @@ def update_model_cache(global_dku_mltask, model_cache):
             relativities = relativities_calculator.get_relativities_df()
             relativities_dict = relativities_calculator.relativities
             variable_stats = relativities_calculator.get_variable_level_stats()
-            lift_chart_data = relativities_calculator.get_lift_chart(8)
+            lift_chart = LiftChartFormatter(
+                     model_retriever,
+                     data_handler,
+                     relativities_calculator
+            ) 
+            lift_chart_data = lift_chart.get_lift_chart(8)
             mmc = ModelMetricsCalculator(model_retriever)
             model_1_aic, model_1_bic, model_1_deviance = mmc.calculate_metrics()
 

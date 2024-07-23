@@ -22,7 +22,7 @@ logger.debug(f"Starting web application with is_local: {is_local}")
 if not is_local:
     from dku_visual_ml.dku_model_trainer import VisualMLModelTrainer
     from dku_visual_ml.dku_model_retrival import VisualMLModelRetriver
-    from glm_handler.dku_model_handler import RelativitiesCalculator
+    from glm_handler.dku_relativites_calculator import RelativitiesCalculator
     from glm_handler.dku_model_deployer import ModelDeployer
     from glm_handler.glm_data_handler import GlmDataHandler
     from backend.model_cache import setup_model_cache, update_model_cache
