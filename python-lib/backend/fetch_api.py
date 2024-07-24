@@ -15,9 +15,9 @@ import numpy as np
 import time
 from chart_formatters.lift_chart import LiftChartFormatter
 
-is_local = False
-visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
 
+visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
+is_local = False
 logger.debug(f"Starting web application with is_local: {is_local}")
 
 if not is_local:
@@ -135,9 +135,9 @@ def get_variables():
     full_model_id = request_json["id"]
     try:
         loading_thread.join()
-        variables = model_cache[full_model_id].get('features')
-        logger.debug(f"Model cache for{full_model_id} is {model_cache[full_model_id]}")
-        
+        model_retriever = VisualMLModelRetriver(saved_model_id)
+        variables = model_retriever._get_included_features()
+
     except ValueError as e:
         current_app.logger.error(f"Validation Error: {e}")
         return jsonify({"error": e})        
@@ -272,8 +272,7 @@ def get_relativities():
     df.columns = ['variable', 'category', 'relativity']
     current_app.logger.info(f"relativites are {df.head()}")
     return jsonify(df.to_dict('records'))
-#     local dev
-    return jsonify(dummy_relativites.to_dict('records'))
+
 
 @fetch_api.route("/get_variable_level_stats", methods=["POST"])
 def get_variable_level_stats():
@@ -289,7 +288,6 @@ def get_variable_level_stats():
 
     df = model_cache[full_model_id].get('variable_stats')
     return jsonify(df.to_dict('records'))
-
 
 
 
@@ -340,26 +338,25 @@ def get_model_metrics():
     loading_thread.join()
     request_json = request.get_json()
 
-    
-    model1, model2 = request_json["model1"], request_json["model2"]
-    
-    model_1_metrics = model_cache.get(model1).get('model_metrics')
-    model_2_metrics = model_cache.get(model2).get('model_metrics')
-    
+   
+    models = [request_json["model1"], request_json["model2"]]
+
     metrics = {
-        "models": {
-            "Model_1": {
-                "AIC": model_1_metrics.get('AIC'),
-                "BIC": model_1_metrics.get('BIC'),
-                "Deviance": model_1_metrics.get('Deviance')
-            },
-            "Model_2": {
-                "AIC": model_2_metrics.get('AIC'),
-                "BIC": model_2_metrics.get('AIC'),
-                "Deviance": model_2_metrics.get('AIC'),
-            }
-        }
+        "models": {}
     }
+
+    for i, model in enumerate(models, start=1):
+        model_retriever = VisualMLModelRetriver(model)
+        mmc = ModelMetricsCalculator(model_retriever)
+        model_aic, model_bic, model_deviance = mmc.calculate_metrics()
+
+        model_key = f"Model_{i}"
+
+        metrics["models"][model_key] = {
+            "AIC": model_aic,
+            "BIC": model_bic,
+            "Deviance": model_deviance
+        }
     return jsonify(metrics)
 
 
@@ -427,8 +424,7 @@ def export_model():
 def export_variable_level_stats():
 
     if is_local:
-        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
-        df = pd.DataFrame(data)
+
 
         # Convert DataFrame to CSV format
         csv_data = df.to_csv(index=False).encode('utf-8')
@@ -461,13 +457,9 @@ def export_variable_level_stats():
 
 @fetch_api.route('/export_one_way', methods=['POST'])
 def export_one_way():
-
+    logger.info("Exporting one way graphs")
     if is_local:
-        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
-        df = pd.DataFrame(data)
-
-        # Convert DataFrame to CSV format
-        csv_data = df.to_csv(index=False).encode('utf-8')
+        csv_data = variable_level_stats_df.to_csv(index=False).encode('utf-8')
     else:
         try:
             loading_thread.join()
@@ -514,10 +506,7 @@ def export_one_way():
 
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
 def get_dataset_columns():
-    
     try:
-        # This try statement is just for local development remove the except 
-        # which explicitly assins the dataset name
         try: 
             web_app_config = get_webapp_config()
             dataset_name = web_app_config.get("training_dataset_string")

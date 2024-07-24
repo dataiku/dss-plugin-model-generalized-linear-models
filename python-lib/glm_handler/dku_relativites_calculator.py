@@ -135,7 +135,7 @@ class RelativitiesCalculator:
         self.calculate_relative_predictions(sample_train_row, baseline_prediction)
         relativities_df = self.construct_relativities_df()
 
-        logger.info(f"Relativities DataFrame computed: {relativities_df}")
+        logger.info(f"Relativities DataFrame computed")
         return relativities_df
 
     def initialize_baseline(self):
@@ -287,28 +287,29 @@ class RelativitiesCalculator:
         df['Value'] = [float('%s' % float('%.3g' % x)) for x in  df['Value']]
         df['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in  df['baseLevelPrediction']]
         return df
+    
+    def process_dataset(self, dataset, dataset_name):
+        logger.info("Processing dataset {dataset_name}")
         
+        used_features = list(self.base_values.keys())
+        base_data = self.compute_base_predictions_new(dataset, used_features)
+        dataset = self.merge_predictions(dataset, base_data)
+        predicted_base = self.data_handler.calculate_weighted_aggregations(dataset, self.model_retriever.non_excluded_features, used_features)
+        predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
+        predicted_base_df['dataset'] = dataset_name
+        logger.info("Processed dataset {dataset_name}")
+        return predicted_base_df
+    
+    
     def get_predicted_and_base(self, nb_bins_numerical=100000):
         logger.info("Getting Predicted and base")
         
         self.compute_base_values()
         
-        test_set = self.test_set
-        train_set = self.train_set
-        used_features = list(self.base_values.keys())
-        base_data = self.compute_base_predictions_new(test_set, used_features)
-        test_set = self.merge_predictions(test_set, base_data)
-        predicted_base = self.data_handler.calculate_weighted_aggregations(test_set, self.model_retriever.non_excluded_features, used_features)
-        predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
-        predicted_base_df['dataset'] = 'test'
-        base_data_train = self.compute_base_predictions_new(train_set, used_features)
-        train_set = self.merge_predictions(train_set, base_data_train)
-        predicted_base_train = self.data_handler.calculate_weighted_aggregations(train_set, self.model_retriever.non_excluded_features, used_features)
-        predicted_base_train_df = self.data_handler.construct_final_dataframe(predicted_base_train)
-        predicted_base_train_df['dataset'] = 'train'
+        test_predictions = self.process_dataset(self.test_set, 'test')
+        train_predictions = self.process_dataset(self.train_set, 'train')
 
-        
-        self.predicted_base_df = predicted_base_df.append(predicted_base_train_df)
+        self.predicted_base_df = train_predictions.append(test_predictions)
         
 
         logger.info("Successfully got Predicted and base")

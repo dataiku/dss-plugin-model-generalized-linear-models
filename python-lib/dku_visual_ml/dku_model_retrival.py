@@ -110,6 +110,7 @@ class VisualMLModelRetriver(DataikuClientProject):
         self.used_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'INPUT']
         self.candidate_features = [feature for feature in self.non_excluded_features if self.features[feature]['role'] == 'REJECT']
         logger.info(f"Features filtered: non_excluded_features={self.non_excluded_features}, used_features={self.used_features}, candidate_features={self.candidate_features}")
+        return self.used_features
     
 
     def get_features_used_in_modelling(self):

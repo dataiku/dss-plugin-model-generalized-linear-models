@@ -209,3 +209,6 @@ dummy_variable_level_stats = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 
                         'weight': [234, 87, 73, 122, 90], 
                         'weight_pct': [60, 20, 20, 65, 35], 
                         'relativity': [1, 1.23, 1.077, 1, 0.98]}).to_dict('records')
+
+data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+variable_level_stats_df = pd.DataFrame(data)

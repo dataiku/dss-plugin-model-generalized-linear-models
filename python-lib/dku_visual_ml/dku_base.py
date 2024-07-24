@@ -1,5 +1,6 @@
 import dataiku
 from logging_assist.logging import logger
+
 class DataikuClientProject:
     """
     A base class to initialize Dataiku client and project
