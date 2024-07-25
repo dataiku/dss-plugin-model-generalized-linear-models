@@ -495,31 +495,32 @@ methods: {
                         const columnName = column.column;
                         const options = column.options;
                         const param = params[columnName];
-                        const isTargetColumn = columnName === paramsResponse.data.target_column;
-                        const isExposureColumn = columnName === paramsResponse.data.exposure_column;
-                        
-                        // Set the selected target variable if this column is the target column
-                        if (isTargetColumn) {
-                            this.selectedTargetVariable = columnName;
+                        if (param) {
+                            const isTargetColumn = columnName === paramsResponse.data.target_column;
+                            const isExposureColumn = columnName === paramsResponse.data.exposure_column;
+                            
+                            // Set the selected target variable if this column is the target column
+                            if (isTargetColumn) {
+                                this.selectedTargetVariable = columnName;
+                            }
+
+
+                            // Set the selected exposure variable if this column is the exposure column
+                            if (isExposureColumn) {
+                                this.selectedExposureVariable = columnName;
+                            }
+
+                            return {
+                                name: columnName,
+                                isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
+                                role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
+                                type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
+                                preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
+                                chooseBaseLevel: param.chooseBaseLevel ? param.chooseBaseLevel : false,
+                                options: options,
+                                baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
+                            };
                         }
-
-
-                        // Set the selected exposure variable if this column is the exposure column
-                        if (isExposureColumn) {
-                            this.selectedExposureVariable = columnName;
-                        }
-                        console.log(param);
-
-                        return {
-                            name: columnName,
-                            isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
-                            role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
-                            type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
-                            preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
-                            chooseBaseLevel: param.chooseBaseLevel ? param.chooseBaseLevel : false,
-                            options: options,
-                            baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
-                        };
                     });
 
                 //} catch (error) {
