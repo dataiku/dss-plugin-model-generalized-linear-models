@@ -520,6 +520,17 @@ methods: {
                                 options: options,
                                 baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
                             };
+                        } else {
+                            return {
+                                name: column.column,
+                                isIncluded: false,
+                                role: 'Variable',
+                                type: 'Categorical',
+                                preprocessing: 'Dummy Encode',
+                                chooseBaseLevel: false,
+                                options: column.options,
+                                baseLevel: column.baseLevel
+                            };
                         }
                     });
 
