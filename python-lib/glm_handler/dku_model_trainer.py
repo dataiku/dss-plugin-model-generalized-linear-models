@@ -155,7 +155,7 @@ class DataikuMLTask:
     
     def update_parameters(self, distribution_function, link_function, elastic_net_penalty, l1_ratio, variables):
         # pick up any new interaction vars that have been created         
-        self.refresh_mltask()
+        # self.refresh_mltask()
         
         self.distribution_function = distribution_function.lower()
         logger.info(f"distribution_function set to {self.distribution_function}")
