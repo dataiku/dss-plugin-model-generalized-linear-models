@@ -16,8 +16,7 @@
         title="Model Parameters">
             <div class="variable-select-container">
             <BsLabel
-                label="Load a previous model"
-                info-text="Charts will be generated with respect to this model">
+                label="Load a previous model">
             </BsLabel>
             <BsSelect
                 :modelValue="selectedModelString"
@@ -478,7 +477,7 @@ methods: {
             if (model_value) {
             console.log("model_id parameter provided:", model_value);
             this.datasetColumns = []
-            try {
+            //try {
                     const response = await API.getDatasetColumns();
                     this.selectedModelString = model_value;
                     const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
@@ -509,6 +508,7 @@ methods: {
                         if (isExposureColumn) {
                             this.selectedExposureVariable = columnName;
                         }
+                        console.log(param);
 
                         return {
                             name: columnName,
@@ -522,9 +522,9 @@ methods: {
                         };
                     });
 
-                } catch (error) {
-                    console.error("Error fetching data:", error);
-                }
+                //} catch (error) {
+                 //   console.error("Error fetching data:", error);
+                //}
 
         } 
     else {
