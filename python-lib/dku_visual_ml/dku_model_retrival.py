@@ -72,20 +72,13 @@ class VisualMLModelRetriver(DataikuClientProject):
         return self.full_model_id
     
     def get_target_column(self):
-        target_column = None
-        logger.info("Getting the target column for model id {self.full_model_id}")
-        preprocessing = self.model_details.get_preprocessing_settings().get('per_feature')
-        features = preprocessing.keys()
-        for feature in features:
-            feature_settings = preprocessing.get(feature)
-            if (feature_settings.get('role')=="TARGET") or (feature_settings.get('role')=="Target"):
-                target_column = feature
-                self.target_column = target_column
-                logger.debug(f"Setting target columns to {self.target_column}")
-                return feature
-            
-        if not target_column:
-            logger.debug("Unable to find a target column")
+        print(f"Getting the target column for model id {self.full_model_id}")
+        self.target_column = self.model_details.details.get('coreParams').get('target_variable')
+        if not self.target_column:
+            print("Unable to find a target column")
+            return
+        else:
+            return self.target_column 
 
     
     def _get_excluded_features(self):
@@ -103,8 +96,8 @@ class VisualMLModelRetriver(DataikuClientProject):
         logger.debug(f"excluded_features: {excluded_features}")
         self.non_excluded_features = [feature for feature in self.features.keys() if feature not in excluded_features]
         logger.debug(f"Found Included features as {self.non_excluded_features }")
-        
         return self.non_excluded_features
+
     
     def get_used_features(self):
         """

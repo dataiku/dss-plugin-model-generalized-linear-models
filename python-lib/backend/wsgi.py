@@ -11,6 +11,7 @@ from webaiku.extension import WEBAIKU
 #setup_dataiku_client()
 
 app = Flask(__name__)
+app.logger.setLevel(logging.DEBUG)
 WEBAIKU(
     app, "webapps/vue_template", int(os.getenv("VITE_API_PORT"))
 )

@@ -31,6 +31,7 @@ def setup_model_cache(global_dku_mltask, model_deployer):
                 model_retriever = VisualMLModelRetriver(
                     model_id
                 )
+                print(f'cache visual model retrieve target is {model_retriever.target_column}')
                 relativities_calculator = RelativitiesCalculator(
                     data_handler,
                     model_retriever

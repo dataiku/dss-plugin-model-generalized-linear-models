@@ -23,7 +23,7 @@ class LazyLogger:
 
             if cls._logger is None:
                 cls._logger = logging.getLogger(__name__)
-            cls._logger.setLevel(level)
+            cls._logger.setLevel('DEBUG')
 
             if not cls._logger.handlers:
                 handler = logging.StreamHandler()

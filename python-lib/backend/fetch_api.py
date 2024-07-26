@@ -60,9 +60,11 @@ loading_thread.start()
 
 
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
-
+    
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
+    current_app.logger.debug('This is a debug message')
+
     current_app.logger.info("Initalising Model Training")
     
     if is_local:
@@ -70,40 +72,33 @@ def train_model():
         time.sleep(2)
         return jsonify({'message': 'Model training initiated successfully.'}), 200
     
-    global visual_ml_trainer, model_cache, model_deployer, relativites_calculator
+    global visual_ml_trainer, model_cache
     
     visual_ml_config.update_model_parameters(request.get_json())
 
-    try:
-        ml_task = visual_ml_trainer.get_latest_ml_task()
-        if not ml_task:
-            current_app.logger.debug("First time training a model, creating Visual ML Trainer")
-            visual_ml_trainer = VisualMLModelTrainer(visual_ml_config)
-        
-        visual_ml_trainer.update_visual_ml_config(visual_ml_config)
-        model_details = visual_ml_trainer.train_model(
-            code_env_string=visual_ml_config.code_env_string,
-            session_name=visual_ml_config.model_name_string
-        )
-        
-        loading_thread.join()
-        
-        if not model_cache:
-            current_app.logger.info("Creating Model cache For the first time")
-            latest_ml_task = visual_ml_trainer.get_latest_ml_task()
-            
-            if not model_deployer:
-                model_deployer = visual_ml_trainer.model_deployer
-                
-            model_cache = setup_model_cache(latest_ml_task, model_deployer)
-        
+#     try:
+    current_app.logger.debug("Creating Visual ML Trainer")
+    visual_ml_trainer = VisualMLModelTrainer(visual_ml_config)
+
+    model_details = visual_ml_trainer.train_model(
+        code_env_string=visual_ml_config.code_env_string,
+        session_name=visual_ml_config.model_name_string
+    )
+    loading_thread.join()
+
+    if not model_cache:
+        current_app.logger.info("Creating Model cache For the first time")
+        latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+        model_deployer = visual_ml_trainer.model_deployer
+        model_cache = setup_model_cache(latest_ml_task, model_deployer)
+    else:
         model_cache = update_model_cache(latest_ml_task, model_cache)
-        
-        current_app.logger.info("Model trained and cache updated")
-        return jsonify({'message': 'Model training completed successfully.'}), 200
-    except Exception as e:
-        current_app.logger.exception(f"An error occurred during model training {e}")
-        return jsonify({'error': str(e)}), 500
+
+    current_app.logger.info("Model trained and cache updated")
+    return jsonify({'message': 'Model training completed successfully.'}), 200
+#     except Exception as e:
+#         current_app.logger.exception(f"An error occurred during model training {e}")
+#         return jsonify({'error': str(e)}), 500
     
     
 @fetch_api.route("/get_latest_mltask_params", methods=["POST"])
@@ -134,8 +129,8 @@ def get_variables():
     full_model_id = request_json["id"]
     try:
         loading_thread.join()
-        model_retriever = VisualMLModelRetriver(saved_model_id)
-        variables = model_retriever._get_included_features()
+        model_retriever = VisualMLModelRetriver(full_model_id)
+        variables = model_retriever.get_features_used_in_modelling()
 
     except ValueError as e:
         current_app.logger.error(f"Validation Error: {e}")
@@ -184,8 +179,7 @@ def get_data():
         dataset = 'test' if train_test else 'train'
 
         current_app.logger.info(f"Model ID received: {full_model_id}")
-
-        predicted_base = model_cache[full_model_id].get('predicted_and_base')
+        predicted_base = model_cache.get_model(full_model_id).get('predicted_and_base')
         predicted_base = predicted_base[predicted_base['dataset']==dataset]
 
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
@@ -214,7 +208,7 @@ def get_lift_data():
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
     
-    lift_chart_data = model_cache[full_model_id].get('lift_chart_data')
+    lift_chart_data = model_cache.get_model(full_model_id).get('lift_chart_data')
     
     current_nb_bins = len(lift_chart_data[lift_chart_data['dataset'] == dataset])
     
@@ -231,7 +225,7 @@ def get_lift_data():
                  relativities_calculator
         ) 
         lift_chart_data = lift_chart.get_lift_chart(nb_bins)
-        model_cache[full_model_id]['lift_chart_data'] = lift_chart_data
+#          model_cache.add_model(full_model_id).get('lift_chart_data') = lift_chart_data
     
     lift_chart_data = lift_chart_data[lift_chart_data['dataset'] == dataset]
     current_app.logger.info(f"Successfully generated Lift chart data")
@@ -267,7 +261,7 @@ def get_relativities():
     full_model_id = request_json["id"]
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
-    df = model_cache[full_model_id].get('relativities')
+    df = model_cache.get_model(full_model_id).get('relativities')
     df.columns = ['variable', 'category', 'relativity']
     current_app.logger.info(f"relativites are {df.head()}")
     return jsonify(df.to_dict('records'))
@@ -285,7 +279,7 @@ def get_variable_level_stats():
     current_app.logger.info(f"for Model ID: {full_model_id}")
 
 
-    df = model_cache[full_model_id].get('variable_stats')
+    df = model_cache.get_model(full_model_id).get('variable_stats')
     return jsonify(df.to_dict('records'))
 
 
@@ -435,7 +429,7 @@ def export_variable_level_stats():
             
             current_app.logger.info(f"Model ID received: {full_model_id}")
 
-            df = model_cache[full_model_id].get('variable_stats')
+            df = model_cache.get_model(full_model_id).get('variable_stats')
             df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
 
             csv_data = df.to_csv(index=False).encode('utf-8')
@@ -474,12 +468,12 @@ def export_one_way():
             current_app.logger.info(f"Train/Test received: {dataset}")
             current_app.logger.info(f"Rescale received: {rescale}")
 
-            predicted_base = model_cache[full_model_id].get('predicted_and_base')
+            predicted_base = model_cache.get_model(full_model_id).get('predicted_and_base')
             predicted_base = predicted_base[predicted_base['dataset']==dataset]
             predicted_base = predicted_base[predicted_base['definingVariable']==variable]
 
             if rescale:
-                relativities = model_cache[full_model_id].get('relativities')
+                relativities = model_cache.get_model(full_model_id).get('relativities')
                 relativities.columns = ['variable', 'category', 'relativity']
                 variable_relativities = relativities[relativities["variable"]==variable]
                 base_level = variable_relativities[variable_relativities['relativity']==1]['category'].iloc[0]
