@@ -8,6 +8,7 @@ import string
 from logging_assist.logging import logger
 from dku_visual_ml.custom_configurations import dku_dataset_selection_params, custom_base_none
 from dku_visual_ml.dku_base import DataikuClientProject
+from glm_handler.dku_model_deployer import ModelDeployer
 
 class VisualMLModelTrainer(DataikuClientProject):
     """
@@ -24,6 +25,7 @@ class VisualMLModelTrainer(DataikuClientProject):
         self.visual_ml_config = visual_ml_config
         self.mltask = None
         self.saved_model_id = None
+        self.model_deployer = None
 
         logger.info("Initalized a Visual ML training task successfully")
         if visual_ml_config:
@@ -57,6 +59,7 @@ class VisualMLModelTrainer(DataikuClientProject):
         self.mltask_id = self.analysis.list_ml_tasks().get('mlTasks')[0].get('mlTaskId')
         self.mltask = self.analysis.get_ml_task(self.mltask_id)
         self.remove_failed_trainings()
+        self.model_deployer = ModelDeployer(self.mltask, self.saved_model_id)
         
         logger.info(f"Successfully update the existing ML task")
     
@@ -78,12 +81,16 @@ class VisualMLModelTrainer(DataikuClientProject):
             return
         
     def disable_existing_variables(self):
-        logger.info(f"Disabling variables from the ml task config") 
+        print(f"Disabling variables from the ml task config") 
         
         settings = self.mltask.get_settings()
         target_variable = self.visual_ml_config.get_target_variable()
+        print(f"Target Variable is {target_variable}")
+        print(f"Settings are {settings}")
         for feature_name in settings.get_raw()['preprocessing']['per_feature'].keys():
-            if feature_name != target_variable:
+            feature_role = settings.get_raw()['preprocessing']['per_feature'][feature_name].get('role')
+            print(f"feature role is {feature_role}")
+            if feature_name != target_variable or (feature_role!="TARGET"):
                 settings.reject_feature(feature_name)
         settings.save()
         
@@ -200,7 +207,7 @@ class VisualMLModelTrainer(DataikuClientProject):
         
         self.set_included_variables()
         self.set_exposure_variable()
-#         self.set_target_variable() - already set
+        self.set_target_variable()
         
         logger.debug('***Updated settings are:***')
         settings = self.mltask.get_settings()
@@ -218,9 +225,7 @@ class VisualMLModelTrainer(DataikuClientProject):
         logger.info("Setting the target variables in the dataiku ML task")
         settings = self.mltask.get_settings()
         target_variable = self.visual_ml_config.get_target_variable()
-        settings.set_target_variable(target_variable)
-        settings.save()
-        logger.info("Succesfully set the target variables in the dataiku ML task")
+        logger.info("Succesfully set the target variables in the dataiku ML visual Config")
         return
     
     def set_code_env_settings(self,code_env_string):
@@ -293,16 +298,21 @@ class VisualMLModelTrainer(DataikuClientProject):
         self.set_code_env_settings(code_env_string)
         self.mltask.start_train(session_name=session_name)
         self.mltask.wait_train_complete()
+        if not self.model_deployer:
+            logger.info("Setting up model deployer")
+            self.model_deployer = ModelDeployer(self.mltask,self.visual_ml_config.saved_model_id)
         logging.info("Model training completed. Deploying the model.")
         try:
-            model_details = self.deploy_model()
+            latest_model_id = self.get_latest_model()
+            model_details = self.model_deployer.deploy_model(latest_model_id, self.visual_ml_config.input_dataset)
             logger.info(f"Model Details are {model_details}")
             return model_details
         except Exception as e:
             # This logs the error message along with the stack trace.
             logging.exception("Failed to deploy model to the flow: %s", e)
-            logging.info("Removing Failed Model Traings.")
+            logging.info("Removing Failed Model Trainings.")
             self.remove_failed_trainings()
+        return model_details
             
     def update_mltask_modelling_params(self):
         """

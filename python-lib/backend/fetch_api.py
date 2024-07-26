@@ -18,6 +18,7 @@ from chart_formatters.lift_chart import LiftChartFormatter
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
 is_local = False
+
 logger.debug(f"Starting web application with is_local: {is_local}")
 
 if not is_local:
@@ -59,12 +60,10 @@ loading_thread.start()
 
 
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
-client = dataiku.api_client()
-project = client.get_default_project()
-@fetch_api.route("/train_model", methods=["POST"])
 
+@fetch_api.route("/train_model", methods=["POST"])
 def train_model():
-    logger.info("Initalising Model Traing")
+    current_app.logger.info("Initalising Model Training")
     
     if is_local:
         logger.info("Local set up: No model training completed")
@@ -87,20 +86,20 @@ def train_model():
             session_name=visual_ml_config.model_name_string
         )
         
-        saved_model_id = model_details.get("savedModelId")
-        current_app.logger.info("Model training initiated successfully")
         loading_thread.join()
         
         if not model_cache:
-            logger.info("Creating Model cache For the first time")
+            current_app.logger.info("Creating Model cache For the first time")
             latest_ml_task = visual_ml_trainer.get_latest_ml_task()
-            model_deployer = ModelDeployer(latest_ml_task, saved_model_id)
-            relativities_calculator = RelativitiesCalculator(data_handler, model_retriever)
-            model_cache = setup_model_cache(latest_ml_task, model_deployer, relativities_calculator)
+            
+            if not model_deployer:
+                model_deployer = visual_ml_trainer.model_deployer
+                
+            model_cache = setup_model_cache(latest_ml_task, model_deployer)
         
         model_cache = update_model_cache(latest_ml_task, model_cache)
         
-        logger.info("Model trained and cache updated")
+        current_app.logger.info("Model trained and cache updated")
         return jsonify({'message': 'Model training completed successfully.'}), 200
     except Exception as e:
         current_app.logger.exception(f"An error occurred during model training {e}")
@@ -109,7 +108,7 @@ def train_model():
     
 @fetch_api.route("/get_latest_mltask_params", methods=["POST"])
 def get_latest_mltask_params():
-    logger.info("Getting Latest ML task set up parameters")
+    current_app.logger.info("Getting Latest ML task set up parameters")
     
     if is_local:
         setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
@@ -276,7 +275,7 @@ def get_relativities():
 
 @fetch_api.route("/get_variable_level_stats", methods=["POST"])
 def get_variable_level_stats():
-    logger.info("Getting Variable Level Stats")
+    current_app.logger.info("Getting Variable Level Stats")
     if is_local:
         return jsonify(dummy_variable_level_stats)
     
@@ -293,7 +292,7 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
-    logger.info("Getting Model Comparison Data")
+    current_app.logger.info("Getting Model Comparison Data")
     if is_local:
         df = get_dummy_model_comparison_data()
         return jsonify(df.to_dict('records'))
@@ -320,7 +319,7 @@ def get_model_comparison_data():
                                       how='outer')
         
         merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
-        logger.info("Returning Merged Model stats")
+        current_app.logger.info("Returning Merged Model stats")
         return jsonify(merged_model_stats.to_dict('records'))
     
     except Exception as e:
@@ -331,7 +330,7 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-    logger.info("Getting Model Metrics") 
+    current_app.logger.info("Getting Model Metrics") 
     if is_local:
         return jsonify(dummy_model_metrics)
     
@@ -457,7 +456,7 @@ def export_variable_level_stats():
 
 @fetch_api.route('/export_one_way', methods=['POST'])
 def export_one_way():
-    logger.info("Exporting one way graphs")
+    current_app.logger.info("Exporting one way graphs")
     if is_local:
         csv_data = variable_level_stats_df.to_csv(index=False).encode('utf-8')
     else:

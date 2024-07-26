@@ -13,10 +13,11 @@ class LazyLogger:
             try:
                 webapp_config = get_webapp_config()
                 log_level = webapp_config.get('log_level', 'DEBUG')
+                log_level = 'DEBUG'
             except Exception as e:
                 log_level = 'DEBUG'
 
-            level = getattr(logging, log_level.upper(), logging.INFO)
+            level = getattr(logging, log_level.upper(), logging.DEBUG)
             if not isinstance(level, int):
                 raise ValueError(f'Invalid log level: {log_level}')
 
@@ -42,7 +43,7 @@ class LazyLogger:
         self._initialize_logger()
         self._logger.info(msg, *args, **kwargs)
 
-    def warn(self, msg, *args, **kwargs):
+    def warning(self, msg, *args, **kwargs):
         self._initialize_logger()
         self._logger.warning(msg, *args, **kwargs)
 

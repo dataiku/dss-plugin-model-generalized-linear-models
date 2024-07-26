@@ -72,15 +72,20 @@ class VisualMLModelRetriver(DataikuClientProject):
         return self.full_model_id
     
     def get_target_column(self):
-        
+        target_column = None
         logger.info("Getting the target column for model id {self.full_model_id}")
         preprocessing = self.model_details.get_preprocessing_settings().get('per_feature')
         features = preprocessing.keys()
         for feature in features:
             feature_settings = preprocessing.get(feature)
-            if feature_settings.get('role')=="TARGET":
-                self.target_column =feature
+            if (feature_settings.get('role')=="TARGET") or (feature_settings.get('role')=="Target"):
+                target_column = feature
+                self.target_column = target_column
+                logger.debug(f"Setting target columns to {self.target_column}")
                 return feature
+            
+        if not target_column:
+            logger.debug("Unable to find a target column")
 
     
     def _get_excluded_features(self):

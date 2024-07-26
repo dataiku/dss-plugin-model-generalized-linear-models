@@ -9,13 +9,19 @@ class DKUVisualMLConfig:
         logger.debug("Initalising a dku visual ML config with the existing web app settings")
         
         web_app_config = get_webapp_config()
-        self.existing_analysis_id = web_app_config.get("existing_analysis_id")
+        self.setup_type = web_app_config.get("setup_type")
+        if self.setup_type == "new":
+            self.existing_analysis_id =None
+            self.saved_model_id = None
+        else:
+            self.existing_analysis_id = web_app_config.get("existing_analysis_id")
+            self.saved_model_id = web_app_config.get("saved_model_id")
+        self.target_column = web_app_config.get("target_column")
         self.input_dataset = web_app_config.get("training_dataset_string")
         self.prediction_type = web_app_config.get("prediction_type")
-        self.setup_type = web_app_config.get("setup_type")
+        
         self.policy = web_app_config.get("policy")
         self.test_dataset_string = web_app_config.get("test_dataset_string")
-        self.saved_model_id = web_app_config.get("saved_model_id")
         self.code_env_string = web_app_config.get("code_env_string")
         
         logger.debug("Successfully initalised a dku visual ML config with the existing web app settings")

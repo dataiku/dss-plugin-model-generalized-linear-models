@@ -229,6 +229,9 @@ class RelativitiesCalculator:
         predicted = self.model_retriever.predictor.predict(train_set)
         train_set['predicted'] = predicted
         train_set['weight'] = 1 if self.model_retriever.exposure_columns is None else train_set[self.model_retriever.exposure_columns]
+        print(f"train set columns are {train_set.columns}")
+        print(f"self.model_retriever.target_column {self.model_retriever.target_column}")
+        print(f"self.model_retriever.exposure_column {self.model_retriever.exposure_columns}")
         train_set['weighted_target'] = train_set[self.model_retriever.target_column] * train_set['weight']
         train_set['weighted_predicted'] = train_set['predicted'] * train_set['weight']
         logger.info(f"Training dataset prepared: {train_set.shape}")
