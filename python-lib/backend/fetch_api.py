@@ -13,7 +13,7 @@ import threading
 import numpy as np
 import time
 from chart_formatters.lift_chart import LiftChartFormatter
-
+from glm_handler.dku_model_metrics import ModelMetricsCalculator
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
 is_local = False
@@ -299,12 +299,12 @@ def get_model_comparison_data():
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
         
         current_app.logger.info(f"Retrieving {model1} from the cache")
-        model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
+        model_1_predicted_base = model_cache.get_model(model1).get('predicted_and_base')
         model_1_predicted_base = model_1_predicted_base[model_1_predicted_base['dataset']=='test']
         current_app.logger.info(f"Successfully retrieved {model1} from the cache")
         
         current_app.logger.info(f"Retrieving {model2} from the cache")
-        model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
+        model_2_predicted_base = model_cache.get_model(model2).get('predicted_and_base')
         model_2_predicted_base = model_2_predicted_base[model_2_predicted_base['dataset']=='test']
         current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
@@ -372,7 +372,7 @@ def export_model():
             if not model:
                 current_app.logger.error("error: Model ID not provided")
 
-            relativities_dict = model_cache.get(model).get('relativities_dict')
+            relativities_dict = model_cache.get_model(model).get('relativities_dict')
             if not relativities_dict:
                 current_app.logger.error("error: Model Cache not found for {model} cache only has {model_cache.keys()}")
             
