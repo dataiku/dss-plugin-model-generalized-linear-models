@@ -12,6 +12,7 @@ import dataiku
 import threading
 import numpy as np
 import time
+from dataiku.customwebapp import get_webapp_config
 from chart_formatters.lift_chart import LiftChartFormatter
 from glm_handler.dku_model_metrics import ModelMetricsCalculator
 
@@ -498,11 +499,11 @@ def export_one_way():
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
 def get_dataset_columns():
     try:
-        try: 
+        if is_local:
+            dataset_name = "claim_train"
+        else:
             web_app_config = get_webapp_config()
             dataset_name = web_app_config.get("training_dataset_string")
-        except:
-            dataset_name = "claim_train"
             
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
         
