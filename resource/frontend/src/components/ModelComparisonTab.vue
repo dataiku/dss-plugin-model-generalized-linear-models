@@ -230,9 +230,9 @@ methods: {
     async updateModelTwoString(value: string) {
         this.selectedModelTwoString = value;
     },
-    async getDatasetColumns() {
+    async getDatasetColumnNames() {
     try {
-    const response = await API.getDatasetColumns();
+    const response = await API.getTrainDatasetColumnNames();
     console.log("Datasets:", response.data);
     this.datasetColumns = response.data;
     console.log("First assignment:", this.datasetColumns);

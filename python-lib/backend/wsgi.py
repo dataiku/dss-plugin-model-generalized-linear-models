@@ -2,6 +2,7 @@ from flask import Flask
 from .fetch_api import fetch_api
 from dotenv import load_dotenv
 import os
+import logging
 #from backend.local_config import setup_dataiku_client
 
 load_dotenv()

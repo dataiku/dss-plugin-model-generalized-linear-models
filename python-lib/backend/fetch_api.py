@@ -3,7 +3,6 @@ import pandas as pd
 import random
 import re
 from logging_assist.logging import logger
-from backend.api_utils import format_models, np_encode
 from backend.local_config import *
 from dku_visual_ml.dku_train_model_config import DKUVisualMLConfig
 from io import BytesIO
@@ -22,6 +21,7 @@ is_local = False
 logger.debug(f"Starting web application with is_local: {is_local}")
 
 if not is_local:
+    from backend.api_utils import format_models
     from dku_visual_ml.dku_model_trainer import VisualMLModelTrainer
     from dku_visual_ml.dku_model_retrival import VisualMLModelRetriver
     from glm_handler.dku_relativites_calculator import RelativitiesCalculator
@@ -523,22 +523,21 @@ def get_dataset_columns():
         current_app.logger.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
         return jsonify({'error': str(e)}), 500
     
-@fetch_api.route("/get_dataset_columns", methods=["GET"])
+@fetch_api.route("/get_train_dataset_column_names", methods=["GET"])
 def get_train_dataset_column_names():
     try:
-        current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
         if is_local:
             dataset_name = "claim_train"
-
         else:
-            dataset_name = visual_ml_config.input_dataset  
-            current_app.logger.debug(f"Training Dataset name for colum retrival is: {dataset_name}")
-            cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
-            column_names = [column['name'] for column in cols_dict]
+            dataset_name = visual_ml_config.input_dataset
 
-            current_app.logger.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
+        current_app.logger.debug(f"Training Dataset name for colum retrival is: {dataset_name}")
+        cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
+        column_names = [column['name'] for column in cols_dict]
 
-            return jsonify(column_names)
+        current_app.logger.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
+
+        return jsonify(column_names)
 
     except Exception as e:
         current_app.logger.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
