@@ -20,8 +20,10 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     def __init__(self, family_name="gaussian", binomial_link="logit", gamma_link="inverse_power", gaussian_link="identity", inverse_gaussian_link="inverse_squared",
                  poisson_link="log", negative_binomial_link="log", tweedie_link="log", alpha=1, power=1, penalty=0.0, l1_ratio=0.5,
                  var_power=1, offset_mode="BASIC", training_dataset=None, offset_columns=None, exposure_columns=None,
+                 interaction_columns_first=None, interaction_columns_second=None,
                  column_labels=None):
-
+        
+        print('new backend')
         self.family_name = family_name
         self.binomial_link = binomial_link
         self.gamma_link = gamma_link
@@ -74,6 +76,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.offset_indices = []
         self.exposure_columns = exposure_columns
         self.exposure_indices = []
+        self.interaction_columns_first = interaction_columns_first
+        self.interaction_columns_second = interaction_columns_second
+        print('interactions')
+        print(self.interaction_columns_first)
+        print(self.interaction_columns_second)
         self.column_labels = column_labels
         self.training_dataset = training_dataset
         self.removed_indices = None
@@ -245,7 +252,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         """
         # removes first value which is the intercept
         # other values correspond to fitted coefs (hence excludes offsets and exposures)
-        self.coef_ = self.fitted_model.coef_
+        self.coef_ = self.fitted_model.coef_#np.array(self.fitted_model.params[1:])
         if prediction_is_classification:
             self.intercept_ = [float(self.fitted_model.intercept_)]
         else:
@@ -314,6 +321,23 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                                  'defined')
 
         return offsets, exposures
+
+    def get_interactions(self, X):
+        offsets = []
+        exposures = []
+        if self.offset_mode == 'OFFSETS':
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+            if len(offsets) == 0:
+                raise ValueError('OFFSETS mode is selected but no offset column is defined')
+        elif self.offset_mode == 'OFFSETS/EXPOSURES':
+            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
+            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
+            if len(offsets) == 0 and len(exposures) == 0:
+                raise ValueError('OFFSETS/EXPOSURES mode is selected but neither offset nor exposure columns are '
+                                 'defined')
+
+        return offsets, exposures
+    
 
     def predict_target(self, X):
         offsets, exposures = self.get_offsets_and_exposures(X)
