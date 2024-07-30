@@ -245,7 +245,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         """
         # removes first value which is the intercept
         # other values correspond to fitted coefs (hence excludes offsets and exposures)
-        self.coef_ = self.fitted_model.coef_#np.array(self.fitted_model.params[1:])
+        self.coef_ = self.fitted_model.coef_
         if prediction_is_classification:
             self.intercept_ = [float(self.fitted_model.intercept_)]
         else:
