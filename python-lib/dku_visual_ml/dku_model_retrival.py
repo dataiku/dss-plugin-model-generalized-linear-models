@@ -78,6 +78,7 @@ class VisualMLModelRetriver(DataikuClientProject):
             print("Unable to find a target column")
             return
         else:
+            print(f"returning the target column for model id {self.target_column }")
             return self.target_column 
 
     
@@ -164,6 +165,7 @@ class VisualMLModelRetriver(DataikuClientProject):
         
         logger.info("Model getting features")
         exposure_columns = self.get_exposure_columns()
+        target_column = self.get_target_column()
         
         preprocessing = self.model_details.get_preprocessing_settings().get('per_feature')
         features = preprocessing.keys()
@@ -192,9 +194,8 @@ class VisualMLModelRetriver(DataikuClientProject):
             }
             if feature == exposure_columns:
                 features_dict[feature]["role"]=="Exposure"
-            if features_dict[feature]["role"]=="TARGET":
+            if feature ==target_column:
                 features_dict[feature]["role"]=="Target"
-                target_column = feature
                 
         logger.info("Model retriever succesfully got features")    
         logger.debug(f"Features are:{features_dict}")
@@ -230,7 +231,24 @@ class VisualMLModelRetriver(DataikuClientProject):
         logger.debug(f"Returning the link_function as {link_function}")
         return link_function
     
-        
+    def get_setup_params(self):   
+
+        logger.debug(f"Retrieving setup parameters for model id {self.full_model_id}")
+        logger.debug("Model Parameters")
+        features_dict = self.get_features_dict()
+        setup_params = {
+            "target_column": self.get_target_column(),
+            "exposure_column":self.get_exposure_columns(),
+            "distribution_function": self.get_distribution_function(),
+            "link_function":self.get_link_function(),
+            "elastic_net_penalty": self.get_elastic_net_penalty(),
+            "l1_ratio": self.get_l1_ratio(),
+            "params": features_dict
+        }
+        logger.info(f"Retrieved setup parameters for model id {self.full_model_id}")
+        logger.info(f"Setup params are {setup_params}")
+        return setup_params
+
 
         
     

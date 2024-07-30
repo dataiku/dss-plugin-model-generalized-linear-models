@@ -254,7 +254,7 @@ mounted() {
                         }, {});
     
     });
-    this.getDatasetColumns(); 
+    this.getDatasetColumnNames(); 
 },
 emits: ['update:modelValue']
 })
