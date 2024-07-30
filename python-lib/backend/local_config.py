@@ -76,6 +76,8 @@ dummy_lift_data = pd.DataFrame({
             'observedAverage': [0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1],
             'fittedAverage': [0.12, 0.16, 0.19, 0.32, 0.37, 0.55, 0.83, 1.02]
         })
+dummy_lift_data['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['observedAverage']]
+dummy_lift_data['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['fittedAverage']]
 
 dummy_get_updated_data  = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -199,3 +201,14 @@ def get_dummy_model_comparison_data():
     df['model2_baseLevelPrediction']= np.random.uniform(0.5, 1, size=11)
     return df
 
+dummy_variable_level_stats = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
+                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
+                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
+                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
+                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
+                        'weight': [234, 87, 73, 122, 90], 
+                        'weight_pct': [60, 20, 20, 65, 35], 
+                        'relativity': [1, 1.23, 1.077, 1, 0.98]}).to_dict('records')
+
+data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+variable_level_stats_df = pd.DataFrame(data)

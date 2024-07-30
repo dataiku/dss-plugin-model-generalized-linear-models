@@ -2,199 +2,165 @@ from flask import Blueprint, jsonify, request, send_file, current_app
 import pandas as pd
 import random
 import re
-is_local = False
-
-if not is_local:
-    from glm_handler.dku_model_trainer import DataikuMLTask
-    from glm_handler.dku_model_handler import ModelHandler
-    from glm_handler.dku_model_deployer import ModelDeployer
-    from glm_handler.glm_data_handler import GlmDataHandler
-    from glm_handler.dku_model_metrics import ModelMetricsCalculator
-    from backend.model_cache import setup_model_cache, update_model_cache
-    
-from backend.api_utils import format_models
-from backend.local_config import (dummy_models, dummy_variables, dummy_df_data,
-dummy_lift_data,dummy_get_updated_data, dummy_relativites, get_dummy_model_comparison_data, 
-dummy_model_metrics, dummy_setup_params, dummy_setup_params_2)
-from backend.logging_settings import logger
+from logging_assist.logging import logger
+from backend.local_config import *
+from dku_visual_ml.dku_train_model_config import DKUVisualMLConfig
 from io import BytesIO
 from time import time
 import traceback
 import dataiku
-from dataiku.customwebapp import get_webapp_config
 import threading
-
 import numpy as np
+import time
+from chart_formatters.lift_chart import LiftChartFormatter
+from glm_handler.dku_model_metrics import ModelMetricsCalculator
+
+visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
+is_local = False
+
+logger.debug(f"Starting web application with is_local: {is_local}")
+
+if not is_local:
+    from backend.api_utils import format_models
+    from dku_visual_ml.dku_model_trainer import VisualMLModelTrainer
+    from dku_visual_ml.dku_model_retrival import VisualMLModelRetriver
+    from glm_handler.dku_relativites_calculator import RelativitiesCalculator
+    from glm_handler.dku_model_deployer import ModelDeployer
+    from glm_handler.glm_data_handler import GlmDataHandler
+    from backend.model_cache import setup_model_cache, update_model_cache
+    
+    visual_ml_config = DKUVisualMLConfig()
+    data_handler = GlmDataHandler()
+    visual_ml_trainer = VisualMLModelTrainer()
+    
+    if visual_ml_config.setup_type != "new":
+        visual_ml_trainer.setup_using_existing_ml_task(
+            visual_ml_config.existing_analysis_id, 
+            visual_ml_config.saved_model_id
+            )
+        model_deployer = ModelDeployer(
+            visual_ml_trainer.mltask, 
+            visual_ml_config.saved_model_id
+            )
+        saved_model_id = visual_ml_trainer.get_latest_model()
+        model_retriever = VisualMLModelRetriver(saved_model_id)
+        relativities_calculator = RelativitiesCalculator(
+            data_handler,
+            model_retriever
+            )
+    
+        
+def setup_cache():
+    global model_cache
+    latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+    model_cache = setup_model_cache(latest_ml_task, model_deployer)
+
+loading_thread = threading.Thread(target=setup_cache)
+loading_thread.start()
+
 
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
-client = dataiku.api_client()
-project = client.get_default_project()
+    
+@fetch_api.route("/train_model", methods=["POST"])
+def train_model():
+    current_app.logger.info("Initalising Model Training")
+    
+    if is_local:
+        logger.info("Local set up: No model training completed")
+        time.sleep(2)
+        return jsonify({'message': 'Model training initiated successfully.'}), 200
+    
+    global visual_ml_trainer, model_cache
+    
+    visual_ml_config.update_model_parameters(request.get_json())
 
-if not is_local:   
-    web_app_config = get_webapp_config()
-    existing_analysis_id = web_app_config.get("existing_analysis_id")
-    input_dataset = web_app_config.get("training_dataset_string")
-    prediction_type = web_app_config.get("prediction_type")
-    setup_type = web_app_config.get("setup_type")
-    policy = web_app_config.get("policy")
-    test_dataset_string = web_app_config.get("test_dataset_string")
-    
-    data_handler = GlmDataHandler()
-    
-    if setup_type != "new":
-        saved_model_id = web_app_config.get("saved_model_id")
-        global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
-        global_DkuMLTask.setup_using_existing_ml_task(existing_analysis_id, saved_model_id)
-        print(f'Savemodel id is {saved_model_id}')
-        model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
-        model_handler = ModelHandler(saved_model_id, data_handler)
-        
-        def setup_cache():
-            global model_cache
-            model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
-        
-        loading_thread = threading.Thread(target=setup_cache)
-        loading_thread.start()
+#     try:
+    current_app.logger.debug("Creating Visual ML Trainer")
+    visual_ml_trainer.update_visual_ml_config(visual_ml_config)
+
+    model_details = visual_ml_trainer.train_model(
+        code_env_string=visual_ml_config.code_env_string,
+        session_name=visual_ml_config.model_name_string
+    )
+    loading_thread.join()
+
+    if not model_cache:
+        current_app.logger.info("Creating Model cache For the first time")
+        latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+        model_deployer = visual_ml_trainer.model_deployer
+        model_cache = setup_model_cache(latest_ml_task, model_deployer)
     else:
-        global_DkuMLTask = None
-        model_cache = None
-        model_deployer = None
-        model_handler = None
-        
-        def setup_cache():
-            return
-        
-        loading_thread = threading.Thread(target=setup_cache)
-        loading_thread.start()
+        latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+        model_cache = update_model_cache(latest_ml_task, model_cache)
+
+    current_app.logger.info("Model trained and cache updated")
+    return jsonify({'message': 'Model training completed successfully.'}), 200
+#     except Exception as e:
+#         current_app.logger.exception(f"An error occurred during model training {e}")
+#         return jsonify({'error': str(e)}), 500
     
+    
+@fetch_api.route("/get_latest_mltask_params", methods=["POST"])
+def get_latest_mltask_params():
+    current_app.logger.info("Getting Latest ML task set up parameters")
+    
+    if is_local:
+        setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
+        current_app.logger.info(f"Returning Params {setup_params}")
+        return jsonify(setup_params)
+    
+    request_json = request.get_json()
+    full_model_id = request_json["id"]
+    current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
+    
+    model_retriver = VisualMLModelRetriver(full_model_id)
+    setup_params = model_retriver.get_setup_params()
+   
+    current_app.logger.info(f"Returning setup params {setup_params}")
+    return jsonify(setup_params)
 
+@fetch_api.route("/variables", methods=["POST"])
+def get_variables():
+    if is_local:
+        return jsonify(dummy_variables)
+    
+    request_json = request.get_json()
+    full_model_id = request_json["id"]
+    try:
+        loading_thread.join()
+        model_retriever = VisualMLModelRetriver(full_model_id)
+        variables = model_retriever.get_features_used_in_modelling()
 
-
-
+    except ValueError as e:
+        current_app.logger.error(f"Validation Error: {e}")
+        return jsonify({"error": e})        
+    except Exception as e:
+        current_app.logger.error(f"An error occurred: {e}")
+        return jsonify({"error": e})    
+        
+    if variables is None:
+            raise ValueError("No variables returned.")
+    else: return jsonify(variables)
 
 @fetch_api.route("/models", methods=["GET"])
 def get_models():
-    
     if is_local:
         return jsonify(dummy_models)
     
-    if global_DkuMLTask is None:
+    latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+    
+    if latest_ml_task is None:
         return jsonify({'error': 'ML task not initialized'}), 500
-    try:
-        #refresh the ml task        
-        current_app.logger.info(f"global_DkuMLTask.mltask is: {global_DkuMLTask.mltask.get_trained_models_ids()}")
-        dku_ml_task = global_DkuMLTask.mltask
-        models = format_models(dku_ml_task)
+    try:  
+        current_app.logger.info(f"Mltask has : {len(visual_ml_trainer.mltask.get_trained_models_ids())} Models")
+        
+        models = format_models(latest_ml_task)
         current_app.logger.info(f"models from global ML task is {models}")
         return jsonify(models)
     except Exception as e:
         current_app.logger.exception("An error occurred while retrieving models")
         return jsonify({'error': str(e)}), 500
     return jsonify(models)
-
-@fetch_api.route("/get_latest_mltask_params", methods=["POST"])
-def get_latest_mltask_params():
-    
-    request_json = request.get_json()
-    current_app.logger.info(f"Recieved request with payload in ml task params: {request_json}")
-    full_model_id = request_json["id"]
-    current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
-    
-    if is_local:
-        setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
-        current_app.logger.info(f"Returning Params {setup_params}")
-        return jsonify(setup_params)
-    #try:
-    client = dataiku.api_client()
-    mltask = global_DkuMLTask.mltask.from_full_model_id(client,fmi=full_model_id)
-
-    model_details = mltask.get_trained_model_details(full_model_id)
-
-    algo_settings = model_details.get_modeling_settings().get('plugin_python_grid')
-    algo_settings.get('params').get('exposure_columns')[0]
-    exposure_column = algo_settings.get('params').get('exposure_columns')[0]
-    distribution_function = algo_settings.get('params').get('family_name')
-    link_function = algo_settings.get('params').get(distribution_function+"_link")
-    elastic_net_penalty = algo_settings.get('params').get('penalty')[0]
-    l1_ratio = algo_settings.get('params').get('l1_ratio')[0]
-    preprocessing = model_details.get_preprocessing_settings().get('per_feature')
-    features = preprocessing.keys()
-
-
-    features_dict = {}
-    for feature in features:
-        feature_settings = preprocessing.get(feature)
-        choose_base_level = feature_settings.get('category_handling') and not ("series.mode()[0]" in feature_settings.get('customHandlingCode'))
-        base_level = None
-        if choose_base_level:
-            pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
-            # Search for the pattern in the code string
-            match = re.search(pattern, feature_settings.get('customHandlingCode'))
-            # Extract and print the matched value
-            if match:
-                base_level = match.group(1)
-        features_dict[feature] = {
-            "role": feature_settings.get('role'),
-             'type': feature_settings.get('type'),
-            "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling'),
-            "chooseBaseLevel": choose_base_level,
-            "baseLevel": base_level
-
-        }
-        if feature == exposure_column:
-            features_dict[feature]["role"]=="Exposure"
-        if features_dict[feature]["role"]=="TARGET":
-            features_dict[feature]["role"]=="Target"
-            target_column = feature
-    setup_params = {
-        "target_column": target_column,
-        "exposure_column":exposure_column,
-        "distribution_function": distribution_function.title(),
-        "link_function":link_function.title(),
-        "elastic_net_penalty": elastic_net_penalty,
-        "l1_ratio": l1_ratio,
-        "params": features_dict
-    }
-    current_app.logger.info(f"Returning setup params {setup_params}")
-    return jsonify(setup_params)
-    #except:
-    #    setup_params = {
-    #        "target_column": None,
-    #        "exposure_column":None,
-    #        "distribution_function": None,
-    #        "link_function":None,
-    #        "params": None
-    #    }
-    #    current_app.logger.info(f"Failed setup: Returning setup params {setup_params}")
-    #    return jsonify(setup_params)
-
-
-
-
-@fetch_api.route("/variables", methods=["POST"])
-def get_variables():
-    if is_local:
-        return jsonify(dummy_variables)
-    request_json = request.get_json()
-    full_model_id = request_json["id"]
-    try:
-        loading_thread.join()
-        variables = model_cache[full_model_id].get('features')
-        print(f"Model cache for{full_model_id} is {model_cache[full_model_id]}")
-        print(variables)
-        if variables is None:
-            raise ValueError("variables returned None.")
-        
-    except ValueError as e:
-        current_app.logger.error(f"Validation Error: {e}")
-        return jsonify({"error": e})        
-    except Exception as e:
-        current_app.logger.error(f"An error occurred: {e}")
-    
-    return jsonify(variables)
-# local dev
-    # return jsonify(dummy_variables)
-
 
 
 @fetch_api.route("/data", methods=["POST"])
@@ -212,13 +178,9 @@ def get_data():
         dataset = 'test' if train_test else 'train'
 
         current_app.logger.info(f"Model ID received: {full_model_id}")
-
-        predicted_base = model_cache[full_model_id].get('predicted_and_base')
+        predicted_base = model_cache.get_model(full_model_id).get('predicted_and_base')
         predicted_base = predicted_base[predicted_base['dataset']==dataset]
-        predicted_base['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['observedAverage']]
-        predicted_base['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['fittedAverage']]
-        predicted_base['Value'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['Value']]
-        predicted_base['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in predicted_base['baseLevelPrediction']]
+
         current_app.logger.info(f"Successfully generated predictions. Sample is {predicted_base.head()}")
         
         return jsonify(predicted_base.to_dict('records'))
@@ -230,11 +192,12 @@ def get_data():
 
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():
+    
     if is_local:
-        dummy_lift_data['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['observedAverage']]
-        dummy_lift_data['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['fittedAverage']]
         return jsonify(dummy_lift_data.to_dict('records'))
+    
     current_app.logger.info("Received a new request for lift chart data.")
+    
     loading_thread.join()
     request_json = request.get_json()
     full_model_id = request_json["id"]
@@ -243,28 +206,31 @@ def get_lift_data():
     dataset = 'test' if train_test else 'train'
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
-
-    current_app.logger.info(f"Model {full_model_id} is now the active version.")
     
-    lift_chart = model_cache[full_model_id].get('lift_chart_data')
+    lift_chart_data = model_cache.get_model(full_model_id).get('lift_chart_data')
     
-    current_nb_bins = len(lift_chart[lift_chart['dataset'] == dataset])
+    current_nb_bins = len(lift_chart_data[lift_chart_data['dataset'] == dataset])
+    
     if current_nb_bins != nb_bins:
         model_deployer.set_new_active_version(full_model_id)
-        model_handler.update_active_version()
-        lift_chart = model_handler.get_lift_chart(nb_bins)
-        model_cache[full_model_id]['lift_chart_data'] = lift_chart
+        model_retriever = VisualMLModelRetriver(full_model_id)
+        relativites_calculator = RelativitiesCalculator(
+            data_handler,
+            model_retriever)
+        
+        lift_chart = LiftChartFormatter(
+                 model_retriever,
+                 data_handler,
+                 relativities_calculator
+        ) 
+        lift_chart_data = lift_chart.get_lift_chart(nb_bins)
+#          model_cache.add_model(full_model_id).get('lift_chart_data') = lift_chart_data
     
-    lift_chart.columns = ['Value', 'observedAverage', 'fittedAverage', 'Category', 'dataset']
-    lift_chart['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['observedAverage']]
-    lift_chart['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['fittedAverage']]
-    lift_chart['Value'] = [float('%s' % float('%.3g' % x)) for x in lift_chart['Value']]
-    lift_chart = lift_chart[lift_chart['dataset'] == dataset]
-    current_app.logger.info(f"Successfully generated predictions. Sample is {lift_chart.head()}")
+    lift_chart_data = lift_chart_data[lift_chart_data['dataset'] == dataset]
+    current_app.logger.info(f"Successfully generated Lift chart data")
     
-    return jsonify(lift_chart.to_dict('records'))
-#     local dev
-    return jsonify(dummy_lift_data.to_dict('records'))
+    return jsonify(lift_chart_data.to_dict('records'))
+
 
 
 @fetch_api.route("/update_bins", methods=["POST"])
@@ -275,7 +241,7 @@ def get_updated_data():
 
     feature = request_json["feature"]
     nb_bins = request_json["nbBin"]
-    predicted_base = model_handler.get_predicted_and_base_feature(feature, nb_bins)
+    predicted_base = relativities_calculator.get_predicted_and_base_feature(feature, nb_bins)
     df = predicted_base.copy()
     df.columns = ['definingVariable', 'Category', 'observedAverage', 'fittedAverage', 'Value', 'baseLevelPrediction']
     
@@ -294,78 +260,58 @@ def get_relativities():
     full_model_id = request_json["id"]
     
     current_app.logger.info(f"Model ID received: {full_model_id}")
-    df = model_cache[full_model_id].get('relativities')
+    df = model_cache.get_model(full_model_id).get('relativities')
     df.columns = ['variable', 'category', 'relativity']
     current_app.logger.info(f"relativites are {df.head()}")
     return jsonify(df.to_dict('records'))
-#     local dev
-    return jsonify(dummy_relativites.to_dict('records'))
+
 
 @fetch_api.route("/get_variable_level_stats", methods=["POST"])
 def get_variable_level_stats():
+    current_app.logger.info("Getting Variable Level Stats")
     if is_local:
-        df = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
-                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
-                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
-                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
-                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
-                        'weight': [234, 87, 73, 122, 90], 
-                        'weight_pct': [60, 20, 20, 65, 35], 
-                        'relativity': [1, 1.23, 1.077, 1, 0.98]})
-        return jsonify(df.to_dict('records'))
-    print("variable level stats")
+        return jsonify(dummy_variable_level_stats)
+    
     loading_thread.join()
     request_json = request.get_json()
     full_model_id = request_json["id"]
-    
-    current_app.logger.info(f"Model ID received: {full_model_id}")
+    current_app.logger.info(f"for Model ID: {full_model_id}")
 
 
-    df = model_cache[full_model_id].get('variable_stats')
-    df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
-    df.fillna(0, inplace=True)
-    df.replace([np.inf, -np.inf], 0, inplace=True)
+    df = model_cache.get_model(full_model_id).get('variable_stats')
     return jsonify(df.to_dict('records'))
-
 
 
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
-    start_time = time()
-    
+    current_app.logger.info("Getting Model Comparison Data")
     if is_local:
         df = get_dummy_model_comparison_data()
-        current_app.logger.info(f"Data fetched locally in {time() - start_time} seconds.")
         return jsonify(df.to_dict('records'))
 
     try:
-        loading_thread.join()
-        current_app.logger.info("Received a new request for data prediction.")
         request_json = request.get_json()
+        current_app.logger.info(f"Model Comparison Data recieved the following json {request_json}")
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
         
+        loading_thread.join()
         current_app.logger.info(f"Retrieving {model1} from the cache")
-        model_1_predicted_base = model_cache.get(model1).get('predicted_and_base')
+        model_1_predicted_base = model_cache.get_model(model1).get('predicted_and_base')
         model_1_predicted_base = model_1_predicted_base[model_1_predicted_base['dataset']=='test']
-        model_1_predicted_base.columns = ['definingVariable', 'Category', 'model_1_observedAverage', 'model_1_fittedAverage', 'Value', 'model1_baseLevelPrediction', 'dataset']
         current_app.logger.info(f"Successfully retrieved {model1} from the cache")
         
         current_app.logger.info(f"Retrieving {model2} from the cache")
-        model_2_predicted_base = model_cache.get(model2).get('predicted_and_base')
+        model_2_predicted_base = model_cache.get_model(model2).get('predicted_and_base')
         model_2_predicted_base = model_2_predicted_base[model_2_predicted_base['dataset']=='test']
-        model_2_predicted_base.columns = ['definingVariable', 'Category', 'model_2_observedAverage', 'model_2_fittedAverage', 'Value', 'model2_baseLevelPrediction', 'dataset']
         current_app.logger.info(f"Successfully retrieved {model2} from the cache")
 
-        merge_time = time()
         merged_model_stats = pd.merge(model_1_predicted_base, model_2_predicted_base, 
                                       on=['definingVariable', 'Category', 'Value'], 
                                       how='outer')
-        merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
-        current_app.logger.info(f"Merged data in {time() - merge_time} seconds. Sample: {merged_model_stats.head().to_string()}")
         
-        total_time = time() - start_time
-        current_app.logger.info(f"Total execution time: {total_time} seconds.")
+        merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
+        current_app.logger.info("Returning Merged Model stats")
         return jsonify(merged_model_stats.to_dict('records'))
     
     except Exception as e:
@@ -376,36 +322,32 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-    start_time = time()
-    
+    current_app.logger.info("Getting Model Metrics") 
     if is_local:
-        response_time = time() - start_time
-        print(f"Returned local dummy metrics in {response_time} seconds.")
         return jsonify(dummy_model_metrics)
     
     loading_thread.join()
     request_json = request.get_json()
-    print(request_json)
-    
-    model1, model2 = request_json["model1"], request_json["model2"]
-    
-    model_1_metrics = model_cache.get(model1).get('model_metrics')
-    model_2_metrics = model_cache.get(model2).get('model_metrics')
-    
+
+   
+    models = [request_json["model1"], request_json["model2"]]
+
     metrics = {
-        "models": {
-            "Model_1": {
-                "AIC": model_1_metrics.get('AIC'),
-                "BIC": model_1_metrics.get('BIC'),
-                "Deviance": model_1_metrics.get('Deviance')
-            },
-            "Model_2": {
-                "AIC": model_2_metrics.get('AIC'),
-                "BIC": model_2_metrics.get('AIC'),
-                "Deviance": model_2_metrics.get('AIC'),
-            }
-        }
+        "models": {}
     }
+
+    for i, model in enumerate(models, start=1):
+        model_retriever = VisualMLModelRetriver(model)
+        mmc = ModelMetricsCalculator(model_retriever)
+        model_aic, model_bic, model_deviance = mmc.calculate_metrics()
+
+        model_key = f"Model_{i}"
+
+        metrics["models"][model_key] = {
+            "AIC": model_aic,
+            "BIC": model_bic,
+            "Deviance": model_deviance
+        }
     return jsonify(metrics)
 
 
@@ -428,7 +370,7 @@ def export_model():
             if not model:
                 current_app.logger.error("error: Model ID not provided")
 
-            relativities_dict = model_cache.get(model).get('relativities_dict')
+            relativities_dict = model_cache.get_model(model).get('relativities_dict')
             if not relativities_dict:
                 current_app.logger.error("error: Model Cache not found for {model} cache only has {model_cache.keys()}")
             
@@ -473,8 +415,7 @@ def export_model():
 def export_variable_level_stats():
 
     if is_local:
-        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
-        df = pd.DataFrame(data)
+
 
         # Convert DataFrame to CSV format
         csv_data = df.to_csv(index=False).encode('utf-8')
@@ -486,7 +427,7 @@ def export_variable_level_stats():
             
             current_app.logger.info(f"Model ID received: {full_model_id}")
 
-            df = model_cache[full_model_id].get('variable_stats')
+            df = model_cache.get_model(full_model_id).get('variable_stats')
             df.columns = ['variable', 'value', 'relativity', 'coefficient', 'standard_error', 'standard_error_pct', 'weight', 'weight_pct']
 
             csv_data = df.to_csv(index=False).encode('utf-8')
@@ -507,13 +448,9 @@ def export_variable_level_stats():
 
 @fetch_api.route('/export_one_way', methods=['POST'])
 def export_one_way():
-
+    current_app.logger.info("Exporting one way graphs")
     if is_local:
-        data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
-        df = pd.DataFrame(data)
-
-        # Convert DataFrame to CSV format
-        csv_data = df.to_csv(index=False).encode('utf-8')
+        csv_data = variable_level_stats_df.to_csv(index=False).encode('utf-8')
     else:
         try:
             loading_thread.join()
@@ -529,12 +466,12 @@ def export_one_way():
             current_app.logger.info(f"Train/Test received: {dataset}")
             current_app.logger.info(f"Rescale received: {rescale}")
 
-            predicted_base = model_cache[full_model_id].get('predicted_and_base')
+            predicted_base = model_cache.get_model(full_model_id).get('predicted_and_base')
             predicted_base = predicted_base[predicted_base['dataset']==dataset]
             predicted_base = predicted_base[predicted_base['definingVariable']==variable]
 
             if rescale:
-                relativities = model_cache[full_model_id].get('relativities')
+                relativities = model_cache.get_model(full_model_id).get('relativities')
                 relativities.columns = ['variable', 'category', 'relativity']
                 variable_relativities = relativities[relativities["variable"]==variable]
                 base_level = variable_relativities[variable_relativities['relativity']==1]['category'].iloc[0]
@@ -558,107 +495,9 @@ def export_one_way():
         download_name='variable_level_stats.csv'
     )
 
-
-@fetch_api.route("/train_model", methods=["POST"])
-def train_model():
-    # Log the receipt of a new training request
-    request_json = request.get_json()
-    current_app.logger.info(f"Received a model training request: {request_json}")
-    if is_local:
-        import time
-        time.sleep(5)
-        return jsonify({'message': 'Model training initiated successfully.'}), 200
-    global global_DkuMLTask, model_cache, model_deployer, model_handler
-
-    try: 
-        web_app_config = get_webapp_config()
-        input_dataset = web_app_config.get("training_dataset_string")
-        code_env_string = web_app_config.get("code_env_string")
-        target_column = web_app_config.get("target_column")
-        prediction_type = web_app_config.get("prediction_type")
-        
-    except:
-        input_dataset = "claim_train"
-        code_env_string="py39_sol"
-
-        
-    current_app.logger.info(f"Training Dataset name selected is: {input_dataset}") 
-    
-    distribution_function = request_json.get('model_parameters', {}).get('distribution_function')
-    link_function = request_json.get('model_parameters', {}).get('link_function')
-    elastic_net_penalty = request_json.get('model_parameters', {}).get('elastic_net_penalty')
-    l1_ratio = request_json.get('model_parameters', {}).get('l1_ratio')
-    model_name_string = request_json.get('model_parameters', {}).get('model_name', None)
-    variables = request_json.get('variables')
-    policy = web_app_config.get("policy")
-    test_dataset_string = web_app_config.get("test_dataset_string")
-
-    current_app.logger.debug(f"Parameters received - Dataset: {input_dataset}, Distribution Function: {distribution_function}, Link Function: {link_function}, Elastic Net Penalty: {elastic_net_penalty}, L1 Ratio: {l1_ratio}, Variables: {variables}")
-    params = {
-        "input_dataset": input_dataset,
-        "distribution_function": distribution_function,
-        "link_function": link_function,
-        "elastic_net_penalty": elastic_net_penalty,
-        "l1_ratio": l1_ratio,
-        "variables": variables,
-    }
-    
-    missing_params = [key for key, value in params.items() if value is None]
-    if missing_params:
-        missing_str = ", ".join(missing_params)
-        current_app.logger.error(f"Missing parameters in the request: {missing_str}")
-        return jsonify({'error': f'Missing parameters: {missing_str}'}), 400
-
-    try:
-        if not global_DkuMLTask:
-            current_app.logger.debug("First time training a model, creating global_DkuMLTask")
-            global_DkuMLTask = DataikuMLTask(input_dataset, prediction_type, policy, test_dataset_string)
-            global_DkuMLTask.create_inital_ml_task(target_column)# defaults to target set in web app settings, this is overriden
-            
-        global_DkuMLTask.update_parameters(distribution_function, link_function, elastic_net_penalty, l1_ratio, variables)
-        global_DkuMLTask.create_visual_ml_task()
-        current_app.logger.debug("Visual ML task created successfully")
-
-        global_DkuMLTask.enable_glm_algorithm()
-        current_app.logger.debug("GLM algorithm enabled successfully")
-
-        settings = global_DkuMLTask.test_settings()
-        settings_new = global_DkuMLTask.configure_variables()
-        current_app.logger.debug("Model settings configured successfully")
-
-        model_details = global_DkuMLTask.train_model(code_env_string=code_env_string, session_name=model_name_string)
-        current_app.logger.debug(f"Model model_details are {model_details}")
-        saved_model_id = model_details.get("savedModelId")
-        
-        current_app.logger.info("Model training initiated successfully")
-        loading_thread.join()
-        
-        if not model_cache:
-            model_deployer = ModelDeployer(global_DkuMLTask.mltask, saved_model_id)
-            model_handler = ModelHandler(saved_model_id, data_handler)
-            model_cache = setup_model_cache(global_DkuMLTask.mltask, model_deployer, model_handler)
-        
-        model_cache = update_model_cache(global_DkuMLTask.mltask, model_cache, model_handler)
-            
-
-        
-        return jsonify({'message': 'Model training completed successfully.'}), 200
-    except Exception as e:
-        current_app.logger.exception(f"An error occurred during model training {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-def np_encode(obj):
-    if isinstance(obj, np.int64):
-        return int(obj)
-    return obj
-
 @fetch_api.route("/get_dataset_columns", methods=["GET"])
 def get_dataset_columns():
-    
     try:
-        # This try statement is just for local development remove the except 
-        # which explicitly assins the dataset name
         try: 
             web_app_config = get_webapp_config()
             dataset_name = web_app_config.get("training_dataset_string")
@@ -678,6 +517,26 @@ def get_dataset_columns():
         current_app.logger.error(f"Missing key in request: {e}")
         return jsonify({'error': f'Missing key in request: {e}'}), 400
     
+    except Exception as e:
+        current_app.logger.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
+        return jsonify({'error': str(e)}), 500
+    
+@fetch_api.route("/get_train_dataset_column_names", methods=["GET"])
+def get_train_dataset_column_names():
+    try:
+        if is_local:
+            dataset_name = "claim_train"
+        else:
+            dataset_name = visual_ml_config.input_dataset
+
+        current_app.logger.debug(f"Training Dataset name for colum retrival is: {dataset_name}")
+        cols_dict = dataiku.Dataset(dataset_name).get_config().get('schema').get('columns')
+        column_names = [column['name'] for column in cols_dict]
+
+        current_app.logger.info(f"Successfully retrieved column names for dataset '{dataset_name}': {column_names}")
+
+        return jsonify(column_names)
+
     except Exception as e:
         current_app.logger.exception(f"Error retrieving columns for dataset '{dataset_name}': {e}")
         return jsonify({'error': str(e)}), 500

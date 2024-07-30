@@ -7,12 +7,12 @@ import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 
-from backend.logging_settings import logger
+from logging_assist.logging import logger
 
 
 class GlmDataHandler():
     def __init__(self):
-        pass
+        logger.info("Initalising the GLM Data Handler")
     
     def weighted_qcut(values, weights, q, **kwargs):
         quantiles = np.linspace(0, 1, q + 1)
