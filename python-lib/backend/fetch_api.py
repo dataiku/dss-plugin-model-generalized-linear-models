@@ -291,12 +291,11 @@ def get_model_comparison_data():
         return jsonify(df.to_dict('records'))
 
     try:
-        loading_thread.join()
-        
-        current_app.logger.info("Received a new Model comparison data")
         request_json = request.get_json()
+        current_app.logger.info(f"Model Comparison Data recieved the following json {request_json}")
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
         
+        loading_thread.join()
         current_app.logger.info(f"Retrieving {model1} from the cache")
         model_1_predicted_base = model_cache.get_model(model1).get('predicted_and_base')
         model_1_predicted_base = model_1_predicted_base[model_1_predicted_base['dataset']=='test']

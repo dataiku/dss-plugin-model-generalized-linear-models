@@ -42,7 +42,7 @@ class VisualMLModelTrainer(DataikuClientProject):
         
         return None
     
-    def refresh_mltask(self):
+    def _refresh_mltask(self):
         
         logger.debug("Refreshing the ml task")
         self.mltask.guess()
@@ -62,7 +62,8 @@ class VisualMLModelTrainer(DataikuClientProject):
         self.model_deployer = ModelDeployer(self.mltask, self.saved_model_id)
         
         logger.info(f"Successfully update the existing ML task")
-    
+        
+
     def assign_train_test_policy(self):
         logger.info(f"Assigning train test policy")   
      
@@ -144,6 +145,7 @@ class VisualMLModelTrainer(DataikuClientProject):
             self.mltask = self.create_inital_ml_task(target)  
         else:
             logger.info("ML task already exists")
+            self._refresh_mltask()
             
         self.assign_train_test_policy()
         self.update_mltask_modelling_params()
@@ -167,6 +169,7 @@ class VisualMLModelTrainer(DataikuClientProject):
     def set_included_variables(self):
         
         logger.debug("Updating the Dataiku ML task settings for included variables")
+        
         settings = self.mltask.get_settings()
         model_features = self.visual_ml_config.get_model_features()
         excluded_variables = self.visual_ml_config.get_excluded_features()
