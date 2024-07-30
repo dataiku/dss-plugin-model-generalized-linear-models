@@ -92,6 +92,7 @@ def train_model():
         model_deployer = visual_ml_trainer.model_deployer
         model_cache = setup_model_cache(latest_ml_task, model_deployer)
     else:
+        latest_ml_task = visual_ml_trainer.get_latest_ml_task()
         model_cache = update_model_cache(latest_ml_task, model_cache)
 
     current_app.logger.info("Model trained and cache updated")

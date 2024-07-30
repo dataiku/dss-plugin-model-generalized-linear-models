@@ -82,15 +82,15 @@ def update_model_cache(global_dku_mltask, model_cache):
     logger.debug(f"Model ID list obtained: {model_id_list}")
     
     for model_id in model_id_list:
-        if model_id not in model_cache.keys():
+        if not model_cache.model_exists(model_id):
             logger.debug(f"Model ID {model_id} not found in cache. Updating cache.")
 
             model_retriever = VisualMLModelRetriver(
                 model_id
             )
             relativities_calculator = RelativitiesCalculator(
-                model_retriever,
-                data_handler
+                data_handler,
+                model_retriever
             )
             model1_predicted_base = relativities_calculator.get_formated_predicted_base()
 
@@ -108,13 +108,12 @@ def update_model_cache(global_dku_mltask, model_cache):
             ) 
             lift_chart_data = lift_chart.get_lift_chart(8)
 
-            model_cache[model_id] = {
-                'relativities': relativities,
-                'relativities_dict': relativities_dict,
-                'predicted_and_base': model1_predicted_base,
-                'lift_chart_data': lift_chart_data,
-                'variable_stats': variable_stats,
-            }
+            model_cache.add_model(model_id, 
+                                 relativities, 
+                                 model1_predicted_base,
+                                 relativities_dict,
+                                 lift_chart_data,
+                                 variable_stats)
 
             logger.debug(f"Model ID {model_id} cache updated.")
     
