@@ -63,8 +63,6 @@ fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
     
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
-    current_app.logger.debug('This is a debug message')
-
     current_app.logger.info("Initalising Model Training")
     
     if is_local:
@@ -78,7 +76,7 @@ def train_model():
 
 #     try:
     current_app.logger.debug("Creating Visual ML Trainer")
-    visual_ml_trainer = VisualMLModelTrainer(visual_ml_config)
+    visual_ml_trainer.update_visual_ml_config(visual_ml_config)
 
     model_details = visual_ml_trainer.train_model(
         code_env_string=visual_ml_config.code_env_string,
