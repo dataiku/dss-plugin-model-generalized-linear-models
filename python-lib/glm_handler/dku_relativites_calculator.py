@@ -111,7 +111,7 @@ class RelativitiesCalculator:
             train_set (pd.DataFrame): The training dataset.
         """
         logger.info(f"Computing base value for numeric feature: {feature}")
-        if self.model.retriever.exposure_columns is not None:
+        if self.model_retriever.exposure_columns is not None:
             feature_exposure = train_set.groupby(feature)[self.model_retriever.exposure_columns].sum().reset_index()
             base_value = feature_exposure[feature].iloc[feature_exposure[self.model_retriever.exposure_columns].idxmax()]
         else:
