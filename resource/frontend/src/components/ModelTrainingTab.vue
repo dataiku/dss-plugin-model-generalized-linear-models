@@ -480,6 +480,16 @@ methods: {
             this.datasetColumns = []
             try {
                     const response = await API.getDatasetColumns();
+                    this.datasetColumns = response.data.map((column: ColumnInput) => ({
+                        name: column.column,
+                        isIncluded: false,
+                        role: 'Variable',
+                        type: 'Categorical',
+                        preprocessing: 'Dummy Encode',
+                        chooseBaseLevel: false,
+                        options: column.options,
+                        baseLevel: column.baseLevel
+                    }));
                     this.selectedModelString = model_value;
                     const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
                     console.log("Making request with model Id :", model);

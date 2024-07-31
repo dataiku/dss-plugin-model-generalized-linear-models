@@ -56,7 +56,7 @@ def setup_dataiku_client():
     dataiku_api.setup(**dataiku_setup)
 
     
-dummy_models = [{"id": "model_1", "name": "Generalized Linear Model Regression (GLM 1)"}, {"id": "model_2", "name": "Generalized Linear Model Regression (GLM 2)"}]
+dummy_models = [{"id": "model_interaction", "name": "Interaction"}, {"id": "model_1", "name": "Generalized Linear Model Regression (GLM 1)"}, {"id": "model_2", "name": "Generalized Linear Model Regression (GLM 2)"}]
 
 dummy_variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
@@ -107,6 +107,30 @@ dummy_model_metrics ={
             }
         }
         }
+interaction_setup_params = {
+       "target_column": "ClaimAmount",
+    "exposure_column":"Exposure",
+    "distribution_function":"Tweedie",
+    "link_function":"Logit",
+    'params': {'VehGas': {'role': 'REJECT','type': 'CATEGORY','handling': 'DUMMIFY'},
+    'VehPower': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'ClaimNb': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'VehAge': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'VehBrand': {'role': 'INPUT', 'type': 'CATEGORY', 'handling': 'DUMMIFY', 'chooseBaseLevel': True, 'baseLevel': 'B10'},
+    '5_Interaction': {'role': 'REJECT','type': 'CATEGORY','handling': 'DUMMIFY'},
+    'Exposure': {'role': 'INPUT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'DrivAge': {'role': 'INPUT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'BonusMalus': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'Density': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    '6_Interaction': {'role': 'REJECT','type': 'CATEGORY','handling': 'DUMMIFY'},
+    'Area': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'DUMMIFY'},
+    'ClaimAmount': {'role': 'Target', 'type': 'NUMERIC', 'handling': None},
+    'IDpol': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': None},
+    'DrivAgeBin': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'DUMMIFY'},
+    'Region': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'CUSTOM'},
+    '4_Interaction': {'role': 'REJECT','type': 'CATEGORY','handling': 'DUMMIFY'},
+    'New_Interaction': {'role': 'INPUT','type': 'CATEGORY','handling': 'DUMMIFY'}} 
+}
 dummy_setup_params = {
     "target_column": "ClaimAmount",
     "exposure_column":"Exposure",

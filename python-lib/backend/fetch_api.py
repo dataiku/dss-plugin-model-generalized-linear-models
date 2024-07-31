@@ -17,7 +17,7 @@ from chart_formatters.lift_chart import LiftChartFormatter
 from glm_handler.dku_model_metrics import ModelMetricsCalculator
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
-is_local = False
+is_local = True
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
@@ -104,14 +104,17 @@ def train_model():
 @fetch_api.route("/get_latest_mltask_params", methods=["POST"])
 def get_latest_mltask_params():
     current_app.logger.info("Getting Latest ML task set up parameters")
+    request_json = request.get_json()
+    full_model_id = request_json["id"]
     
     if is_local:
-        setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
+        if full_model_id== "model_interaction":
+            setup_params = interaction_setup_params
+        else:
+            setup_params = random.choice([dummy_setup_params, dummy_setup_params_2])
         current_app.logger.info(f"Returning Params {setup_params}")
         return jsonify(setup_params)
     
-    request_json = request.get_json()
-    full_model_id = request_json["id"]
     current_app.logger.info(f"Recieved request for latest params for: {full_model_id}")
     
     model_retriver = VisualMLModelRetriver(full_model_id)
