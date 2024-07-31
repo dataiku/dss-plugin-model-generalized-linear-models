@@ -232,6 +232,9 @@ methods: {
     },
     async updateTrainTest(value: boolean) {
         this.trainTest = value;
+        if (this.selectedVariable) {
+        await this.updateVariableString(this.selectedVariable);
+    }
         },
     async updateModelString(value: string) {
         this.selectedModelString = value;

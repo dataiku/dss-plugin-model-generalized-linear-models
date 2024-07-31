@@ -17,7 +17,7 @@ from chart_formatters.lift_chart import LiftChartFormatter
 from glm_handler.dku_model_metrics import ModelMetricsCalculator
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
-is_local = True
+is_local = False
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
