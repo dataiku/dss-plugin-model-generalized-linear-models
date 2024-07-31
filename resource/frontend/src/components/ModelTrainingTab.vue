@@ -221,7 +221,7 @@ import trainingIcon from "../assets/images/training.svg";
 import { API } from '../Api';
 import { QRadio } from 'quasar';
 import { useLoader } from "../composables/use-loader";
-
+import { useNotification } from "../composables/use-notification";
 
 
 export default defineComponent({
@@ -356,6 +356,14 @@ methods: {
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
           this.loading = false;
         },
+        notifyError(msg: string) {
+            useNotification("negative", msg);
+        },
+        handleError(msg: any) {
+            this.loading = false;
+            console.error(msg);
+            this.notifyError(msg);
+        },
     validateSubmission() {
         this.errorMessage = ''; // Reset error message before validation
         if (!this.modelName) {
@@ -480,22 +488,16 @@ methods: {
             this.datasetColumns = []
             try {
                     const response = await API.getDatasetColumns();
-                    this.datasetColumns = response.data.map((column: ColumnInput) => ({
-                        name: column.column,
-                        isIncluded: false,
-                        role: 'Variable',
-                        type: 'Categorical',
-                        preprocessing: 'Dummy Encode',
-                        chooseBaseLevel: false,
-                        options: column.options,
-                        baseLevel: column.baseLevel
-                    }));
                     this.selectedModelString = model_value;
                     const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
                     console.log("Making request with model Id :", model);
                     const paramsResponse = await API.getLatestMLTaskParams(model);
                     const params = paramsResponse.data.params;
-
+                    if (response.data.length !== Object.keys(params).length) {
+                        this.handleError(`Column mismatch: Your training dataset does not contain the same variables as the model you requested.
+                        Expected ${Object.keys(params).length} columns, but received ${response.data.length} columns.`);
+                        return;
+                    }
                     this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
                     this.selectedLinkFunctionString = paramsResponse.data.link_function;
                     this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
@@ -534,7 +536,10 @@ methods: {
 
                 } catch (error) {
                     console.error("Error fetching data:", error);
-                }
+                }finally {
+                        this.loading = false;
+                    }
+                
 
         } 
     else {
