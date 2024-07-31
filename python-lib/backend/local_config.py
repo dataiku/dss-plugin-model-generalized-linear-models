@@ -199,6 +199,8 @@ def get_dummy_model_comparison_data():
     df['model_2_observedAverage']= np.random.uniform(0.5, 1, size=11)
     df['model_2_fittedAverage']= np.random.uniform(0.5, 1, size=11)
     df['model2_baseLevelPrediction']= np.random.uniform(0.5, 1, size=11)
+    choices = ["train", "test"]
+    df['dataset']= [np.random.choice(choices) for _ in range(11)]
     return df
 
 dummy_variable_level_stats = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 

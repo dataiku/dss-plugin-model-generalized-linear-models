@@ -17,7 +17,7 @@ from chart_formatters.lift_chart import LiftChartFormatter
 from glm_handler.dku_model_metrics import ModelMetricsCalculator
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
-is_local = False
+is_local = True
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
@@ -286,33 +286,46 @@ def get_variable_level_stats():
 
 @fetch_api.route("/get_model_comparison_data", methods=["POST"])
 def get_model_comparison_data():
-    current_app.logger.info("Getting Model Comparison Data")
+    request_json = request.get_json()
+    current_app.logger.info(f"Model Comparison Data recieved the following json {request_json}")
     if is_local:
         df = get_dummy_model_comparison_data()
+        current_app.logger.info(f"Returning Merged Model stats as {df.head().to_string()}") 
         return jsonify(df.to_dict('records'))
 
     try:
-        request_json = request.get_json()
-        current_app.logger.info(f"Model Comparison Data recieved the following json {request_json}")
         model1, model2, selectedVariable = request_json["model1"], request_json["model2"], request_json["selectedVariable"]
-        
+        train_test = request_json["trainTest"]
+        dataset = 'test' if train_test else 'train'
+
         loading_thread.join()
         current_app.logger.info(f"Retrieving {model1} from the cache")
         model_1_predicted_base = model_cache.get_model(model1).get('predicted_and_base')
-        model_1_predicted_base = model_1_predicted_base[model_1_predicted_base['dataset']=='test']
+        model_1_predicted_base = model_1_predicted_base[model_1_predicted_base['dataset']==dataset]
         current_app.logger.info(f"Successfully retrieved {model1} from the cache")
         
         current_app.logger.info(f"Retrieving {model2} from the cache")
         model_2_predicted_base = model_cache.get_model(model2).get('predicted_and_base')
-        model_2_predicted_base = model_2_predicted_base[model_2_predicted_base['dataset']=='test']
+        model_2_predicted_base = model_2_predicted_base[model_2_predicted_base['dataset']==dataset]
         current_app.logger.info(f"Successfully retrieved {model2} from the cache")
+        model_1_predicted_base = model_1_predicted_base.rename(columns={
+            'observedAverage': 'model_1_observedAverage',
+            'fittedAverage': 'model_1_fittedAverage',
+            'baseLevelPrediction': 'model1_baseLevelPrediction'
+        })
 
+        model_2_predicted_base = model_2_predicted_base.rename(columns={
+            'observedAverage': 'model_2_observedAverage',
+            'fittedAverage': 'model_2_fittedAverage',
+            'baseLevelPrediction': 'model2_baseLevelPrediction'
+        })
         merged_model_stats = pd.merge(model_1_predicted_base, model_2_predicted_base, 
                                       on=['definingVariable', 'Category', 'Value'], 
                                       how='outer')
         
+        
         merged_model_stats = merged_model_stats[merged_model_stats.definingVariable == selectedVariable]
-        current_app.logger.info("Returning Merged Model stats")
+        current_app.logger.info(f"Returning Merged Model stats as {merged_model_stats.head()}")
         return jsonify(merged_model_stats.to_dict('records'))
     
     except Exception as e:
