@@ -228,7 +228,10 @@ class VisualMLModelTrainer(DataikuClientProject):
         logger.info("Setting the target variables in the dataiku ML task")
         settings = self.mltask.get_settings()
         target_variable = self.visual_ml_config.get_target_variable()
-        logger.info("Succesfully set the target variables in the dataiku ML visual Config")
+        feature_settings = settings.get_feature_preprocessing(target_variable)
+        feature_settings['role'] = "TARGET"
+        settings.save()
+        logger.info(f"Succesfully set the target variables to {target_variable} for model training")
         return
     
     def set_code_env_settings(self,code_env_string):
