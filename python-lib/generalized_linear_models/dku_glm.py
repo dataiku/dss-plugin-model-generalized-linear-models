@@ -11,6 +11,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 import generalized_linear_models.link as link
 import pandas as pd
+from generalized_linear_models.interactions import Interactions
 
 class BaseGLM(BaseEstimator, ClassifierMixin):
     """
@@ -23,7 +24,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                  interaction_columns_first=None, interaction_columns_second=None,
                  column_labels=None):
         
-        print('new backend')
         self.family_name = family_name
         self.binomial_link = binomial_link
         self.gamma_link = gamma_link
@@ -78,9 +78,6 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.exposure_indices = []
         self.interaction_columns_first = interaction_columns_first
         self.interaction_columns_second = interaction_columns_second
-        print('interactions')
-        print(self.interaction_columns_first)
-        print(self.interaction_columns_second)
         self.column_labels = column_labels
         self.training_dataset = training_dataset
         self.removed_indices = None
@@ -225,14 +222,31 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
 
         return offset_output
 
+    def set_interactions(self):
+        self.interactions = Interactions(self.interaction_columns_first, self.interaction_columns_second)
+
     def fit_model(self, X, y, sample_weight=None, prediction_is_classification=False):
         """
         fits a GLM model
         """
+        print('exposures')
+        print(self.exposure_columns)
         self.classes_ = list(set(y))
         offsets, exposures = self.get_offsets_and_exposures(X)
-
+        self.set_interactions()
+        
+        print("initial matrix")
+        print(X)
+        print("column labels")
+        print(self.column_labels)
         X = self.process_fixed_columns(X)
+        
+        print(self.final_labels)
+        print(X.shape)
+        X = self.interactions.transform(X, self.final_labels)
+        print(self.final_labels)
+        print(X.shape)
+        print([x for x in self.interactions.interactions])
 
         offset_output = self.compute_aggregate_offset(offsets, exposures)
 
@@ -321,30 +335,22 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
                                  'defined')
 
         return offsets, exposures
-
-    def get_interactions(self, X):
-        offsets = []
-        exposures = []
-        if self.offset_mode == 'OFFSETS':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-            if len(offsets) == 0:
-                raise ValueError('OFFSETS mode is selected but no offset column is defined')
-        elif self.offset_mode == 'OFFSETS/EXPOSURES':
-            offsets, self.offset_indices = self.get_columns(X, self.offset_columns)
-            exposures, self.exposure_indices = self.get_columns(X, self.exposure_columns)
-            if len(offsets) == 0 and len(exposures) == 0:
-                raise ValueError('OFFSETS/EXPOSURES mode is selected but neither offset nor exposure columns are '
-                                 'defined')
-
-        return offsets, exposures
     
 
     def predict_target(self, X):
+        print('exposures')
+        print(self.exposure_columns)
         offsets, exposures = self.get_offsets_and_exposures(X)
+        self.set_interactions()
         X = self.process_fixed_columns(X)
-
+        print(self.final_labels)
+        print(X.shape)
+        X = self.interactions.transform(X, self.final_labels)
+        print(self.final_labels)
+        print(X.shape)
+        print([x for x in self.interactions.interactions])
         offset_output = self.compute_aggregate_offset(offsets, exposures)
-
+        
         # makes predictions and converts to DSS accepted format
         y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
         return y_pred
