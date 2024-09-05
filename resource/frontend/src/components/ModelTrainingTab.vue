@@ -145,7 +145,7 @@
                 <div class="checkbox-container">
                     <BsCheckbox v-model="column.isIncluded" label="Include?" class="custom-label-spacing"></BsCheckbox>
                 </div>
-                <div class="radio-group-container" :class="{ 'hidden': !column.isIncluded }">
+                <div class="radio-group-container">
                     <div class="q-gutter-sm row items-center">
                         <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
                     </div>
@@ -153,12 +153,10 @@
                         <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
                     </div>
                 </div>
-                <div class="choose-base-level">
-                    <div class="q-gutter-sm row items-center" :class="{ 'hidden': !(column.isIncluded && column.type === 'categorical') }">
-                        <BsCheckbox v-model="column.chooseBaseLevel" label="Choose Base Level?"></BsCheckbox>
-                    </div>
-                    <div class="q-gutter-sm row items-center" :class="{ 'hidden': !(column.isIncluded && column.type === 'categorical' && column.chooseBaseLevel) }">
+                <div class="radio-group-container">
+                    <div class="q-gutter-sm row items-center">
                         <BsSelect
+                            label="Base Level"
                             :modelValue="column.baseLevel"
                             :all-options="column.options"
                             @update:modelValue="value => column.baseLevel = value">
@@ -174,7 +172,7 @@
 </template>
 
 <script lang="ts">
-type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing' | 'chooseBaseLevel' | 'baseLevel' | 'options';
+type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing' | 'baseLevel' | 'options';
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
 interface TypeWithValue {
   value: string;
@@ -189,7 +187,6 @@ interface Column {
         role: string;
         type: string;
         preprocessing: string;
-        chooseBaseLevel: boolean;
         baseLevel: string;
         options: Array<string>;
         }
@@ -208,7 +205,6 @@ role: string;
 type: string;
 processing: string;
 included: boolean;
-choose_base_level: boolean;
 base_level: string;
 };
 }
@@ -452,13 +448,12 @@ methods: {
         };
 
         // Reduce function to construct Variables object    
-        const variableParameters = this.datasetColumns.reduce<AccType>((acc, { name, role, type, preprocessing, isIncluded, chooseBaseLevel, baseLevel }) => {
+        const variableParameters = this.datasetColumns.reduce<AccType>((acc, { name, role, type, preprocessing, isIncluded, baseLevel }) => {
         acc[name] = {
             role: role,
             type: type.toLowerCase(),
             processing: preprocessing == 'Dummy Encode' ? 'CUSTOM' : 'REGULAR',
             included: isIncluded,
-            choose_base_level: chooseBaseLevel,
             base_level: baseLevel
         };
         return acc;
@@ -541,9 +536,8 @@ methods: {
                                 name: columnName,
                                 isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
                                 role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
-                                type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
+                                type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : 'categorical',
                                 preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
-                                chooseBaseLevel: param.chooseBaseLevel ? param.chooseBaseLevel : false,
                                 options: options,
                                 baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
                             };
@@ -566,9 +560,8 @@ methods: {
                         name: column.column,
                         isIncluded: false,
                         role: 'Variable',
-                        type: 'Categorical',
+                        type: 'categorical',
                         preprocessing: 'Dummy Encode',
-                        chooseBaseLevel: false,
                         options: column.options,
                         baseLevel: column.baseLevel
                     }));
@@ -691,12 +684,6 @@ margin-top: 5px;
     flex: 1;
 }
 
-.choose-base-level {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    flex: 1;
-}
 .checkbox-container {
     margin-left: auto; /* Pushes the container to the right */
     display: flex;
