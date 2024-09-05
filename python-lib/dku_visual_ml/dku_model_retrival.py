@@ -15,7 +15,7 @@ class VisualMLModelRetriver(DataikuClientProject):
     def __init__(self, full_model_id):
         super().__init__()
 
-        logger.info(f"Initalising a model retriever for model ID {full_model_id}")
+        logger.info(f"Initialising a model retriever for model ID {full_model_id}")
         
         self.full_model_id = full_model_id
         self.task = dataikuapi.dss.ml.DSSMLTask.from_full_model_id(
@@ -174,21 +174,18 @@ class VisualMLModelRetriver(DataikuClientProject):
         features_dict = {}
         for feature in features:
             feature_settings = preprocessing.get(feature)
-            choose_base_level = feature_settings.get('category_handling') and not ("series.mode()[0]" in feature_settings.get('customHandlingCode'))
             base_level = None
-            if choose_base_level:
-                pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
-                # Search for the pattern in the code string
-                match = re.search(pattern, feature_settings.get('customHandlingCode'))
-                # Extract and print the matched value
-                if match:
-                    base_level = match.group(1)
+            pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
+            # Search for the pattern in the code string
+            match = re.search(pattern, feature_settings.get('customHandlingCode'))
+            # Extract and print the matched value
+            if match:
+                base_level = match.group(1)
                     
             features_dict[feature] = {
                 "role": feature_settings.get('role'),
                  'type': feature_settings.get('type'),
                 "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling'),
-                "chooseBaseLevel": choose_base_level,
                 "baseLevel": base_level
 
             }
