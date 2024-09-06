@@ -70,6 +70,9 @@ dummy_df_data = pd.DataFrame({
             'baseLevelPrediction': [0.5, 0.55, 0.6, 0.7, 0.5, 0.5, 0.4, 0.45]
         })
 
+dummy_base_values = {'Variable1': 'January', 
+                     'Variable2': 20}
+
 dummy_lift_data = pd.DataFrame({
             'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
             'Value': [100, 103, 101, 98, 100, 100, 101, 102],

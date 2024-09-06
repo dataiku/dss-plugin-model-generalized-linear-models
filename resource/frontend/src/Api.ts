@@ -45,6 +45,11 @@ interface RelativityPoint {
     relativity: number;
 }
 
+interface BaseValue {
+    variable: string;
+    base_level: string;
+}
+
 interface ModelPoint {
     id: string;
     name: string;
@@ -123,6 +128,7 @@ interface MLTaskParams {
 export let API = {
     getLatestMLTaskParams: (data:any) => axios.post<MLTaskParams>("/api/get_latest_mltask_params", data),
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
+    getBaseValues: (data: ModelPoint) => axios.post<BaseValue[]>("/api/base_values", data),
     getLiftData: (data: ModelNbBins) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
     updateData: (data: FeatureNbBin) => axios.post<DataPoint[]>("/api/update_bins", data),
     getRelativities: (data: ModelPoint) => axios.post<RelativityPoint[]>("/api/relativities", data),
