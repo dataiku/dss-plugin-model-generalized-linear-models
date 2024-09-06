@@ -69,8 +69,7 @@
                               </q-item>
                         </template>
                   </BsSelect>
-                  <BsCheckbox v-model="rescale" 
-                  v-if="selectedVariable.isInModel"
+                  <BsCheckbox v-model="rescale" v-if="selectedModelString"
                   @update:modelValue="updateRescale" 
                   label="Rescale?"></BsCheckbox>
                   <BsLabel v-if="selectedModelString"
