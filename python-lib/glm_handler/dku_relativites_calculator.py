@@ -44,7 +44,7 @@ class RelativitiesCalculator:
         step_elapsed = time() - step_time
         
         self.handle_preprocessing()
-        self.compute_numerical_features()
+        #self.compute_numerical_features()
         logger.info(f"Compute base values: {step_elapsed:.2f} seconds")
 
 
@@ -73,7 +73,7 @@ class RelativitiesCalculator:
         except AttributeError:
             logger.info(f"Step processing failed (AttributeError): {step}")
 
-    def compute_numerical_features(self):
+    def compute_numerical_features_old(self):
         """
         Computes base values for numerical features not handled in preprocessing.
         """
@@ -85,7 +85,7 @@ class RelativitiesCalculator:
         logger.info(f"Numerical features computed: {self.base_values}")
         
         
-    def compute_base_for_feature(self, feature, train_set):
+    def compute_base_for_feature_old(self, feature, train_set):
         """
         Computes base value for a single feature based on its type and rescaling.
 
@@ -102,7 +102,7 @@ class RelativitiesCalculator:
 
 
  
-    def compute_base_for_numeric_feature(self, feature, train_set):
+    def compute_base_for_numeric_feature_old(self, feature, train_set):
         """
         Computes base values for numeric features without rescaling.
 
