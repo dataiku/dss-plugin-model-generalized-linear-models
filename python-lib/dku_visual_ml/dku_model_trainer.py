@@ -191,6 +191,8 @@ class VisualMLModelTrainer(DataikuClientProject):
         for variable in excluded_variables:
             print(variable)
             fs = settings.get_feature_preprocessing(variable)
+            variable_type = self.visual_ml_config.get_variable_type(variable)
+            print(variable_type)
             base_level = self.visual_ml_config.variables[variable].get('base_level', None)
             if variable_type == 'categorical':
                 fs = self.update_to_categorical(fs, base_level)

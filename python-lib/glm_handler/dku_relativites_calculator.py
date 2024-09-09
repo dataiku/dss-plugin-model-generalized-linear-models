@@ -6,6 +6,7 @@ from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 from logging_assist.logging import logger
 from time import time
+import re
 
 class RelativitiesCalculator:
     """
@@ -31,7 +32,9 @@ class RelativitiesCalculator:
         self.model_retriever = model_retriever
         self.train_set = self.prepare_train_set()
         self.test_set = self.prepare_test_set()
+        print("Here")
         self.compute_base_values()
+        print("Base Values")
         logger.info("ModelHandler initialized.")
     
 
@@ -42,23 +45,56 @@ class RelativitiesCalculator:
         logger.info("Computing base values.")
         step_time = time()
         step_elapsed = time() - step_time
-        
+        print("Handle preprocessing")
         self.handle_preprocessing()
+        self.handle_modalities()
         #self.compute_numerical_features()
         logger.info(f"Compute base values: {step_elapsed:.2f} seconds")
 
+    def handle_modalities(self):
+        """
+        Extracts modalities from train set
+        """
+        for feature in self.base_values.keys():
+            self.modalities[feature] = self.train_set[feature].unique()
+
+    def extract_base_level(self, custom_code):
+        """
+        Extracts Base Level from preprocessing custom code
+        """
+        base_level = None
+        pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
+        # Search for the pattern in the code string
+        print("Custom Code")
+        print(custom_code)
+        match = re.search(pattern, custom_code)
+        print(match)
+        # Extract and print the matched value
+        if match:
+            base_level = match.group(1)
+        else:
+            print("else")
+            pattern = r'self\.mode_column\s*=\s*(\d+)'
+            match = re.search(pattern, custom_code)
+            print(match)
+            if match:
+                base_level = int(match.group(1))
+        print(base_level)
+        return base_level
 
     def handle_preprocessing(self):
         """
         Processes each step in the preprocessing pipeline.
         """
         logger.info("Handling preprocessing steps.")
-        preprocessing = self.model_retriever.predictor.get_preprocessing()
-        for step in preprocessing.pipeline.steps:
-            self.process_preprocessing_step(step)
+        params = self.model_retriever.predictor.params
+        preprocessing_feature = params.preprocessing_params['per_feature']
+        for feature in preprocessing_feature.keys():
+            print(feature)
+            self.base_values[feature] = self.extract_base_level(preprocessing_feature[feature]['customHandlingCode'])
         logger.info("Preprocessing handled.")
 
-    def process_preprocessing_step(self, step):
+    def process_preprocessing_step_old(self, step):
         """
         Processes a single preprocessing step to extract base values and modalities.
 
