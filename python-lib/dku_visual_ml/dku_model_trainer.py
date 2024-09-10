@@ -9,6 +9,8 @@ from logging_assist.logging import logger
 from dku_visual_ml.custom_configurations import dku_dataset_selection_params, custom_base_none
 from dku_visual_ml.dku_base import DataikuClientProject
 from glm_handler.dku_model_deployer import ModelDeployer
+from typing import List, Dict, Any
+
 
 class VisualMLModelTrainer(DataikuClientProject):
     """
@@ -82,15 +84,15 @@ class VisualMLModelTrainer(DataikuClientProject):
             return
         
     def disable_existing_variables(self):
-        print(f"Disabling variables from the ml task config") 
+        logger.debug(f"Disabling variables from the ml task config") 
         
         settings = self.mltask.get_settings()
         target_variable = self.visual_ml_config.get_target_variable()
-        print(f"Target Variable is {target_variable}")
-        print(f"Settings are {settings}")
+        logger.debug(f"Target Variable is {target_variable}")
+        logger.debug(f"Settings are {settings}")
         for feature_name in settings.get_raw()['preprocessing']['per_feature'].keys():
             feature_role = settings.get_raw()['preprocessing']['per_feature'][feature_name].get('role')
-            print(f"feature role is {feature_role}")
+            logger.debug(f"feature role is {feature_role}")
             if feature_name != target_variable or (feature_role!="TARGET"):
                 settings.reject_feature(feature_name)
         settings.save()
@@ -164,46 +166,49 @@ class VisualMLModelTrainer(DataikuClientProject):
         settings.set_algorithm_enabled("CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression", True)
         settings.save()
         logger.info("Successfully set the model to GLM algorithm in ml task settings")
-
-   
-    def set_included_variables(self):
         
+        
+    def _process_variables(self, settings: Any, variables: List[str], include: bool):
+            action = "Including" if include else "Excluding"
+            logger.debug(f"{action} variables: {variables}")
+
+            for variable in variables:
+                self._process_single_variable(settings, variable, include)
+
+    def _process_single_variable(self, settings: Any, variable: str, include: bool):
+            logger.debug(f"Processing variable: {variable}")
+            
+            fs = settings.get_feature_preprocessing(variable)
+            variable_type = self.visual_ml_config.get_variable_type(variable)
+            base_level = self.visual_ml_config.variables[variable].get('base_level', None)
+
+            if variable_type == 'categorical':
+                fs = self.update_to_categorical(fs, base_level)
+            elif variable_type == 'numerical':
+                fs = self.update_to_numeric(fs, base_level)
+                
+            if include:
+                settings.use_feature(variable)
+            else:
+                settings.reject_feature(variable)
+                logger.debug(f"Rejecting feature {variable} from Dataiku ML task settings")
+
+
+                
+    def set_included_variables(self):
         logger.debug("Updating the Dataiku ML task settings for included variables")
         
         settings = self.mltask.get_settings()
         model_features = self.visual_ml_config.get_model_features()
         excluded_variables = self.visual_ml_config.get_excluded_features()
-        print('model features')
-        for variable in model_features:
-            settings.use_feature(variable)
-            fs = settings.get_feature_preprocessing(variable)
-            variable_type = self.visual_ml_config.get_variable_type(variable)
-            base_level = self.visual_ml_config.variables[variable].get('base_level', None)
-            print(variable)
-            
-            if variable_type == 'categorical':
-                fs = self.update_to_categorical(fs, base_level)
 
-            elif variable_type == 'numerical':
-                fs = self.update_to_numeric(fs, base_level)
-        
-        print('excluded')
-        for variable in excluded_variables:
-            print(variable)
-            fs = settings.get_feature_preprocessing(variable)
-            variable_type = self.visual_ml_config.get_variable_type(variable)
-            print(variable_type)
-            base_level = self.visual_ml_config.variables[variable].get('base_level', None)
-            if variable_type == 'categorical':
-                fs = self.update_to_categorical(fs, base_level)
-            elif variable_type == 'numerical':
-                fs = self.update_to_numeric(fs, base_level)
-            settings.reject_feature(variable)
-            logger.debug(f"Rejecting feature {variable} from Dataiku ML task settings")
-            
+        self._process_variables(settings, model_features, include=True)
+        self._process_variables(settings, excluded_variables, include=False)
+
         settings.save()
         logger.debug("Successfully updated the Dataiku ML task settings for included/excluded variables")
-        return 
+
+
                     
     def set_exposure_variable(self):
         logger.debug("Updating the Dataiku ML task settings for exposure variables")

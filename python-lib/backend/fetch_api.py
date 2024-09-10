@@ -195,19 +195,16 @@ def get_data():
 
 @fetch_api.route("/base_values", methods=["POST"])
 def get_base_values():
-    if is_local:
-        base_values = [{'variable': k, 'base_level': v} for k, v in dummy_base_values.items()]
+    request_json = request.get_json()
+    full_model_id = request_json["id"]
+    current_app.logger.info(f"Request recieved for base_values for {full_model_id}")
         
-        current_app.logger.info("base_values")
-        current_app.logger.info(base_values)
-        return jsonify(base_values)
+    if is_local:
+        current_app.logger.info("Running Locally")
+        return jsonify(dummy_base_values)
     try:
         loading_thread.join()
-        current_app.logger.info("Received a new request for data prediction.")
-        request_json = request.get_json()
-        full_model_id = request_json["id"]
-
-        current_app.logger.info(f"Model ID received: {full_model_id}")
+        
         base_values = model_cache.get_model(full_model_id).get('base_values')
         
         base_values = [{'variable': k, 'base_level': v} for k, v in base_values.items()]
