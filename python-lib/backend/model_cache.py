@@ -38,7 +38,8 @@ def setup_model_cache(global_dku_mltask, model_deployer):
                 )
                 
                 model1_predicted_base = relativities_calculator.get_formated_predicted_base()
-   
+                base_values = relativities_calculator.get_base_values()
+
                 relativities = relativities_calculator.get_relativities_df()
                 
                 logger.info(f"relativites are: {relativities.to_dict()}")
@@ -61,6 +62,7 @@ def setup_model_cache(global_dku_mltask, model_deployer):
                 model_cache.add_model(model_id, 
                                      relativities, 
                                      model1_predicted_base,
+                                     base_values,
                                      relativities_dict,
                                      lift_chart_data,
                                      variable_stats)
@@ -93,7 +95,8 @@ def update_model_cache(global_dku_mltask, model_cache):
                 model_retriever
             )
             model1_predicted_base = relativities_calculator.get_formated_predicted_base()
-
+            base_values = relativities_calculator.get_base_values()
+            
             relativities = relativities_calculator.get_relativities_df()
             relativities_dict = relativities_calculator.relativities
             variable_level_stats = VariableLevelStatsFormatter(
@@ -111,6 +114,7 @@ def update_model_cache(global_dku_mltask, model_cache):
             model_cache.add_model(model_id, 
                                  relativities, 
                                  model1_predicted_base,
+                                 base_values,
                                  relativities_dict,
                                  lift_chart_data,
                                  variable_stats)

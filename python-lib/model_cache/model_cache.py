@@ -10,6 +10,7 @@ class ModelCache(ModelConformityChecker):
                   model_id, 
                   relativities, 
                   predicted_and_base, 
+                  base_values,
                   relativities_dict,
                   lift_chart_data,
                   variable_stats
@@ -28,6 +29,7 @@ class ModelCache(ModelConformityChecker):
             self.cache[model_id] = {
                         'relativities': relativities,
                         'predicted_and_base': predicted_and_base,
+                        'base_values': base_values,
                         'relativities_dict': relativities_dict,
                         'lift_chart_data':lift_chart_data,
                         'variable_stats':variable_stats,

@@ -193,6 +193,30 @@ def get_data():
         current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
         return jsonify({"error": "An error occurred during data processing."}), 500
 
+@fetch_api.route("/base_values", methods=["POST"])
+def get_base_values():
+    request_json = request.get_json()
+    full_model_id = request_json["id"]
+    current_app.logger.info(f"Request recieved for base_values for {full_model_id}")
+        
+    if is_local:
+        current_app.logger.info("Running Locally")
+        return jsonify(dummy_base_values)
+    try:
+        loading_thread.join()
+        
+        base_values = model_cache.get_model(full_model_id).get('base_values')
+        
+        base_values = [{'variable': k, 'base_level': v} for k, v in base_values.items()]
+
+        current_app.logger.info("base_values")
+        current_app.logger.info(base_values)
+        return jsonify(base_values)
+    
+    except Exception as e:
+        current_app.logger.error(f"An error occurred while processing the request: {e}", exc_info=True)
+        return jsonify({"error": "An error occurred during data processing."}), 500
+
 
 @fetch_api.route("/lift_data", methods=["POST"])
 def get_lift_data():

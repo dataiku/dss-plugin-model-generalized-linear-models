@@ -6,6 +6,7 @@ from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 from logging_assist.logging import logger
 from time import time
+import re
 
 class RelativitiesCalculator:
     """
@@ -34,7 +35,10 @@ class RelativitiesCalculator:
         self.compute_base_values()
         logger.info("ModelHandler initialized.")
     
-
+    def get_base_values(self):
+        logger.info(f"Getting base values")
+        return self.self.base_values()
+    
     def compute_base_values(self):
         """
         Main method to initialize and compute base values.
@@ -42,85 +46,53 @@ class RelativitiesCalculator:
         logger.info("Computing base values.")
         step_time = time()
         step_elapsed = time() - step_time
-        
+        print("Handle preprocessing")
         self.handle_preprocessing()
-        self.compute_numerical_features()
+        self.handle_modalities()
+        #self.compute_numerical_features()
         logger.info(f"Compute base values: {step_elapsed:.2f} seconds")
 
+    def handle_modalities(self):
+        """
+        Extracts modalities from train set
+        """
+        for feature in self.base_values.keys():
+            self.modalities[feature] = self.train_set[feature].unique()
+
+    def extract_base_level(self, custom_code):
+        """
+        Extracts Base Level from preprocessing custom code
+        """
+        base_level = None
+        pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
+        # Search for the pattern in the code string
+        logger.debug("Custom Code is {custom_code}")
+        match = re.search(pattern, custom_code)
+        logger.debug("Match is {match}")
+        
+        # Extract and print the matched value
+        if match:
+            base_level = match.group(1)
+        else:
+            pattern = r'self\.mode_column\s*=\s*(\d+)'
+            match = re.search(pattern, custom_code)
+            if match:
+                base_level = int(match.group(1))
+        logger.debug("returning base_level {base_level}")
+        return base_level
 
     def handle_preprocessing(self):
         """
         Processes each step in the preprocessing pipeline.
         """
         logger.info("Handling preprocessing steps.")
-        preprocessing = self.model_retriever.predictor.get_preprocessing()
-        for step in preprocessing.pipeline.steps:
-            self.process_preprocessing_step(step)
+        params = self.model_retriever.predictor.params
+        preprocessing_feature = params.preprocessing_params['per_feature']
+        for feature in preprocessing_feature.keys():
+            print(feature)
+            self.base_values[feature] = self.extract_base_level(preprocessing_feature[feature]['customHandlingCode'])
         logger.info("Preprocessing handled.")
 
-    def process_preprocessing_step(self, step):
-        """
-        Processes a single preprocessing step to extract base values and modalities.
-
-        Args:
-            step: A preprocessing step in the pipeline.
-        """
-        try:
-            logger.info(f"Processing preprocessing step: {step}")
-            self.base_values[step.input_col] = step.processor.mode_column
-            self.modalities[step.input_col] = step.processor.modalities
-            logger.info(f"Step processed: {step}")
-        except AttributeError:
-            logger.info(f"Step processing failed (AttributeError): {step}")
-
-    def compute_numerical_features(self):
-        """
-        Computes base values for numerical features not handled in preprocessing.
-        """
-        logger.info("Computing numerical features.")
-#         used_features = self.model_retriever.get
-        for feature in self.model_retriever.used_features:
-            if feature not in self.base_values:
-                self.compute_base_for_feature(feature, self.train_set)
-        logger.info(f"Numerical features computed: {self.base_values}")
-        
-        
-    def compute_base_for_feature(self, feature, train_set):
-        """
-        Computes base value for a single feature based on its type and rescaling.
-
-        Args:
-            feature (str): The feature to compute the base value for.
-            train_set (pd.DataFrame): The training dataset.
-        """
-        if self.model_retriever.features[feature]['type'] == 'NUMERIC' and self.model_retriever.features[feature]['rescaling'] == 'NONE':
-            self.compute_base_for_numeric_feature(feature, train_set)
-        else:
-            error_msg = f"feature should be handled numerically without rescaling or categorically with the custom preprocessor for model {self.model_retriever.full_model_id}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-
- 
-    def compute_base_for_numeric_feature(self, feature, train_set):
-        """
-        Computes base values for numeric features without rescaling.
-
-        Args:
-            feature (str): The numeric feature to compute the base value for.
-            train_set (pd.DataFrame): The training dataset.
-        """
-        logger.info(f"Computing base value for numeric feature: {feature}")
-        if self.model_retriever.exposure_columns is not None:
-            feature_exposure = train_set.groupby(feature)[self.model_retriever.exposure_columns].sum().reset_index()
-            base_value = feature_exposure[feature].iloc[feature_exposure[self.model_retriever.exposure_columns].idxmax()]
-        else:
-            feature_exposure = train_set[feature].value_counts().reset_index()
-            base_value = feature_exposure['index'].iloc[feature_exposure[feature].idxmax()]
-
-        self.base_values[feature] = base_value
-        self.modalities[feature] = {'min': train_set[feature].min(), 'max': train_set[feature].max()}
-        logger.info(f"Base value computed for numeric feature: {feature}, base_value: {base_value}")
 
     def get_relativities_df(self):
         """

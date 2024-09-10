@@ -9,6 +9,8 @@ from logging_assist.logging import logger
 from dku_visual_ml.custom_configurations import dku_dataset_selection_params, custom_base_none
 from dku_visual_ml.dku_base import DataikuClientProject
 from glm_handler.dku_model_deployer import ModelDeployer
+from typing import List, Dict, Any
+
 
 class VisualMLModelTrainer(DataikuClientProject):
     """
@@ -82,15 +84,15 @@ class VisualMLModelTrainer(DataikuClientProject):
             return
         
     def disable_existing_variables(self):
-        print(f"Disabling variables from the ml task config") 
+        logger.debug(f"Disabling variables from the ml task config") 
         
         settings = self.mltask.get_settings()
         target_variable = self.visual_ml_config.get_target_variable()
-        print(f"Target Variable is {target_variable}")
-        print(f"Settings are {settings}")
+        logger.debug(f"Target Variable is {target_variable}")
+        logger.debug(f"Settings are {settings}")
         for feature_name in settings.get_raw()['preprocessing']['per_feature'].keys():
             feature_role = settings.get_raw()['preprocessing']['per_feature'][feature_name].get('role')
-            print(f"feature role is {feature_role}")
+            logger.debug(f"feature role is {feature_role}")
             if feature_name != target_variable or (feature_role!="TARGET"):
                 settings.reject_feature(feature_name)
         settings.save()
@@ -164,33 +166,49 @@ class VisualMLModelTrainer(DataikuClientProject):
         settings.set_algorithm_enabled("CustomPyPredAlgo_generalized-linear-models_generalized-linear-models_regression", True)
         settings.save()
         logger.info("Successfully set the model to GLM algorithm in ml task settings")
-
-   
-    def set_included_variables(self):
         
+        
+    def _process_variables(self, settings: Any, variables: List[str], include: bool):
+            action = "Including" if include else "Excluding"
+            logger.debug(f"{action} variables: {variables}")
+
+            for variable in variables:
+                self._process_single_variable(settings, variable, include)
+
+    def _process_single_variable(self, settings: Any, variable: str, include: bool):
+            logger.debug(f"Processing variable: {variable}")
+            
+            fs = settings.get_feature_preprocessing(variable)
+            variable_type = self.visual_ml_config.get_variable_type(variable)
+            base_level = self.visual_ml_config.variables[variable].get('base_level', None)
+
+            if variable_type == 'categorical':
+                fs = self.update_to_categorical(fs, base_level)
+            elif variable_type == 'numerical':
+                fs = self.update_to_numeric(fs, base_level)
+                
+            if include:
+                settings.use_feature(variable)
+            else:
+                settings.reject_feature(variable)
+                logger.debug(f"Rejecting feature {variable} from Dataiku ML task settings")
+
+
+                
+    def set_included_variables(self):
         logger.debug("Updating the Dataiku ML task settings for included variables")
         
         settings = self.mltask.get_settings()
         model_features = self.visual_ml_config.get_model_features()
         excluded_variables = self.visual_ml_config.get_excluded_features()
-        for variable in model_features:
-                settings.use_feature(variable)
-                fs = settings.get_feature_preprocessing(variable)
-                variable_type = self.visual_ml_config.get_variable_type(variable)
-                
-                if variable_type == 'categorical':
-                    fs = self.update_to_categorical(fs, variable)
-                
-                elif variable_type == 'numerical':
-                    fs = self.update_to_numeric(fs, "NONE")
-                    
-        for variable in excluded_variables:
-            settings.reject_feature(variable)
-            logger.debug(f"Rejecting feature {variable} from Dataiku ML task settings")
-            
+
+        self._process_variables(settings, model_features, include=True)
+        self._process_variables(settings, excluded_variables, include=False)
+
         settings.save()
         logger.debug("Successfully updated the Dataiku ML task settings for included/excluded variables")
-        return 
+
+
                     
     def set_exposure_variable(self):
         logger.debug("Updating the Dataiku ML task settings for exposure variables")
@@ -198,7 +216,7 @@ class VisualMLModelTrainer(DataikuClientProject):
         settings = self.mltask.get_settings()
         settings.use_feature(exposure_variable)
         fs = settings.get_feature_preprocessing(exposure_variable)
-        fs = self.update_to_numeric(fs, "NONE")
+        fs = self.update_to_numeric(fs, None)
         settings.save()
         logger.debug("Successfully updated the Dataiku ML task settings for exposure variables")
     
@@ -366,11 +384,15 @@ class VisualMLModelTrainer(DataikuClientProject):
             })
         
         settings.save()
-        return 
-    def update_to_numeric(self, fs, variable_preprocessing_method='NONE'):
+        return
+    
+    def update_to_numeric(self, fs, base_level):
+    
         fs['generate_derivative'] = False
-#         fs['numerical_handling'] = variable_preprocessing_method
-        fs['numerical_handling'] = 'REGULAR'
+        if base_level is None:
+            fs['numerical_handling'] = 'REGULAR'
+        else:
+            fs['numerical_handling'] = 'CUSTOM'
         fs['missing_handling'] = 'IMPUTE'
         fs['missing_impute_with'] = 'MEAN'
         fs['impute_constant_value'] = 0.0
@@ -382,15 +404,29 @@ class VisualMLModelTrainer(DataikuClientProject):
         fs['datetime_cyclical_periods'] = []
         fs['role'] = 'INPUT'
         fs['type'] = 'NUMERIC'
-        fs['customHandlingCode'] = ''
-        fs['customProcessorWantsMatrix'] = False
+        if base_level is None:
+            fs['customHandlingCode'] = ''
+        else:
+            fs['customHandlingCode'] = ('import pandas as pd\n'
+            'import numpy as np\n'
+            'class save_base():\n'
+            '    """This processor applies no transformation but saves a base level\n'
+            '    """\n'
+            '    def __init__(self):\n'
+            '        self.mode_column = None\n'
+            '    def fit(self, series):\n'
+            '        # define the base level\n'
+            '        self.mode_column = '+ str(base_level) + '\n'
+            '        self.modalities = np.unique(series)\n'
+            '    def transform(self, series):\n'
+            '        return pd.DataFrame(series)\n'
+            '    \n'
+            'processor = save_base()')
+        fs['customProcessorWantsMatrix'] = True
         fs['sendToInput'] = 'main'
         return fs
     
-    def update_to_categorical(self, fs, variable):
-        
-        variable_preprocessing_method = self.visual_ml_config.variables[variable].get('processing', None)
-        base_level = self.visual_ml_config.variables[variable].get('base_level', None)
+    def update_to_categorical(self, fs, base_level):
         
         fs['missing_impute_with']= 'MODE'
         fs['type']= 'CATEGORY'
@@ -420,37 +456,34 @@ class VisualMLModelTrainer(DataikuClientProject):
         fs['customHandlingCode'] = ''
         fs['customProcessorWantsMatrix'] = False
         fs['sendToInput'] = 'main'
-        if base_level is None:
-            fs['customHandlingCode'] = custom_base_none
-        else:
-            fs['customHandlingCode'] = ('import numpy as np\n'
-            'import pandas as pd\n'
-            'class rebase_mode():\n'
-            '    """This processor applies dummy vectorisation, but drops the dummy column with the mode. Only applies to categorical variables\n'
-            '    """\n'
-            '    def __init__(self):\n'
-            '        self.mode_column = None\n'
-            '    def fit(self, series):\n'
-            '        # identify the mode of the column, returns as a text value\n'
-            '        self.modalities = np.unique(series)\n'
-            '        self.mode_column = "' + base_level + '"\n'
-            '        self.columns = set(self.modalities)\n'
-            '        self.columns = list(self.columns)\n'
-            '        self.columns.remove(self.mode_column)\n'
-            '        self.column_name = series.name\n'
-            '    def transform(self, series):\n'
-            '        to_replace={m: self.mode_column for m in np.unique(series) if m not in self.modalities}\n'
-            '        new_series = series.replace(to_replace=to_replace)\n'
-            '        # obtains the dummy encoded dataframe, but drops the dummy column with the mode identified\n'
-            '        df = pd.get_dummies(new_series.values)\n'
-            '        if self.mode_column in df:\n'
-            '            df = df.drop(self.mode_column, axis = 1)\n'
-            '        for c in self.columns:\n'
-            '            if c not in df.columns:\n'
-            '                df[c] = 0\n'
-            '        df = df[self.columns]\n'
-            '        return df\n'
-            'processor = rebase_mode()')
+        fs['customHandlingCode'] = ('import numpy as np\n'
+        'import pandas as pd\n'
+        'class rebase_mode():\n'
+        '    """This processor applies dummy vectorisation, but drops the dummy column with the mode. Only applies to categorical variables\n'
+        '    """\n'
+        '    def __init__(self):\n'
+        '        self.mode_column = None\n'
+        '    def fit(self, series):\n'
+        '        # identify the mode of the column, returns as a text value\n'
+        '        self.modalities = np.unique(series)\n'
+        '        self.mode_column = "' + base_level + '"\n'
+        '        self.columns = set(self.modalities)\n'
+        '        self.columns = list(self.columns)\n'
+        '        self.columns.remove(self.mode_column)\n'
+        '        self.column_name = series.name\n'
+        '    def transform(self, series):\n'
+        '        to_replace={m: self.mode_column for m in np.unique(series) if m not in self.modalities}\n'
+        '        new_series = series.replace(to_replace=to_replace)\n'
+        '        # obtains the dummy encoded dataframe, but drops the dummy column with the mode identified\n'
+        '        df = pd.get_dummies(new_series.values)\n'
+        '        if self.mode_column in df:\n'
+        '            df = df.drop(self.mode_column, axis = 1)\n'
+        '        for c in self.columns:\n'
+        '            if c not in df.columns:\n'
+        '                df[c] = 0\n'
+        '        df = df[self.columns]\n'
+        '        return df\n'
+        'processor = rebase_mode()')
         
         return fs      
 

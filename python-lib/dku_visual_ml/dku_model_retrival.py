@@ -4,6 +4,8 @@ from logging_assist.logging import logger
 import re
 from dku_visual_ml.dku_base import DataikuClientProject
 from dataiku.doctor.posttraining.model_information_handler import PredictionModelInformationHandler
+from typing import List, Dict, Any, Optional
+
 # need to come up with a structure way of storing features as its being done twice
 
 class VisualMLModelRetriver(DataikuClientProject):
@@ -15,7 +17,7 @@ class VisualMLModelRetriver(DataikuClientProject):
     def __init__(self, full_model_id):
         super().__init__()
 
-        logger.info(f"Initalising a model retriever for model ID {full_model_id}")
+        logger.info(f"Initialising a model retriever for model ID {full_model_id}")
         
         self.full_model_id = full_model_id
         self.task = dataikuapi.dss.ml.DSSMLTask.from_full_model_id(
@@ -160,42 +162,50 @@ class VisualMLModelRetriver(DataikuClientProject):
         predictor = self.model_info_handler.get_predictor()
         logger.debug(f"Successfully retrieved predictor for the model {self.full_model_id}")
         return predictor
+    
+    
+    def _get_basic_feature_info(self, feature_settings: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "role": feature_settings.get('role'),
+            'type': feature_settings.get('type'),
+            "handling": feature_settings.get('numerical_handling') or feature_settings.get('category_handling'),
+        }
+
+    def _extract_base_level(self, feature_settings: Dict[str, Any]) -> Optional[str]:
+        pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
+        custom_handling_code = feature_settings.get('customHandlingCode', '')
+        match = re.search(pattern, custom_handling_code)
+        return match.group(1) if match else None
+    
+    def _process_feature(self, feature: str, preprocessing: Dict[str, Any], 
+                         exposure_columns: str, target_column: str) -> Dict[str, Any]:
         
-    def get_features_dict(self):
+        feature_settings = preprocessing.get(feature, {})
+        feature_dict = self._get_basic_feature_info(feature_settings)
+        feature_dict["baseLevel"] = self._extract_base_level(feature_settings)
         
-        logger.info("Model getting features")
+        if feature == exposure_columns:
+            feature_dict["role"] = "Exposure"
+        elif feature == target_column:
+            feature_dict["role"] = "Target"
+        
+        return feature_dict
+    
+    
+    def get_features_dict(self) -> Dict[str, Dict[str, Any]]:
+        
+        logger.info("Getting model feature dict")
         exposure_columns = self.get_exposure_columns()
         target_column = self.get_target_column()
         
         preprocessing = self.model_details.get_preprocessing_settings().get('per_feature')
         features = preprocessing.keys()
         
-        
         features_dict = {}
         for feature in features:
-            feature_settings = preprocessing.get(feature)
-            choose_base_level = feature_settings.get('category_handling') and not ("series.mode()[0]" in feature_settings.get('customHandlingCode'))
-            base_level = None
-            if choose_base_level:
-                pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
-                # Search for the pattern in the code string
-                match = re.search(pattern, feature_settings.get('customHandlingCode'))
-                # Extract and print the matched value
-                if match:
-                    base_level = match.group(1)
+            feature_dict = self._process_feature(feature, preprocessing, exposure_columns, target_column)
+            features_dict[feature] = feature_dict
                     
-            features_dict[feature] = {
-                "role": feature_settings.get('role'),
-                 'type': feature_settings.get('type'),
-                "handling" : feature_settings.get('numerical_handling') or feature_settings.get('category_handling'),
-                "chooseBaseLevel": choose_base_level,
-                "baseLevel": base_level
-
-            }
-            if feature == exposure_columns:
-                features_dict[feature]["role"]=="Exposure"
-            if feature ==target_column:
-                features_dict[feature]["role"]=="Target"
                 
         logger.info("Model retriever succesfully got features")    
         logger.debug(f"Features are:{features_dict}")
