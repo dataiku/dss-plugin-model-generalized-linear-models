@@ -229,27 +229,16 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         """
         fits a GLM model
         """
-        print('exposures')
-        print(self.exposure_columns)
         self.classes_ = list(set(y))
         offsets, exposures = self.get_offsets_and_exposures(X)
         self.set_interactions()
         
-        print("initial matrix")
-        print(X)
-        print("column labels")
-        print(self.column_labels)
         X = self.process_fixed_columns(X)
         
-        print(self.final_labels)
-        print(X.shape)
         X = self.interactions.transform(X, self.final_labels)
-        print(self.final_labels)
-        print(X.shape)
-        print([x for x in self.interactions.interactions])
-
+        
         offset_output = self.compute_aggregate_offset(offsets, exposures)
-
+        
         #  fits and stores glum glm
         self.fitted_model = GeneralizedLinearRegressor(alpha=self.penalty, l1_ratio=self.l1_ratio, fit_intercept=True,
                                             family=self.family, link=self.link)
@@ -338,17 +327,11 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
     
 
     def predict_target(self, X):
-        print('exposures')
-        print(self.exposure_columns)
+        
         offsets, exposures = self.get_offsets_and_exposures(X)
         self.set_interactions()
         X = self.process_fixed_columns(X)
-        print(self.final_labels)
-        print(X.shape)
         X = self.interactions.transform(X, self.final_labels)
-        print(self.final_labels)
-        print(X.shape)
-        print([x for x in self.interactions.interactions])
         offset_output = self.compute_aggregate_offset(offsets, exposures)
         
         # makes predictions and converts to DSS accepted format
