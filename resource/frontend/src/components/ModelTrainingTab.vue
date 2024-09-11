@@ -145,7 +145,7 @@
                 <div class="checkbox-container">
                     <BsCheckbox v-model="column.isIncluded" label="Include?" class="custom-label-spacing"></BsCheckbox>
                 </div>
-                <div class="radio-group-container" :class="{ 'hidden': !column.isIncluded }">
+                <div class="radio-group-container">
                     <div class="q-gutter-sm row items-center">
                         <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
                     </div>
@@ -153,12 +153,10 @@
                         <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
                     </div>
                 </div>
-                <div class="choose-base-level">
-                    <div class="q-gutter-sm row items-center" :class="{ 'hidden': !(column.isIncluded && column.type === 'categorical') }">
-                        <BsCheckbox v-model="column.chooseBaseLevel" label="Choose Base Level?"></BsCheckbox>
-                    </div>
-                    <div class="q-gutter-sm row items-center" :class="{ 'hidden': !(column.isIncluded && column.type === 'categorical' && column.chooseBaseLevel) }">
+                <div class="radio-group-container">
+                    <div class="q-gutter-sm row items-center">
                         <BsSelect
+                            label="Base Level"
                             :modelValue="column.baseLevel"
                             :all-options="column.options"
                             @update:modelValue="value => column.baseLevel = value">
@@ -174,7 +172,7 @@
 </template>
 
 <script lang="ts">
-type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing' | 'chooseBaseLevel' | 'baseLevel' | 'options';
+type ColumnPropertyKeys = 'isIncluded' | 'role' | 'type' | 'preprocessing' | 'baseLevel' | 'options';
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
 interface TypeWithValue {
   value: string;
@@ -189,7 +187,6 @@ interface Column {
         role: string;
         type: string;
         preprocessing: string;
-        chooseBaseLevel: boolean;
         baseLevel: string;
         options: Array<string>;
         }
@@ -208,7 +205,6 @@ role: string;
 type: string;
 processing: string;
 included: boolean;
-choose_base_level: boolean;
 base_level: string;
 };
 }
@@ -221,7 +217,7 @@ import trainingIcon from "../assets/images/training.svg";
 import { API } from '../Api';
 import { QRadio } from 'quasar';
 import { useLoader } from "../composables/use-loader";
-
+import { useNotification } from "../composables/use-notification";
 
 
 export default defineComponent({
@@ -356,6 +352,14 @@ methods: {
           const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
           this.loading = false;
         },
+        notifyError(msg: string) {
+            useNotification("negative", msg);
+        },
+        handleError(msg: any) {
+            this.loading = false;
+            console.error(msg);
+            this.notifyError(msg);
+        },
     validateSubmission() {
         this.errorMessage = ''; // Reset error message before validation
         if (!this.modelName) {
@@ -444,13 +448,12 @@ methods: {
         };
 
         // Reduce function to construct Variables object    
-        const variableParameters = this.datasetColumns.reduce<AccType>((acc, { name, role, type, preprocessing, isIncluded, chooseBaseLevel, baseLevel }) => {
+        const variableParameters = this.datasetColumns.reduce<AccType>((acc, { name, role, type, preprocessing, isIncluded, baseLevel }) => {
         acc[name] = {
             role: role,
             type: type.toLowerCase(),
             processing: preprocessing == 'Dummy Encode' ? 'CUSTOM' : 'REGULAR',
             included: isIncluded,
-            choose_base_level: chooseBaseLevel,
             base_level: baseLevel
         };
         return acc;
@@ -476,81 +479,101 @@ methods: {
             this.loading = true;
             console.log(model_value);
             if (model_value) {
-            console.log("model_id parameter provided:", model_value);
-            this.datasetColumns = []
-            try {
-                    const response = await API.getDatasetColumns();
-                    this.selectedModelString = model_value;
-                    const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
-                    console.log("Making request with model Id :", model);
-                    const paramsResponse = await API.getLatestMLTaskParams(model);
-                    const params = paramsResponse.data.params;
+                console.log("model_id parameter provided:", model_value);
+                this.datasetColumns = []
+                try {
+                        const response = await API.getDatasetColumns();
+                        this.selectedModelString = model_value;
+                        const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
+                        console.log("Making request with model Id :", model);
+                        const paramsResponse = await API.getLatestMLTaskParams(model);
+                        const params = paramsResponse.data.params;
+                        // Get the column names from the response and params
 
-                    this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
-                    this.selectedLinkFunctionString = paramsResponse.data.link_function;
-                    this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
-                    this.selectedL1Ratio = paramsResponse.data.l1_ratio ? paramsResponse.data.l1_ratio : 0;
-
-                    console.log("paramsResponse:", paramsResponse.data);
-                    this.datasetColumns = response.data.map((column: ColumnInput) => {
-                        const columnName = column.column;
-                        const options = column.options;
-                        const param = params[columnName];
-                        const isTargetColumn = columnName === paramsResponse.data.target_column;
-                        const isExposureColumn = columnName === paramsResponse.data.exposure_column;
+                        const responseColumns = response.data.map((column: ColumnInput) => column.column);
+                        const paramsColumns = Object.keys(params);
                         
-                        // Set the selected target variable if this column is the target column
-                        if (isTargetColumn) {
-                            this.selectedTargetVariable = columnName;
+                        // Check if the column names match
+                        const missingColumns = paramsColumns.filter((col: string) => !responseColumns.includes(col));
+                        const extraColumns = responseColumns.filter((col: string) => !paramsColumns.includes(col));
+                        
+                        if (missingColumns.length > 0 || extraColumns.length > 0) {
+                            let errorMessage = "Column mismatch: Your training dataset does not contain the same variables as the model you requested.\n";
+                            if (missingColumns.length > 0) {
+                                errorMessage += `Missing columns: ${missingColumns.join(", ")}\n`;
+                            }
+                            if (extraColumns.length > 0) {
+                                errorMessage += `Extra columns: ${extraColumns.join(", ")}`;
+                            }
+                            this.handleError(errorMessage);
+                            return;
                         }
+                        this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
+                        this.selectedLinkFunctionString = paramsResponse.data.link_function;
+                        this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
+                        this.selectedL1Ratio = paramsResponse.data.l1_ratio ? paramsResponse.data.l1_ratio : 0;
+
+                        console.log("paramsResponse:", paramsResponse.data);
+                        this.datasetColumns = response.data.map((column: ColumnInput) => {
+                            const columnName = column.column;
+                            const options = column.options;
+                            const param = params[columnName];
+                            const isTargetColumn = columnName === paramsResponse.data.target_column;
+                            const isExposureColumn = columnName === paramsResponse.data.exposure_column;
+                            
+                            // Set the selected target variable if this column is the target column
+                            if (isTargetColumn) {
+                                this.selectedTargetVariable = columnName;
+                            }
 
 
-                        // Set the selected exposure variable if this column is the exposure column
-                        if (isExposureColumn) {
-                            this.selectedExposureVariable = columnName;
+                            // Set the selected exposure variable if this column is the exposure column
+                            if (isExposureColumn) {
+                                this.selectedExposureVariable = columnName;
+                            }
+
+                            return {
+                                name: columnName,
+                                isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
+                                role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
+                                type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : 'categorical',
+                                preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
+                                options: options,
+                                baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
+                            };
+                        });
+
+                    } catch (error) {
+                        console.error("Error fetching data:", error);
+                    }finally {
+                            this.loading = false;
                         }
+                    
 
-                        return {
-                            name: columnName,
-                            isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
-                            role: isTargetColumn ? 'Target' : (isExposureColumn ? 'Exposure' : (param.role || 'REJECT')),
-                            type: param.type ? (param.type === 'NUMERIC' ? 'numerical' : 'categorical') : '',
-                            preprocessing: param.handling ? (param.handling === 'DUMMIFY' ? 'Dummy Encode' : param.handling) : 'Dummy Encode',
-                            chooseBaseLevel: param.chooseBaseLevel ? param.chooseBaseLevel : false,
-                            options: options,
-                            baseLevel: param.baseLevel ? param.baseLevel : column.baseLevel
-                        };
-                    });
+            } 
+            else {
+                console.log("No model id provided:");
+                try {
+                    const response = await API.getDatasetColumns();
 
+                    this.datasetColumns = response.data.map((column: ColumnInput) => ({
+                        name: column.column,
+                        isIncluded: false,
+                        role: 'Variable',
+                        type: 'categorical',
+                        preprocessing: 'Dummy Encode',
+                        options: column.options,
+                        baseLevel: column.baseLevel
+                    }));
+                console.log("First assignment");
                 } catch (error) {
-                    console.error("Error fetching data:", error);
+                    console.error('Error fetching datasets:', error);
+                    this.datasetColumns = [];
                 }
-
-        } 
-    else {
-        console.log("No model id provided:");
-        try {
-        const response = await API.getDatasetColumns();
-
-        this.datasetColumns = response.data.map((column: ColumnInput) => ({
-            name: column.column,
-            isIncluded: false,
-            role: 'Variable',
-            type: 'Categorical',
-            preprocessing: 'Dummy Encode',
-            chooseBaseLevel: false,
-            options: column.options,
-            baseLevel: column.baseLevel
-        }));
-        console.log("First assignment");
-        } catch (error) {
-            console.error('Error fetching datasets:', error);
-            this.datasetColumns = [];
-        }
-     }
-     this.loading = false;
-     },
-    
+            }
+            this.loading = false;
+            },
+        
     },
 
 async mounted() {
@@ -661,12 +684,6 @@ margin-top: 5px;
     flex: 1;
 }
 
-.choose-base-level {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    flex: 1;
-}
 .checkbox-container {
     margin-left: auto; /* Pushes the container to the right */
     display: flex;

@@ -35,6 +35,15 @@
                 @update:modelValue="updateModelTwoString"
                 style="min-width: 250px">
             </BsSelect>
+            <BsLabel v-if="isVariableSelectEnabled"
+                label="Run Analysis on">
+            </BsLabel>
+            <BsToggle
+             v-if="isVariableSelectEnabled"
+              @update:modelValue="updateTrainTest"
+              v-model="trainTest" 
+              labelRight="Test" 
+              labelLeft="Train"/>
         </div>
         </BsCollapsiblePanel>
         <BsCollapsiblePanel
@@ -51,10 +60,6 @@
                 @update:modelValue="updateVariableString"
                 style="min-width: 150px">
             </BsSelect>
-            <BsLabel v-if="isVariableSelectEnabled"
-                label="Run Analysis on">
-                </BsLabel>
-                <BsToggle v-if="isVariableSelectEnabled" v-model="trainTest" labelRight="Test" labelLeft="Train"/>
         </div>
         </BsCollapsiblePanel>
     </BsDrawer>
@@ -146,7 +151,7 @@ data() {
         modelComparisonData: [] as chartDataItem[],
         tableColumns: columns,
         loading: false,
-        trainTest: false
+        trainTest: false,
     };
 },
 computed:{
@@ -212,7 +217,8 @@ methods: {
         const payload = {
         model1: this.modelDictionary[this.selectedModelString],
         model2: this.modelDictionary[this.selectedModelTwoString],
-        selectedVariable: this.selectedVariable
+        selectedVariable: this.selectedVariable,
+        trainTest:this.trainTest
         }
         const dataResponse = await API.getModelComparisonData(payload);
         this.modelComparisonData = dataResponse?.data;
@@ -224,15 +230,21 @@ methods: {
         this.loading = false;
 
     },
+    async updateTrainTest(value: boolean) {
+        this.trainTest = value;
+        if (this.selectedVariable) {
+        await this.updateVariableString(this.selectedVariable);
+    }
+        },
     async updateModelString(value: string) {
         this.selectedModelString = value;
     },
     async updateModelTwoString(value: string) {
         this.selectedModelTwoString = value;
     },
-    async getDatasetColumns() {
+    async getDatasetColumnNames() {
     try {
-    const response = await API.getDatasetColumns();
+    const response = await API.getTrainDatasetColumnNames();
     console.log("Datasets:", response.data);
     this.datasetColumns = response.data;
     console.log("First assignment:", this.datasetColumns);
@@ -254,7 +266,7 @@ mounted() {
                         }, {});
     
     });
-    this.getDatasetColumns(); 
+    this.getDatasetColumnNames(); 
 },
 emits: ['update:modelValue']
 })

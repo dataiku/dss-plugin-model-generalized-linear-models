@@ -45,6 +45,11 @@ interface RelativityPoint {
     relativity: number;
 }
 
+interface BaseValue {
+    variable: string;
+    base_level: string;
+}
+
 interface ModelPoint {
     id: string;
     name: string;
@@ -123,6 +128,7 @@ interface MLTaskParams {
 export let API = {
     getLatestMLTaskParams: (data:any) => axios.post<MLTaskParams>("/api/get_latest_mltask_params", data),
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
+    getBaseValues: (data: ModelPoint) => axios.post<BaseValue[]>("/api/base_values", data),
     getLiftData: (data: ModelNbBins) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
     updateData: (data: FeatureNbBin) => axios.post<DataPoint[]>("/api/update_bins", data),
     getRelativities: (data: ModelPoint) => axios.post<RelativityPoint[]>("/api/relativities", data),
@@ -130,6 +136,7 @@ export let API = {
     getVariables: (data: ModelPoint) => axios.post<VariablePoint[] | ErrorPoint>("/api/variables", data),
     getProjectDataset: () => axios.get<string[]>("/api/get_project_dataset", {}),
     getDatasetColumns: () => axios.get("/api/get_dataset_columns", {}),
+    getTrainDatasetColumnNames: () => axios.get("/api/get_train_dataset_column_names", {}),
     trainModel: (payload: any) => axios.post<string[]>("/api/train_model", payload),
     getModelComparisonData: (data: any) => axios.post<ModelComparisonDataPoint[]>("/api/get_model_comparison_data", data),
     getModelMetrics: (data: any) => axios.post<ModelMetrics>("/api/get_model_metrics", data),
