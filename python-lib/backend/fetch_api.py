@@ -17,7 +17,7 @@ from chart_formatters.lift_chart import LiftChartFormatter
 from glm_handler.dku_model_metrics import ModelMetricsCalculator
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
-is_local = True
+is_local = False
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
@@ -71,8 +71,7 @@ def train_model():
     if is_local:
         logger.info("Local set up: No model training completed")
         time.sleep(2)
-        error_meesage = "big bad error"
-        return jsonify({'error': str(error_message)}), 500
+        return jsonify({'message': 'Model training initiated successfully.'}), 200
     
     global visual_ml_trainer, model_cache
     
