@@ -17,7 +17,7 @@ from chart_formatters.lift_chart import LiftChartFormatter
 from glm_handler.dku_model_metrics import ModelMetricsCalculator
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
-is_local = False
+is_local = True
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
@@ -61,6 +61,8 @@ loading_thread.start()
 
 
 fetch_api = Blueprint("fetch_api", __name__, url_prefix="/api")
+
+
     
 @fetch_api.route("/train_model", methods=["POST"])
 def train_model():
@@ -69,36 +71,41 @@ def train_model():
     if is_local:
         logger.info("Local set up: No model training completed")
         time.sleep(2)
-        return jsonify({'message': 'Model training initiated successfully.'}), 200
+        error_meesage = "big bad error"
+        return jsonify({'error': str(error_message)}), 500
     
     global visual_ml_trainer, model_cache
     
     visual_ml_config.update_model_parameters(request.get_json())
 
-#     try:
+
     current_app.logger.debug("Creating Visual ML Trainer")
     visual_ml_trainer.update_visual_ml_config(visual_ml_config)
 
-    model_details = visual_ml_trainer.train_model(
+    model_details, error_message = visual_ml_trainer.train_model(
         code_env_string=visual_ml_config.code_env_string,
         session_name=visual_ml_config.model_name_string
     )
+    current_app.logger.debug(f"Model error message is {error_message}")
+    print(f"Model error message is {error_message}")
+    current_app.logger.debug(f"Model details are {model_details}")
     loading_thread.join()
+    if not error_message:
+        if not model_cache:
+            current_app.logger.info("Creating Model cache For the first time")
+            latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+            model_deployer = visual_ml_trainer.model_deployer
+            model_cache = setup_model_cache(latest_ml_task, model_deployer)
+        else:
+            latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+            model_cache = update_model_cache(latest_ml_task, model_cache)
 
-    if not model_cache:
-        current_app.logger.info("Creating Model cache For the first time")
-        latest_ml_task = visual_ml_trainer.get_latest_ml_task()
-        model_deployer = visual_ml_trainer.model_deployer
-        model_cache = setup_model_cache(latest_ml_task, model_deployer)
-    else:
-        latest_ml_task = visual_ml_trainer.get_latest_ml_task()
-        model_cache = update_model_cache(latest_ml_task, model_cache)
+        current_app.logger.info("Model trained and cache updated")
+        return jsonify({'message': 'Model training completed successfully.'}), 200
+    else: 
+        current_app.logger.debug("Model training error: {error_message}")
+        return jsonify({'error': str(error_message)}), 500
 
-    current_app.logger.info("Model trained and cache updated")
-    return jsonify({'message': 'Model training completed successfully.'}), 200
-#     except Exception as e:
-#         current_app.logger.exception(f"An error occurred during model training {e}")
-#         return jsonify({'error': str(e)}), 500
     
     
 @fetch_api.route("/get_latest_mltask_params", methods=["POST"])
