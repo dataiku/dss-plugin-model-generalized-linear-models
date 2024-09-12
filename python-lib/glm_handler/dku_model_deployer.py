@@ -56,7 +56,7 @@ class ModelDeployer(DataikuClientProject):
         `get_latest_model`. It then deploys this model to the flow using the specified
         model name and input dataset.
         """
-        logger.info(f"Deploying the latest model to the flow {model_id}.")
+        logger.info(f"Attempting to deploy the latest model: {model_id}, to the flow.")
 
         if self.saved_model:
             logger.debug(f"Using existing saved Model ID to deploy {self.saved_model_id}")
@@ -67,7 +67,7 @@ class ModelDeployer(DataikuClientProject):
             except Exception as e:
                 logger.exception("Failed to deploy model to the flow: %s", e)
         else:
-            logger.debug("Creating new Model ID to deploy")
+            logger.debug("Saved model not present - Creating new Model ID to deploy")
             model_name = str(input_dataset) + "_Model_"+ str(random.randint(0, 1000))
             model_details = self.mltask.deploy_to_flow(model_id, model_name=model_name, train_dataset=input_dataset)
             saved_model_id = model_details.get("savedModelId")

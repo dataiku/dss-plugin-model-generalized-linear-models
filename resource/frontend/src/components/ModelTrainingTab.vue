@@ -181,6 +181,9 @@ interface Model {
     id: string;
     name: string;
 }
+interface ErrorResponse {
+    error: string;
+}
 interface Column {
         name: string;
         isIncluded: boolean;
@@ -218,7 +221,9 @@ import { API } from '../Api';
 import { QRadio } from 'quasar';
 import { useLoader } from "../composables/use-loader";
 import { useNotification } from "../composables/use-notification";
-
+import type { AxiosError, AxiosResponse } from 'axios';
+import { isAxiosError } from 'axios';   
+import axios from "../api/index";
 
 export default defineComponent({
 components: {
@@ -468,12 +473,37 @@ methods: {
             const modelUID = await API.trainModel(payload);
             // Handle successful submission here
         } catch (error) {
-            console.error('Error submitting variables:', error);
-            // Handle errors here
+        if (isAxiosError(error)) {
+            const axiosError = error as AxiosError<ErrorResponse>;
+            
+            if (axiosError.response) {
+                console.log('Error response:', axiosError.response);
+                console.log('Error response data:', axiosError.response.data);
+                console.log('Error response status:', axiosError.response.status);
+                console.log('Error response headers:', axiosError.response.headers);
+
+                if (axiosError.response.data && 'error' in axiosError.response.data) {
+                    this.errorMessage = axiosError.response.data.error;
+                } else {
+                    this.errorMessage = `Server error: ${axiosError.response.status}`;
+                }
+            } else if (axiosError.request) {
+                console.log('Error request:', axiosError.request);
+                this.errorMessage = 'No response received from the server. Please try again later.';
+            } else {
+                console.log('Error message:', axiosError.message);
+                this.errorMessage = 'An unexpected error occurred while training the model.';
+            }
+        } else {
+            this.errorMessage = 'An unexpected error occurred.';
         }
+
+        this.notifyError(this.errorMessage);
+    } finally {
         this.updateModels = !this.updateModels;
         this.$emit("update-models", this.updateModels);
         this.loading = false;
+    }
     },  
         async getDatasetColumns(model_value = null) {
             this.loading = true;

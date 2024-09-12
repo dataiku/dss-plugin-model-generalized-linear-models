@@ -14,8 +14,12 @@ from model_cache.model_cache import ModelCache
 model_cache = ModelCache()
 
 def setup_model_cache(global_dku_mltask, model_deployer):
-    if global_dku_mltask is None or model_deployer is None:
-        logger.warning("One or more input parameters are None. Exiting setup_model_cache.")
+    if global_dku_mltask is None:
+        logger.warning("global_dku_mltask is None. Exiting setup_model_cache.")
+        return
+
+    elif model_deployer is None:
+        logger.warning("model_deployer is None. Exiting setup_model_cache.")
         return
     
     else:

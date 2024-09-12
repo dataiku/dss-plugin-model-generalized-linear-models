@@ -67,7 +67,6 @@ class RelativitiesCalculator:
         pattern = r'self\.mode_column\s*=\s*["\']([^"\']+)["\']'
         # Search for the pattern in the code string
         match = re.search(pattern, custom_code)
-        # Extract and print the matched value
         if match:
             base_level = match.group(1)
         else:
