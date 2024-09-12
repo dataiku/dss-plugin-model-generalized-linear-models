@@ -37,7 +37,7 @@ class RelativitiesCalculator:
     
     def get_base_values(self):
         logger.info(f"Getting base values")
-        return self.self.base_values()
+        return self.base_values
     
     def compute_base_values(self):
         """
@@ -68,7 +68,7 @@ class RelativitiesCalculator:
         # Search for the pattern in the code string
         logger.debug("Custom Code is {custom_code}")
         match = re.search(pattern, custom_code)
-        logger.debug("Match is {match}")
+        logger.debug(f"Match is {match}")
         
         # Extract and print the matched value
         if match:
@@ -78,7 +78,7 @@ class RelativitiesCalculator:
             match = re.search(pattern, custom_code)
             if match:
                 base_level = int(match.group(1))
-        logger.debug("returning base_level {base_level}")
+        logger.debug(f"returning base_level {base_level}")
         return base_level
 
     def handle_preprocessing(self):

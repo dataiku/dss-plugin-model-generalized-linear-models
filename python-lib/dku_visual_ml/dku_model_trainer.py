@@ -301,7 +301,15 @@ class VisualMLModelTrainer(DataikuClientProject):
             logger.info(f"Latest model ID: {latest_model_id}")
         return latest_model_id
     
-
+    def check_failure_get_error_message(self, latest_model_id):
+        
+        status = self.mltask.get_trained_model_details(latest_model_id).details.get('trainInfo').get('state')
+        try:
+            message = self.mltask.get_trained_model_details(latest_model_id).details.get('trainInfo').get('failure').get('message', None)
+        except:
+            message = None
+        return status, message
+    
     
     def train_model(self, code_env_string, session_name=None):
         """
@@ -321,23 +329,30 @@ class VisualMLModelTrainer(DataikuClientProject):
         settings_new = self.configure_variables()
         self.set_code_env_settings(code_env_string)
         self.mltask.start_train(session_name=session_name)
-        self.mltask.wait_train_complete()
+        details = self.mltask.wait_train_complete()
         logging.info("Model training completed. Deploying the model.")
         
-        if not self.model_deployer:
-            logger.info("Setting up model deployer")
-            self.model_deployer = ModelDeployer(self.mltask, self.visual_ml_config.saved_model_id)
-        try:
-            latest_model_id = self.get_latest_model()
-            model_details = self.model_deployer.deploy_model(latest_model_id, self.visual_ml_config.input_dataset)
-            logger.info(f"Model Details are {model_details}")
-            return model_details, None
-        except Exception as e:
-            error_message = f"Failed to model training:  {str(e)}"
-            logger.debug(error_message)
-#             logging.info("Removing Failed Model Trainings.")
-#             self.remove_failed_trainings()
+        latest_model_id = self.get_latest_model()
+        status, error_message = self.check_failure_get_error_message(latest_model_id)
+        
+        if status == "FAILED":
+            if error_message == "Failed to train : <class 'numpy.linalg.LinAlgError'> : Matrix is singular.":
+                error_message = error_message + "Check colinearity of variables added to the model"
+            self.remove_failed_trainings()
             return None, error_message
+        else:
+            if not self.model_deployer:
+                logger.info("Setting up model deployer")
+                self.model_deployer = ModelDeployer(self.mltask, self.visual_ml_config.saved_model_id)
+            try:
+
+                model_details = self.model_deployer.deploy_model(latest_model_id, self.visual_ml_config.input_dataset)
+                logger.info(f"Model Details are {model_details}")
+                return model_details, None
+            except Exception as e:
+                error_message = f"Model Deployment Failed:  {str(e)}"
+                logger.debug(error_message)
+                return None, error_message
             
     def update_mltask_modelling_params(self):
         """
