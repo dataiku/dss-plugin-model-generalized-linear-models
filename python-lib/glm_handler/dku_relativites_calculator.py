@@ -120,9 +120,6 @@ class RelativitiesCalculator:
         used_features = self.model_retriever.get_used_features()
         
         logger.info(f"Used features: {used_features}")
-#         train_row = train_row[used_features]
-        
-#         logger.info(f"Filtered train row is : {train_row}")
         logger.info("Setting base values for each feature")
         for feature in used_features:
             logger.debug(f"Setting base value for feature: {feature}")
