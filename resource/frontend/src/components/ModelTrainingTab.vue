@@ -164,6 +164,31 @@
                     </div>
                 </div>
             </div>
+            <BsLabel label="Interactions"></BsLabel>
+            <div v-for="(interaction, index) in interactions" :key="index" :item="interaction" :index="index">
+                <BsCard class="filter-card" :border-left="false">
+                    <template #content>
+                        <div class="bs-font-medium-2-normal">
+                            <div class="row bs-label-content">Choose variable <i class="dku-icon-trash-16" @click="deleteFilter(index)" style="cursor: pointer; color:#2B66FF;"></i></div>
+                        </div>
+                        <BsSelect
+                            v-model="filter.target"
+                            :all-options="allFilters"
+                            :selector-width="280"
+                            :dropdown-height="300"
+                            @filterfntmp="filterFn"
+                            @update:modelValue="loadFilterRange($event, index)"
+                            popup-content-class="target-select-popup"
+                        >
+                        </BsSelect>
+                    </template>
+                </BsCard>
+            </div>
+            <BsCard class="add-interaction-btn" :border-left="false" @click="addInteraction">
+                <template #content>
+                    <BsLabel label="+ Add interaction" :is-sub-label="true" style="color: #2B66FF;"></BsLabel>
+                </template>
+            </BsCard>
         </q-card>
     </BsContent>
     
@@ -209,9 +234,9 @@ base_level: string;
 };
 }
 import { defineComponent } from "vue";
-import type { ModelPoint } from '../models';
+import type { ModelPoint, Interaction } from '../models';
 import EmptyState from './EmptyState.vue';
-import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider } from "quasar-ui-bs";
+import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider, BsCard } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import trainingIcon from "../assets/images/training.svg";
 import { API } from '../Api';
@@ -231,7 +256,8 @@ components: {
     BsContent,
     BsTooltip,
     QRadio,
-    BsSlider
+    BsSlider,
+    BsCard
 
 },
 props: [],
@@ -243,6 +269,7 @@ data() {
         selectedModelString: "",
         models: [] as ModelPoint[],
         modelsString: [] as string[],
+        interactions: [] as Interaction[],
         selectedDatasetString: "",
         selectedTargetVariable: "",
         selectedExposureVariable: "",
@@ -373,6 +400,10 @@ methods: {
         return false;
         }
         return true; // Validation passed
+    },
+    addInteraction() {
+        var newInteraction = {interaction_first: "", interaction_second: ""};
+        this.interactions.push(newInteraction);
     },
     updateDatasetColumnsPreprocessing() {
         const updatedColumns = this.datasetColumns.map(column => {
