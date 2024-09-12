@@ -37,7 +37,7 @@ class RelativitiesCalculator:
     
     def get_base_values(self):
         logger.info(f"Getting base values")
-        return self.base_values()
+        return self.base_values
     
     def compute_base_values(self):
         """
