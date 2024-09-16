@@ -64,7 +64,8 @@
               data: this.xaxisLabels,
               axisLabel: {'interval': 0,
                           'rotate': 45,
-                          }
+                          },
+              axisLine: { onZero: false},
           }],
           yAxis: [
                     {
@@ -72,11 +73,22 @@
                         position: "left",
                         name: "value",
                         axisLine: { onZero: false, show: true },
+                        //axisLine: { onZero: false, show:false},
+                        //min: 'dataMin',
+                        max: function(value: any) {
+                          return Math.round((value.max + (value.max-value.min)*0.1) * 100) / 100; // Adjust 'someMargin' as needed
+                        },
+                        min: function(value: any) {
+                          return Math.round((value.min - (value.max-value.min)*0.1) * 100) / 100; // Adjust 'someMargin' as needed
+                        },
                     },
                     {
                         type: "value",
                         position: "right",
                         name: "weights",
+                        max: function(value: any) {
+                          return Math.round((value.max + (value.max-value.min)*0.1) * 100) / 100; // Adjust 'someMargin' as needed
+                        },
                         splitLine: {show: false} ,
                     },
                 ],
