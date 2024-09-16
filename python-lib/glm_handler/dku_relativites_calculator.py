@@ -29,6 +29,7 @@ class RelativitiesCalculator:
         self.data_handler = data_handler
         self.base_values = {}
         self.modalities = {}
+        self.variable_types = {}
         self.model_retriever = model_retriever
         self.train_set = self.prepare_dataset('train')
         self.test_set = self.prepare_dataset('test')
@@ -43,6 +44,7 @@ class RelativitiesCalculator:
         for feature, config in preprocessing_features.items():
             self.base_values[feature] = self.extract_base_level(config['customHandlingCode'])
             self.modalities[feature] = self.train_set[feature].unique()
+            self.variable_types[feature] = config['type']
 
         logger.info("Base values computed and modalities extracted.")
 
@@ -209,7 +211,7 @@ class RelativitiesCalculator:
         logger.info("Successfully got formatted and predicted base")
         return df
     
-    def process_dataset(self, dataset, dataset_name):
+    def process_dataset_old(self, dataset, dataset_name):
         logger.info(f"Processing dataset {dataset_name}")
         used_features = self.model_retriever.get_used_features()
         base_data = self.compute_base_predictions_new(dataset, used_features)
@@ -228,14 +230,39 @@ class RelativitiesCalculator:
         logger.info(f"Processed dataset {dataset_name}")
         return predicted_base_df
     
+    def merge_predictions(self, test_set, base_data):
+        logger.info("Merging Base predictions")
+        for feature in base_data.keys():
+            test_set = pd.merge(test_set, base_data[feature], how='left', on=feature)
+        logger.info("Successfully Merged Base predictions")
+        return test_set
+    
+    def process_dataset(self, dataset, dataset_name):
+        logger.info(f"Processing dataset {dataset_name}")
+        used_features = self.model_retriever.get_used_features()
+        base_data = self.compute_base_predictions_new(dataset, used_features)
+        dataset = self.merge_predictions(dataset, base_data)
+        predicted_base = self.data_handler.calculate_weighted_aggregations(dataset, self.model_retriever.non_excluded_features, used_features)
+        predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
+        predicted_base_df['dataset'] = dataset_name
+        logger.info(f"Processed dataset {dataset_name}")
+        return predicted_base_df
+    
     def get_predicted_and_base(self, nb_bins_numerical=100000):
         logger.info("Getting Predicted and base")
         self.compute_base_values()
+        print(self.test_set)
+        print(self.train_set)        
         
         test_predictions = self.process_dataset(self.test_set, 'test')
         train_predictions = self.process_dataset(self.train_set, 'train')
-
+        print(test_predictions)
+        print(train_predictions)
+        
         self.predicted_base_df = train_predictions.append(test_predictions)
+        categorical_variables = [variable for variable in self.variable_types.keys() if self.variable_types[variable] == 'CATEGORY']
+        self.predicted_base_df['category'] = [str(category) if variable in categorical_variables else category for category, variable in zip(self.predicted_base_df['category'], self.predicted_base_df['feature'])]
+        print(self.predicted_base_df)
         logger.info("Successfully got Predicted and base")
         return self.predicted_base_df.copy()
     
