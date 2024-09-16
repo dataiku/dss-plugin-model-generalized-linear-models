@@ -251,18 +251,13 @@ class RelativitiesCalculator:
     def get_predicted_and_base(self, nb_bins_numerical=100000):
         logger.info("Getting Predicted and base")
         self.compute_base_values()
-        print(self.test_set)
-        print(self.train_set)        
         
         test_predictions = self.process_dataset(self.test_set, 'test')
         train_predictions = self.process_dataset(self.train_set, 'train')
-        print(test_predictions)
-        print(train_predictions)
         
         self.predicted_base_df = train_predictions.append(test_predictions)
         categorical_variables = [variable for variable in self.variable_types.keys() if self.variable_types[variable] == 'CATEGORY']
         self.predicted_base_df['category'] = [str(category) if variable in categorical_variables else category for category, variable in zip(self.predicted_base_df['category'], self.predicted_base_df['feature'])]
-        print(self.predicted_base_df)
         logger.info("Successfully got Predicted and base")
         return self.predicted_base_df.copy()
     
