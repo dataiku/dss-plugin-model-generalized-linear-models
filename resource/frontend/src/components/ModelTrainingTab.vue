@@ -130,7 +130,7 @@
                 <div class="radio-group-container">
                     <div class="q-gutter-sm row items-center">
                         <BsSelect
-                            label="Base Level"
+                            label=""
                             :modelValue="column.baseLevel"
                             :all-options="column.options"
                             @update:modelValue="value => column.baseLevel = value">
@@ -138,34 +138,19 @@
                     </div>
                 </div>
             </div>
-            <BsLabel label="Interactions"></BsLabel>
-            <div v-for="(interaction, index) in interactions" :key="index" :item="interaction" :index="index">
-                <BsCard class="filter-card" :border-left="false">
-                    <template #content>
-                        <div class="bs-font-medium-2-normal">
-                            <div class="row bs-label-content">Choose variable <i class="dku-icon-trash-16" @click="deleteFilter(index)" style="cursor: pointer; color:#2B66FF;"></i></div>
-                        </div>
-                        <BsSelect
-                            v-model="filter.target"
-                            :all-options="allFilters"
-                            :selector-width="280"
-                            :dropdown-height="300"
-                            @filterfntmp="filterFn"
-                            @update:modelValue="loadFilterRange($event, index)"
-                            popup-content-class="target-select-popup"
-                        >
-                        </BsSelect>
-                    </template>
-                </BsCard>
-            </div>
-            <BsCard class="add-interaction-btn" :border-left="false" @click="addInteraction">
-                <template #content>
-                    <BsLabel label="+ Add interaction" :is-sub-label="true" style="color: #2B66FF;"></BsLabel>
-                </template>
-            </BsCard>
+            
+        </q-card>
+        <q-card-section>
+            <h5>Variable Interactions</h5>
+        </q-card-section>
+        <q-card class="q-pa-xl">
+            <VariableInteractions 
+            :filtered-columns="filteredColumns"
+            @update:interactions="handleInteractionsUpdate"
+            />
         </q-card>
     </BsContent>
-    
+
 </BsTab>
 
 </template>
@@ -223,10 +208,12 @@ import { useNotification } from "../composables/use-notification";
 import type { AxiosError, AxiosResponse } from 'axios';
 import { isAxiosError } from 'axios';   
 import axios from "../api/index";
+import VariableInteractions from './VariableInteractions.vue'
 
 export default defineComponent({
 components: {
     EmptyState,
+    VariableInteractions,
     BsTab,
     BsTabIcon,
     BsHeader,
@@ -236,7 +223,7 @@ components: {
     BsTooltip,
     QRadio,
     BsSlider,
-    BsCard
+    BsCard,
 
 },
 props: [],
@@ -338,6 +325,18 @@ methods: {
         } catch (error) {
         console.error('Error fetching excluded columns:', error);
         }
+    },
+    handleInteractionsUpdate(formattedInteractions: string[]) {
+        console.log("formatted inteactions are:")
+        
+        console.log(formattedInteractions);
+        this.interactions = formattedInteractions.map(interaction => {
+        const [first, second] = interaction.split(':');
+        return {
+          interaction_first: first,
+          interaction_second: second
+        };
+      });
     },
     async updateModelString(value: string) {
           this.loading = true;
@@ -458,7 +457,8 @@ methods: {
         // Now modelParameters is available to be included in payload
         const payload = {
             model_parameters: modelParameters,
-            variables: variableParameters
+            variables: variableParameters,
+            interaction_variable: this.interactions
         };
         try {
             console.log("Payload:", payload);
