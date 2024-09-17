@@ -1,4 +1,9 @@
 import axios from "./api/index";
+import type { AxiosError } from 'axios';
+
+interface ErrorResponse {
+    error: string;
+}
 
 interface DataPoint {
     definingVariable: string;
@@ -105,7 +110,10 @@ interface VariableLevelStatsPoint {
 interface ErrorPoint {
     error: string;
 }
-
+interface ExcludedColumns {
+    target_column: string;
+    exposure_column: string;
+}
 interface MLTaskParams {
     target_column: string;
     exposure_column: string;
@@ -127,6 +135,7 @@ interface MLTaskParams {
 
 export let API = {
     getLatestMLTaskParams: (data:any) => axios.post<MLTaskParams>("/api/get_latest_mltask_params", data),
+    getExcludedColumns: () => axios.get<ExcludedColumns>("/api/get_excluded_columns"),
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
     getBaseValues: (data: ModelPoint) => axios.post<BaseValue[]>("/api/base_values", data),
     getLiftData: (data: ModelNbBins) => axios.post<LiftDataPoint[]>("/api/lift_data", data),
@@ -137,7 +146,11 @@ export let API = {
     getProjectDataset: () => axios.get<string[]>("/api/get_project_dataset", {}),
     getDatasetColumns: () => axios.get("/api/get_dataset_columns", {}),
     getTrainDatasetColumnNames: () => axios.get("/api/get_train_dataset_column_names", {}),
-    trainModel: (payload: any) => axios.post<string[]>("/api/train_model", payload),
+    trainModel: (payload: any) => 
+        axios.post<string[]>("/api/train_model", payload)
+        .catch((error: AxiosError<ErrorResponse>) => {
+            throw error;
+        }),
     getModelComparisonData: (data: any) => axios.post<ModelComparisonDataPoint[]>("/api/get_model_comparison_data", data),
     getModelMetrics: (data: any) => axios.post<ModelMetrics>("/api/get_model_metrics", data),
     exportModel: (model: ModelPoint) => axios.post<Blob>("/api/export_model", model),

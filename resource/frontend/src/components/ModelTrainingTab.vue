@@ -47,32 +47,6 @@
             </BsSelect>
         </div>
          </BsCollapsiblePanel>
-         <BsCollapsiblePanel
-        title="Custom Variables">
-        <div class="variable-select-container">
-        <BsLabel
-                label="Select a Target Variable"
-                info-text="Target Variable for GLM"
-        ></BsLabel>
-        <BsSelect
-            :modelValue="selectedTargetVariable"
-            :all-options="targetVariablesOptions"
-            @update:modelValue="value => selectedTargetVariable = value"
-            style="min-width: 150px">
-        </BsSelect>
-        <BsLabel
-                label="Select an Exposure Variable"
-                info-text="Exposure Variable for GLM"
-        ></BsLabel>
-        <BsSelect
-            :modelValue="selectedExposureVariable"
-            :all-options="exposureVariableOptions"
-            @update:modelValue="value => selectedExposureVariable = value"
-            style="min-width: 150px">
-        </BsSelect>
-
-        </div>
-        </BsCollapsiblePanel>
         <BsCollapsiblePanel
         title="Regularization">
         <div class="variable-select-container">
@@ -206,6 +180,9 @@ interface Model {
     id: string;
     name: string;
 }
+interface ErrorResponse {
+    error: string;
+}
 interface Column {
         name: string;
         isIncluded: boolean;
@@ -243,7 +220,9 @@ import { API } from '../Api';
 import { QRadio } from 'quasar';
 import { useLoader } from "../composables/use-loader";
 import { useNotification } from "../composables/use-notification";
-
+import type { AxiosError, AxiosResponse } from 'axios';
+import { isAxiosError } from 'axios';   
+import axios from "../api/index";
 
 export default defineComponent({
 components: {
@@ -313,49 +292,13 @@ data() {
     };
 },
 computed:{
-    targetVariablesOptions(){
-        return this.datasetColumns.map(column=>{
-            return column.name;//{label:column.name,value:column.name};
-        });
-        },
-    exposureVariableOptions(){
-        console.log(this.datasetColumns);
-        return this.datasetColumns
-        .filter(column => {
-            return (column.role !== 'Target');
-            })
-            
-            .map(column=>{
-            return column.name;
-            });
-        },
     filteredColumns() {
             return this.datasetColumns.filter(column =>
                 column.role !== 'Target' &&
                 column.role !== 'Exposure')
-        }
+        },
 },
 watch: {
-    selectedTargetVariable(newValue, oldValue) {
-        console.log(` Attempting to change selectedTargetVariable from ${oldValue} to ${newValue}`);
-        this.datasetColumns.forEach(column => {
-            if (column.name === newValue) {
-                column.role = 'Target';
-            } else if (column.role !== 'Exposure') {
-                column.role = 'Variable'; 
-            }   
-        });
-    },
-    selectedExposureVariable(newValue, oldValue) {
-        console.log(` Attempting to change selectedExposureVariable from ${oldValue} to ${newValue}`);
-        this.datasetColumns.forEach(column => {
-            if (column.name === newValue) {
-                column.role = 'Exposure';
-            } else if (column.role !== 'Target') {
-                column.role = 'Variable'; 
-            }
-        });
-    },
     datasetColumns: {
         handler(newVal, oldVal) {
             console.log('datasetColumns changed:', newVal);
@@ -373,6 +316,29 @@ watch: {
     
 },
 methods: {
+        async fetchExcludedColumns() {
+        try {
+        const excludedColumnsResponse = await API.getExcludedColumns();
+        const { target_column, exposure_column } = excludedColumnsResponse.data;
+        
+        // Update selectedTargetVariable and selectedExposureVariable
+        this.selectedTargetVariable = target_column;
+        this.selectedExposureVariable = exposure_column;
+        
+        // Update the roles in datasetColumns
+        this.datasetColumns.forEach(column => {
+            if (column.name === target_column) {
+            column.role = 'Target';
+            } else if (column.name === exposure_column) {
+            column.role = 'Exposure';
+            } else {
+            column.role = 'Variable';
+            }
+        });
+        } catch (error) {
+        console.error('Error fetching excluded columns:', error);
+        }
+    },
     async updateModelString(value: string) {
           this.loading = true;
           this.selectedModelString = value;
@@ -499,12 +465,37 @@ methods: {
             const modelUID = await API.trainModel(payload);
             // Handle successful submission here
         } catch (error) {
-            console.error('Error submitting variables:', error);
-            // Handle errors here
+        if (isAxiosError(error)) {
+            const axiosError = error as AxiosError<ErrorResponse>;
+            
+            if (axiosError.response) {
+                console.log('Error response:', axiosError.response);
+                console.log('Error response data:', axiosError.response.data);
+                console.log('Error response status:', axiosError.response.status);
+                console.log('Error response headers:', axiosError.response.headers);
+
+                if (axiosError.response.data && 'error' in axiosError.response.data) {
+                    this.errorMessage = axiosError.response.data.error;
+                } else {
+                    this.errorMessage = `Server error: ${axiosError.response.status}`;
+                }
+            } else if (axiosError.request) {
+                console.log('Error request:', axiosError.request);
+                this.errorMessage = 'No response received from the server. Please try again later.';
+            } else {
+                console.log('Error message:', axiosError.message);
+                this.errorMessage = 'An unexpected error occurred while training the model.';
+            }
+        } else {
+            this.errorMessage = 'An unexpected error occurred.';
         }
+
+        this.notifyError(this.errorMessage);
+    } finally {
         this.updateModels = !this.updateModels;
         this.$emit("update-models", this.updateModels);
         this.loading = false;
+    }
     },  
         async getDatasetColumns(model_value = null) {
             this.loading = true;
@@ -596,7 +587,9 @@ methods: {
                         options: column.options,
                         baseLevel: column.baseLevel
                     }));
+
                 console.log("First assignment");
+                await this.fetchExcludedColumns();
                 } catch (error) {
                     console.error('Error fetching datasets:', error);
                     this.datasetColumns = [];

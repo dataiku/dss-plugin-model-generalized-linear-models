@@ -81,6 +81,7 @@ class GlmDataHandler():
         return grouped
     
     def calculate_weighted_aggregations(self, test_set, non_excluded_features, used_feature):
+        logger.info(f"caclulating weighted aggregation on {used_feature}")
         predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
             {'weighted_target': 'sum',
              'weighted_predicted': 'sum',
@@ -98,14 +99,17 @@ class GlmDataHandler():
                 predicted_base[feature]['weighted_base'] = predicted_base[feature]['weighted_predicted']
                 #predicted_base[feature]['weighted_base'] /= predicted_base[feature]['weight']
                 #else:
+        logger.info(f"Successfully calculated weighted aggregation on {used_feature}")
         return predicted_base
     
     def construct_final_dataframe(self, predicted_base):
+        logger.info("Constructing final dataframe")
         predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
         for feature, df in predicted_base.items():
             df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
             df['feature'] = feature
             predicted_base_df = predicted_base_df.append(df)
+        logger.info("Successfully constructed final dataframe")
         return predicted_base_df
     
     def bin_numeric_columns(self, test_set, nb_bins_numerical, features, non_excluded_features):
