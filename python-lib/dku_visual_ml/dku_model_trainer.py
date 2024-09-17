@@ -355,14 +355,16 @@ class VisualMLModelTrainer(DataikuClientProject):
                 return None, error_message
             
     def process_interaction_columns(self, interaction_columns):
+        print(f"interaction columns are {interaction_columns}")
         interaction_columns_first = []
         interaction_columns_second = []
         
         for interaction in interaction_columns:
-            first, second = interaction.split(':')
+            first = interaction['interaction_first']
+            second = interaction['interaction_second']
             interaction_columns_first.append(first)
             interaction_columns_second.append(second)
-        
+            
         return interaction_columns_first, interaction_columns_second
         
     def update_mltask_modelling_params(self):
@@ -386,7 +388,7 @@ class VisualMLModelTrainer(DataikuClientProject):
             "penalty": [self.visual_ml_config.elastic_net_penalty],
             "l1_ratio": [self.visual_ml_config.l1_ratio],
             "interaction_columns_first":first_columns,
-            "interaction_columns_second":second_columns
+            "interaction_columns_second":second_columns,
         })
         
         # Handle exposure and offset variables
