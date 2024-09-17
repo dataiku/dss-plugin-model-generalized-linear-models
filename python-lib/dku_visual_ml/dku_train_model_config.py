@@ -19,6 +19,7 @@ class DKUVisualMLConfig:
         self.target_column = web_app_config.get("target_column")
         self.input_dataset = web_app_config.get("training_dataset_string")
         self.prediction_type = web_app_config.get("prediction_type")
+        self.exposure_column = web_app_config.get("exposure_column")    
         
         self.policy = web_app_config.get("policy")
         self.test_dataset_string = web_app_config.get("test_dataset_string")
@@ -37,11 +38,11 @@ class DKUVisualMLConfig:
     
     def get_target_variable(self):
         logger.debug("Getting target variable")
-        return self.get_variable_by_role("target")
+        return self.target_column
     
     def get_exposure_variable(self):
         logger.debug("Getting exposure variable")
-        return self.get_variable_by_role("exposure")
+        return self.exposure_column
     
     def get_offset_variable(self):
         logger.debug("Getting offset variables")
@@ -76,10 +77,9 @@ class DKUVisualMLConfig:
     def get_model_features(self):
         
         target_variable = self.get_target_variable()
-        exposure_variable = self.get_target_variable()
         included_variables = self.get_included_variables()
         
-        model_features= [var for var in included_variables if var not in {target_variable, exposure_variable}]
+        model_features= [var for var in included_variables if var not in {target_variable, self.exposure_column}]
         
         if len(model_features)>0:
             return model_features

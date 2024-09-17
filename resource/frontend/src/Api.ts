@@ -110,7 +110,10 @@ interface VariableLevelStatsPoint {
 interface ErrorPoint {
     error: string;
 }
-
+interface ExcludedColumns {
+    target_column: string;
+    exposure_column: string;
+}
 interface MLTaskParams {
     target_column: string;
     exposure_column: string;
@@ -132,6 +135,7 @@ interface MLTaskParams {
 
 export let API = {
     getLatestMLTaskParams: (data:any) => axios.post<MLTaskParams>("/api/get_latest_mltask_params", data),
+    getExcludedColumns: () => axios.get<ExcludedColumns>("/api/get_excluded_columns"),
     getData: (data: ModelPoint) => axios.post<DataPoint[]>("/api/data", data),
     getBaseValues: (data: ModelPoint) => axios.post<BaseValue[]>("/api/base_values", data),
     getLiftData: (data: ModelNbBins) => axios.post<LiftDataPoint[]>("/api/lift_data", data),

@@ -57,30 +57,41 @@
          "label": "Modelling Parameters"
     },
     {
+      "name": "prediction_type",
+      "label": "Prediction Type",
+      "description": "Select the Default Prediction Type",
+       "type": "SELECT",
+        "selectChoices" : [
+            { "value": "BINARY_CLASSIFICATION", "label": "Binary Classification"},
+            { "value": "REGRESSION", "label": "Regression"}
+        ]
+  },
+
+  {
+    "name": "target_column",
+    "label": "Target Variable",
+    "type": "DATASET_COLUMN",
+    "datasetParamName": "training_dataset_string",
+    "mandatory": true
+  },
+  {
+    "name": "exposure_column",
+    "label": "Exposure Variable",
+    "type": "DATASET_COLUMN",
+    "datasetParamName": "training_dataset_string",
+    "mandatory": false
+  },
+    {
+      "type": "SEPARATOR",
+      "description": "",
+       "label": "Dataset Parameters"
+  },
+    {
         "name": "training_dataset_string",
         "label": "Training Dataset",
         "description": "Select the Training Dataset for Modelling",
         "type": "DATASET"
     },
-    {
-        "name": "prediction_type",
-        "label": "Prediction Type",
-        "description": "Select the Default Prediction Type",
-         "type": "SELECT",
-          "selectChoices" : [
-              { "value": "BINARY_CLASSIFICATION", "label": "Binary Classification"},
-              { "value": "REGRESSION", "label": "Regression"}
-          ]
-    },
-
-    {
-      "name": "target_column",
-      "label": "Target Variable",
-      "type": "DATASET_COLUMN",
-      "datasetParamName": "training_dataset_string",
-      "mandatory": true
-    },
-
     {
         "name": "policy",
         "label": "Policy",
@@ -101,7 +112,7 @@
      {
         "type": "SEPARATOR",
         "description": "",
-         "label": "Additional Parameters"
+         "label": "Setup Parameters"
     },
     {
         "name": "code_env_string",
