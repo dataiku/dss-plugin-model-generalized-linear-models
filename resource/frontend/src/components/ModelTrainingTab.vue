@@ -47,32 +47,6 @@
             </BsSelect>
         </div>
          </BsCollapsiblePanel>
-         <BsCollapsiblePanel
-        title="Custom Variables">
-        <div class="variable-select-container">
-        <BsLabel
-                label="Select a Target Variable"
-                info-text="Target Variable for GLM"
-        ></BsLabel>
-        <BsSelect
-            :modelValue="selectedTargetVariable"
-            :all-options="targetVariablesOptions"
-            @update:modelValue="value => selectedTargetVariable = value"
-            style="min-width: 150px">
-        </BsSelect>
-        <BsLabel
-                label="Select an Exposure Variable"
-                info-text="Exposure Variable for GLM"
-        ></BsLabel>
-        <BsSelect
-            :modelValue="selectedExposureVariable"
-            :all-options="exposureVariableOptions"
-            @update:modelValue="value => selectedExposureVariable = value"
-            style="min-width: 150px">
-        </BsSelect>
-
-        </div>
-        </BsCollapsiblePanel>
         <BsCollapsiblePanel
         title="Regularization">
         <div class="variable-select-container">
@@ -291,49 +265,13 @@ data() {
     };
 },
 computed:{
-    targetVariablesOptions(){
-        return this.datasetColumns.map(column=>{
-            return column.name;//{label:column.name,value:column.name};
-        });
-        },
-    exposureVariableOptions(){
-        console.log(this.datasetColumns);
-        return this.datasetColumns
-        .filter(column => {
-            return (column.role !== 'Target');
-            })
-            
-            .map(column=>{
-            return column.name;
-            });
-        },
     filteredColumns() {
             return this.datasetColumns.filter(column =>
                 column.role !== 'Target' &&
                 column.role !== 'Exposure')
-        }
+        },
 },
 watch: {
-    selectedTargetVariable(newValue, oldValue) {
-        console.log(` Attempting to change selectedTargetVariable from ${oldValue} to ${newValue}`);
-        this.datasetColumns.forEach(column => {
-            if (column.name === newValue) {
-                column.role = 'Target';
-            } else if (column.role !== 'Exposure') {
-                column.role = 'Variable'; 
-            }   
-        });
-    },
-    selectedExposureVariable(newValue, oldValue) {
-        console.log(` Attempting to change selectedExposureVariable from ${oldValue} to ${newValue}`);
-        this.datasetColumns.forEach(column => {
-            if (column.name === newValue) {
-                column.role = 'Exposure';
-            } else if (column.role !== 'Target') {
-                column.role = 'Variable'; 
-            }
-        });
-    },
     datasetColumns: {
         handler(newVal, oldVal) {
             console.log('datasetColumns changed:', newVal);
@@ -351,6 +289,29 @@ watch: {
     
 },
 methods: {
+        async fetchExcludedColumns() {
+        try {
+        const excludedColumnsResponse = await API.getExcludedColumns();
+        const { target_column, exposure_column } = excludedColumnsResponse.data;
+        
+        // Update selectedTargetVariable and selectedExposureVariable
+        this.selectedTargetVariable = target_column;
+        this.selectedExposureVariable = exposure_column;
+        
+        // Update the roles in datasetColumns
+        this.datasetColumns.forEach(column => {
+            if (column.name === target_column) {
+            column.role = 'Target';
+            } else if (column.name === exposure_column) {
+            column.role = 'Exposure';
+            } else {
+            column.role = 'Variable';
+            }
+        });
+        } catch (error) {
+        console.error('Error fetching excluded columns:', error);
+        }
+    },
     async updateModelString(value: string) {
           this.loading = true;
           this.selectedModelString = value;
@@ -595,7 +556,9 @@ methods: {
                         options: column.options,
                         baseLevel: column.baseLevel
                     }));
+
                 console.log("First assignment");
+                await this.fetchExcludedColumns();
                 } catch (error) {
                     console.error('Error fetching datasets:', error);
                     this.datasetColumns = [];
