@@ -519,11 +519,8 @@ def export_one_way():
             predicted_base = predicted_base[predicted_base['definingVariable']==variable]
 
             if rescale:
-                relativities = model_cache.get_model(full_model_id).get('relativities')
-                relativities.columns = ['variable', 'category', 'relativity']
-                variable_relativities = relativities[relativities["variable"]==variable]
-                base_level = variable_relativities[variable_relativities['relativity']==1]['category'].iloc[0]
-                predicted_base_denominator = predicted_base[predicted_base['Category']==base_level].iloc[0]
+                base_values = model_cache.get_model(full_model_id).get('base_values')
+                predicted_base_denominator = predicted_base[predicted_base['Category']==base_values[variable]].iloc[0]
                 predicted_base['observedAverage'] = predicted_base['observedAverage'] / predicted_base_denominator['observedAverage']
                 predicted_base['fittedAverage'] = predicted_base['fittedAverage'] / predicted_base_denominator['fittedAverage']
                 predicted_base['baseLevelPrediction'] = predicted_base['baseLevelPrediction'] / predicted_base_denominator['baseLevelPrediction']
