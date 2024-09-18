@@ -134,7 +134,7 @@ class RelativitiesCalculator:
         logger.info("Relativities DataFrame computed")
         return relativities_df
 
-    def apply_weights_to_data(self, test_set):
+    def apply_weights_to_data_deprecated(self, test_set):
 #         used_features = list(self.base_values.keys())
         used_features = self.model_retriever.get_used_features()
         print(f"Using feature list of {used_features}")
@@ -168,8 +168,8 @@ class RelativitiesCalculator:
         dataset['predicted'] = predicted
         dataset['weight'] = 1 if self.model_retriever.exposure_columns is None else dataset[self.model_retriever.exposure_columns]
 
-        dataset['weighted_target'] = dataset[self.model_retriever.target_column] * dataset['weight']
-        dataset['weighted_predicted'] = dataset['predicted'] * dataset['weight']
+        dataset['weighted_target'] = dataset[self.model_retriever.target_column]# * dataset['weight']
+        dataset['weighted_predicted'] = dataset['predicted']# * dataset['weight']
 
         logger.info(f"{dataset_type.capitalize()} dataset prepared: {dataset.shape}")
         return dataset
