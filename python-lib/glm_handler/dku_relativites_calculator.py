@@ -168,8 +168,8 @@ class RelativitiesCalculator:
         dataset['predicted'] = predicted
         dataset['weight'] = 1 if self.model_retriever.exposure_columns is None else dataset[self.model_retriever.exposure_columns]
 
-        dataset['weighted_target'] = dataset[self.model_retriever.target_column]# * dataset['weight']
-        dataset['weighted_predicted'] = dataset['predicted']# * dataset['weight']
+        dataset['weighted_target'] = dataset[self.model_retriever.target_column]
+        dataset['weighted_predicted'] = dataset['predicted']
 
         logger.info(f"{dataset_type.capitalize()} dataset prepared: {dataset.shape}")
         return dataset
