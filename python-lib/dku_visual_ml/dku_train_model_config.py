@@ -47,7 +47,7 @@ class DKUVisualMLConfig:
     def get_interaction_variables(self):
         logger.debug("Getting interaction variables")
         return self.interaction_variables
-    
+
     def get_offset_variable(self):
         logger.debug("Getting offset variables")
         return self.get_variable_by_role("offset")

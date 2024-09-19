@@ -50,7 +50,8 @@ class GlmDataHandler():
         """
         print(f"Pandas version is {pd.__version__}")
         print(f"data is type {type(data)}")
-        tempdata = data.sort_values(by='predicted', ascending=True)
+        data['raw_predict'] = data['predicted'] / data[exposure]
+        tempdata = data.sort_values(by='raw_predict', ascending=True)
         tempdata['exposure_cumsum'] = tempdata[exposure].cumsum() / tempdata[exposure].sum()
         return tempdata
     
