@@ -22,13 +22,13 @@ class Interactions():
             for fi in first_variable_indices:
                 first_split_label = column_labels[fi].split(':')
                 if len(first_split_label) == 3:
-                    first_column_label_suffix = '_' + str(first_split_label[2])
+                    first_column_label_suffix = '::' + str(first_split_label[2])
                 else:
                     first_column_label_suffix = ''
                 for si in second_variable_indices:
                     second_split_label = column_labels[si].split(':')
                     if len(second_split_label) == 3:
-                        second_column_label_suffix = '_' + str(second_split_label[2])
+                        second_column_label_suffix = '::' + str(second_split_label[2])
                     else:
                         second_column_label_suffix = ''
                     column_labels.append("interaction:" + first_variable + first_column_label_suffix + ":" + second_variable + second_column_label_suffix)

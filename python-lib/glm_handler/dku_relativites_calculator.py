@@ -99,7 +99,25 @@ class RelativitiesCalculator:
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
                 rel_df = rel_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
-        rel_df.coluns = ['variable', 'category', 'relativity']
+        #rel_df.columns = ['variable', 'category', 'relativity']
+        return rel_df
+    
+    def construct_relativities_interaction_df(self):
+        logger.info("constructing relativites DF")
+        rel_df = pd.DataFrame(columns=['feature_1', 'feature_2', 'value_1', 'value_2', 'relativity'])
+        print(self.relativities_interaction)
+        for feature_1, features in self.relativities_interaction.items():
+            print(features)
+            for feature_2, values in features.items():
+                print(values)
+                for value_1, relativities in values.items():
+                    for value_2, relativity in relativities.items():
+                        rel_df = rel_df.append({'feature_1': feature_1, 
+                        'feature_2': feature_2,
+                        'value_1': value_1,
+                        'value_2': value_2, 
+                        'relativity': relativity}, ignore_index=True)
+        #rel_df.columns = ['variable_1', 'variable_2', 'category_1', 'category_2', 'relativity']
         return rel_df
     
     def get_relativities_df(self):
@@ -121,8 +139,9 @@ class RelativitiesCalculator:
             self.relativities[feature] = {base_value: 1.0}
             train_row_copy = sample_train_row.copy()
 
-            values_to_process = (self.modalities[feature] if feature_type == 'CATEGORY' 
-                                 else sorted(set(self.train_set[feature])))
+            #values_to_process = (self.modalities[feature] if feature_type == 'CATEGORY' 
+            #                     else sorted(set(self.train_set[feature])))
+            values_to_process = self.modalities[feature]
 
             for value in values_to_process:
                 train_row_copy[feature] = value
@@ -133,6 +152,49 @@ class RelativitiesCalculator:
         relativities_df = self.construct_relativities_df()
         logger.info("Relativities DataFrame computed")
         return relativities_df
+
+    def get_relativities_interactions_df(self):
+        """
+        Computes and returns the relativities DataFrame for the model.
+        Returns:
+            pd.DataFrame: The relativities DataFrame.
+        """
+        logger.info("Computing relativities DataFrame.")
+        sample_train_row = self.initialize_baseline()
+        baseline_prediction = self.calculate_baseline_prediction(sample_train_row)
+
+        self.relativities_interaction = {}#{'base': {'base': baseline_prediction}}
+        interactions = self.model_retriever.get_interactions()
+
+        for interaction in interactions:
+            interaction_first = interaction[0]
+            interaction_second = interaction[1]
+            
+            base_value_first = self.base_values[interaction_first]
+            base_value_second = self.base_values[interaction_second]
+            try:
+                self.relativities_interaction[interaction_first][interaction_second] = {base_value_first: {base_value_second: 1.0}}
+            except KeyError:
+                self.relativities_interaction[interaction_first] = {interaction_second:  {base_value_first: {base_value_second: 1.0}}}
+            train_row_copy = sample_train_row.copy()
+            
+            values_to_process_first = self.modalities[interaction_first]
+            values_to_process_second = self.modalities[interaction_second]
+            
+            for value_first in values_to_process_first:
+                for value_second in values_to_process_second:
+                    train_row_copy[interaction_first] = value_first
+                    train_row_copy[interaction_second] = value_second
+                    prediction = self.model_retriever.predictor.predict(train_row_copy).iloc[0][0]
+                    relativity = prediction / baseline_prediction
+                    try:
+                        self.relativities_interaction[interaction_first][interaction_second][value_first][value_second] = relativity
+                    except KeyError:
+                        self.relativities_interaction[interaction_first][interaction_second][value_first] = {value_second: relativity}
+
+        relativities_interaction_df = self.construct_relativities_interaction_df()
+        logger.info("Relativities DataFrame computed")
+        return relativities_interaction_df
 
     def apply_weights_to_data(self, test_set):
         used_features = self.model_retriever.get_used_features()

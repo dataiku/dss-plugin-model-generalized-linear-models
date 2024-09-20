@@ -18,6 +18,7 @@ class VariableLevelStatsFormatter:
         try:
             predicted_base = self._get_predicted_base()
             relativities = self._get_relativities()
+            relativities_interaction = self._get_relativities_interaction()
             coef_table = self._prepare_coef_table()
             features = self.model_retriever.get_features_used_in_modelling()
 
@@ -31,6 +32,11 @@ class VariableLevelStatsFormatter:
             if numeric_features := self._get_numeric_features(features):
                 variable_stats = self._process_numeric_features(
                     variable_stats, coef_table, numeric_features
+                )
+            
+            if interaction_features := self._get_interaction_features(features):
+                variable_stats = self._process_interaction_features(
+                    variable_stats, predicted_base, relativities_interaction, coef_table, interaction_features
                 )
 
             variable_stats = self._finalize_stats(variable_stats)
@@ -49,6 +55,10 @@ class VariableLevelStatsFormatter:
     def _get_relativities(self):
         logger.debug("Retrieving relativities DataFrame.")
         return self.relativities_calculator.get_relativities_df()
+        
+    def _get_relativities_interaction(self):
+        logger.debug("Retrieving relativities DataFrame.")
+        return self.relativities_calculator.get_relativities_interaction_df()
 
     def _prepare_coef_table(self):
         logger.debug("Preparing coefficient table.")
@@ -58,6 +68,8 @@ class VariableLevelStatsFormatter:
 
     def _process_intercept(self, coef_table, relativities):
         logger.debug("Processing intercept.")
+        print(coef_table)
+        print(relativities)
         coef_table_intercept = coef_table[coef_table['index'] == 'intercept'].copy()
         coef_table_intercept['feature'] = 'base'
         coef_table_intercept['value'] = 'base'
@@ -75,7 +87,8 @@ class VariableLevelStatsFormatter:
         logger.debug("Processing categorical features.")
         predicted_cat = predicted_base[predicted_base['feature'].isin(categorical_features)]
         relativities_cat = relativities[relativities['feature'].isin(categorical_features)]
-        coef_table_cat = coef_table[(coef_table['index'] == 'intercept') | (coef_table['index'].str.contains(':'))]
+        
+        coef_table_cat = coef_table[((coef_table['index'] == 'intercept') | (coef_table['index'].str.contains(':'))) & (~coef_table['index'].str.startswith('interaction:'))]
 
         coef_table_cat[['dummy', 'variable', 'value']] = coef_table_cat['index'].str.split(':', expand=True)
         variable_stats_cat = relativities_cat.merge(
@@ -113,6 +126,40 @@ class VariableLevelStatsFormatter:
 
         variable_stats_num = coef_table_num[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
         return variable_stats.append(variable_stats_num)
+
+    def _get_interaction_features(self):
+        return self.model_retriever.get_interactions()
+
+    def _process_interaction_features(self, variable_stats, predicted_base, relativities_interaction, coef_table, interaction_features):
+        coef_table_interactions = coef_table[(coef_table['index'].str.startswith('interaction:'))]
+        print(coef_table_interactions)
+        coef_table_interactions[['dummy', 'variable', 'value']] = coef_table_interactions['index'].str.split('::', expand=True)
+        print(coef_table_interactions)
+        coef_table_interactions[['dummy', 'variable_1']] = coef_table_interactions['dummy'].str.split(':', expand=True)
+        coef_table_interactions[['value_1', 'variable_2']] = coef_table_interactions['variable'].str.split(':', expand=True)
+        coef_table_interactions['value_2'] = coef_table_interactions['value']
+        print(relativities_interaction)
+        
+        variable_stats_cat = relativities_interaction.merge(
+            coef_table_interactions[['variable', 'value', 'coef', 'se', 'se_pct']],
+            how='left',
+            left_on=['feature', 'value'],
+            right_on=['variable', 'value']
+        )
+
+        variable_stats_cat.drop('variable', axis=1, inplace=True)
+        predicted_cat['exposure_sum'] = predicted_cat['exposure'].groupby(predicted_cat['feature']).transform('sum')
+        predicted_cat['exposure_pct'] = predicted_cat['exposure'] / predicted_cat['exposure_sum'] * 100
+
+        variable_stats_cat = variable_stats_cat.merge(
+            predicted_cat,
+            how='left',
+            left_on=['feature', 'value'],
+            right_on=['feature', 'category']
+        )
+        variable_stats_cat.drop(['category', 'exposure_sum'], axis=1, inplace=True)
+        return variable_stats.append(variable_stats_cat)
+        
 
     def _finalize_stats(self, variable_stats):
         logger.debug("Finalizing stats.")
