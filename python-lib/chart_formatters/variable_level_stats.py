@@ -34,7 +34,7 @@ class VariableLevelStatsFormatter:
                     variable_stats, coef_table, numeric_features
                 )
             
-            if interaction_features := self._get_interaction_features(features):
+            if interaction_features := self._get_interaction_features():
                 variable_stats = self._process_interaction_features(
                     variable_stats, predicted_base, relativities_interaction, coef_table, interaction_features
                 )
@@ -58,7 +58,7 @@ class VariableLevelStatsFormatter:
         
     def _get_relativities_interaction(self):
         logger.debug("Retrieving relativities DataFrame.")
-        return self.relativities_calculator.get_relativities_interaction_df()
+        return self.relativities_calculator.get_relativities_interactions_df()
 
     def _prepare_coef_table(self):
         logger.debug("Preparing coefficient table.")
@@ -68,8 +68,6 @@ class VariableLevelStatsFormatter:
 
     def _process_intercept(self, coef_table, relativities):
         logger.debug("Processing intercept.")
-        print(coef_table)
-        print(relativities)
         coef_table_intercept = coef_table[coef_table['index'] == 'intercept'].copy()
         coef_table_intercept['feature'] = 'base'
         coef_table_intercept['value'] = 'base'
@@ -132,33 +130,43 @@ class VariableLevelStatsFormatter:
 
     def _process_interaction_features(self, variable_stats, predicted_base, relativities_interaction, coef_table, interaction_features):
         coef_table_interactions = coef_table[(coef_table['index'].str.startswith('interaction:'))]
-        print(coef_table_interactions)
         coef_table_interactions[['dummy', 'variable', 'value']] = coef_table_interactions['index'].str.split('::', expand=True)
-        print(coef_table_interactions)
         coef_table_interactions[['dummy', 'variable_1']] = coef_table_interactions['dummy'].str.split(':', expand=True)
         coef_table_interactions[['value_1', 'variable_2']] = coef_table_interactions['variable'].str.split(':', expand=True)
         coef_table_interactions['value_2'] = coef_table_interactions['value']
-        print(relativities_interaction)
         
-        variable_stats_cat = relativities_interaction.merge(
-            coef_table_interactions[['variable', 'value', 'coef', 'se', 'se_pct']],
+        variable_stats_interaction = relativities_interaction.merge(
+            coef_table_interactions[['variable_1', 'variable_2', 'value_1', 'value_2', 'coef', 'se', 'se_pct']],
             how='left',
-            left_on=['feature', 'value'],
-            right_on=['variable', 'value']
+            left_on=['feature_1', 'feature_2', 'value_1', 'value_2'],
+            right_on=['variable_1', 'variable_2', 'value_1', 'value_2']
         )
-
-        variable_stats_cat.drop('variable', axis=1, inplace=True)
-        predicted_cat['exposure_sum'] = predicted_cat['exposure'].groupby(predicted_cat['feature']).transform('sum')
-        predicted_cat['exposure_pct'] = predicted_cat['exposure'] / predicted_cat['exposure_sum'] * 100
-
-        variable_stats_cat = variable_stats_cat.merge(
-            predicted_cat,
+        
+        groupings = pd.DataFrame()
+        for i, interaction in enumerate(interaction_features):
+            interaction_grouped = self.relativities_calculator.train_set.groupby([interaction[0], interaction[1]])['weight'].sum().reset_index()
+            interaction_grouped.columns = ['value_1', 'value_2', 'exposure']
+            interaction_grouped['feature_1'] = interaction[0]
+            interaction_grouped['feature_2'] = interaction[1]
+            interaction_grouped['interaction'] = i
+            groupings = groupings.append(interaction_grouped)
+        
+        groupings['exposure_sum'] = groupings['exposure'].groupby(groupings['interaction']).transform('sum')
+        groupings['exposure_pct'] = groupings['exposure'] / groupings['exposure_sum'] * 100
+        
+        variable_stats_interaction = variable_stats_interaction.merge(
+            groupings,
             how='left',
-            left_on=['feature', 'value'],
-            right_on=['feature', 'category']
+            on=['feature_1', 'feature_2', 'value_1', 'value_2']
         )
-        variable_stats_cat.drop(['category', 'exposure_sum'], axis=1, inplace=True)
-        return variable_stats.append(variable_stats_cat)
+        variable_stats_interaction['feature'] = variable_stats_interaction['feature_1'] + '::' + variable_stats_interaction['feature_2']
+        variable_stats_interaction['value'] = variable_stats_interaction['value_1'] + '::' + variable_stats_interaction['value_2']
+        
+        variable_stats_interaction.drop(['feature_1', 'feature_2', 'variable_1', 'variable_2', 'value_1', 'value_2', 'interaction', 'exposure_sum'], axis=1, inplace=True)
+        
+        variable_stats_interaction['relativity'] = [1 if np.isnan(coef) else rel for coef, rel in zip(variable_stats_interaction['coef'], variable_stats_interaction['relativity'])]
+        
+        return variable_stats.append(variable_stats_interaction)
         
 
     def _finalize_stats(self, variable_stats):
