@@ -46,8 +46,6 @@ def setup_model_cache(global_dku_mltask, model_deployer):
 
                 relativities = relativities_calculator.get_relativities_df()
                 relativities_interaction = relativities_calculator.get_relativities_interactions_df()
-                print("relativities_interaction")
-                print(relativities_interaction)
                 
                 logger.info(f"relativites are: {relativities.to_dict()}")
                 relativities_dict = relativities_calculator.relativities
@@ -105,6 +103,8 @@ def update_model_cache(global_dku_mltask, model_cache):
             base_values = relativities_calculator.get_base_values()
             
             relativities = relativities_calculator.get_relativities_df()
+            relativities_interaction = relativities_calculator.get_relativities_interactions_df()
+            
             relativities_dict = relativities_calculator.relativities
             variable_level_stats = VariableLevelStatsFormatter(
                 model_retriever, data_handler, relativities_calculator

@@ -442,7 +442,32 @@ def export_model():
                     else:
                         csv_output += ",,,"
                 csv_output += "\n"
-
+            
+            variable_stats = model_cache.get_model(model).get('variable_stats')
+            
+            interactions = variable_stats[variable_stats["variable"].str.contains("::")]
+            if len(interactions) > 0:
+                unique_interactions = interactions['variable'].unique()
+                for interaction in unique_interactions:
+                    csv_output += "{}\n\n".format(interaction.replace("::", " * "))
+                    these_interactions = interactions[interactions['variable'] == interaction]
+                    interaction_dict = dict()
+                    variable_1, variable_2  = interaction.split('::')
+                    for i, interaction_row in these_interactions.iterrows():
+                        value_1, value_2 = interaction_row['value'].split('::')
+                        try:
+                            interaction_dict[value_1][value_2] = interaction_row['relativity']
+                        except KeyError:
+                            interaction_dict[value_1] = {value_2: interaction_row['relativity']}
+                    csv_output += ",,{}\n".format(variable_1)
+                    sorted_value_1 = sorted(interaction_dict.keys())
+                    csv_output += ",,{}\n{}".format(",".join(sorted_value_1), variable_2)
+                    sorted_value_2 = sorted(list(interaction_dict[sorted_value_1[0]].keys()))
+                    for value_2 in sorted_value_2:
+                        csv_output += ",{},{}\n".format(value_2, ",".join([str(interaction_dict[value_1][value_2]) for value_1 in sorted_value_1]))
+                    csv_output += "\n"
+                    
+            
             csv_data = csv_output.encode('utf-8')
 
         except KeyError as e:
