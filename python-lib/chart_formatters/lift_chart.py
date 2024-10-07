@@ -4,10 +4,10 @@ from logging_assist.logging import logger
 
 class LiftChartFormatter:
     
-    def __init__(self, model_retriever, data_handler, relativites_calculator):
+    def __init__(self, model_retriever, data_handler):
         self.model_retriever = model_retriever
         self.data_handler = data_handler
-        self.relativities_calculator = relativites_calculator
+
         
     def _process_set(self, dataset, nb_bins, dataset_type):
         """
@@ -64,7 +64,7 @@ class LiftChartFormatter:
         return combined_data
 
         
-    def get_lift_chart(self, nb_bins):
+    def get_lift_chart(self, nb_bins, train_set, test_set):
         """
         Calculates and returns the lift chart data for the model on the training set,
         divided into the specified number of bins.
@@ -76,19 +76,19 @@ class LiftChartFormatter:
             pd.DataFrame: The aggregated lift chart data with observed and predicted metrics.
         """
         logger.debug(f'Starting to generate lift chart with {nb_bins} bins.')
-        
-        train_set_df = self.relativities_calculator.train_set
+        logger.debug(f'Starting to generate lift chart with train set length{len(train_set)} .')
+        logger.debug(f'Starting to generate lift chart with test set length{len(test_set)} .')
         
         # Process training set
         lift_chart_data = self._process_set(
-            self.relativities_calculator.train_set, 
+            train_set, 
             nb_bins, 
             'train'
         )
         
         # Process test set
         test_lift_chart_data = self._process_set(
-            self.relativities_calculator.test_set, 
+            test_set, 
             nb_bins, 
             'test'
         )
