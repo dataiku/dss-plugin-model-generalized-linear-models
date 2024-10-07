@@ -247,18 +247,29 @@ def get_lift_data():
     current_nb_bins = len(lift_chart_data[lift_chart_data['dataset'] == dataset])
     
     if current_nb_bins != nb_bins:
-        model_deployer.set_new_active_version(full_model_id)
         model_retriever = VisualMLModelRetriver(full_model_id)
-        relativites_calculator = RelativitiesCalculator(
+        
+        lift_relativites_calculator = RelativitiesCalculator(
             data_handler,
             model_retriever)
         
+        current_app.logger.info(f"Relativies calculator is: {lift_relativites_calculator}")
+        current_app.logger.info(f"Relativies calculator train is : {len(lift_relativites_calculator.train_set)}")
+        
         lift_chart = LiftChartFormatter(
                  model_retriever,
-                 data_handler,
-                 relativities_calculator
+                 data_handler
         ) 
-        lift_chart_data = lift_chart.get_lift_chart(nb_bins)
+        train_set = lift_relativites_calculator.train_set
+        test_set = lift_relativites_calculator.test_set
+
+        if train_set is None:
+            raise ValueError("Train set is not defined in relativities_calculator")
+        if test_set is None:
+            raise ValueError("Test set is not defined in relativities_calculator")
+
+        lift_chart_data = lift_chart.get_lift_chart(nb_bins, train_set, test_set)
+        
 #          model_cache.add_model(full_model_id).get('lift_chart_data') = lift_chart_data
     
     lift_chart_data = lift_chart_data[lift_chart_data['dataset'] == dataset]
