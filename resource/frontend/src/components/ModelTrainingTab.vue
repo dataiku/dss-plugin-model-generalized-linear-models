@@ -475,18 +475,29 @@ methods: {
                 try {
                         const response = await API.getDatasetColumns();
                         this.selectedModelString = model_value;
+
                         const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
+                        console.log("Filtered model:", model);
                         console.log("Making request with model Id :", model);
+
                         const paramsResponse = await API.getLatestMLTaskParams(model);
+                        console.log("API.getLatestMLTaskParams response:", paramsResponse);
+
                         const params = paramsResponse.data.params;
-                        // Get the column names from the response and params
+                        console.log("Extracted params:", params);
 
                         const responseColumns = response.data.map((column: ColumnInput) => column.column);
+                        console.log("responseColumns:", responseColumns);
+
                         const paramsColumns = Object.keys(params);
+                        console.log("paramsColumns:", paramsColumns);
                         
                         // Check if the column names match
                         const missingColumns = paramsColumns.filter((col: string) => !responseColumns.includes(col));
+                        console.log("missingColumns:", missingColumns);
                         const extraColumns = responseColumns.filter((col: string) => !paramsColumns.includes(col));
+                        console.log("extraColumns:", extraColumns);
+
                         
                         if (missingColumns.length > 0 || extraColumns.length > 0) {
                             let errorMessage = "Column mismatch: Your training dataset does not contain the same variables as the model you requested.\n";
