@@ -492,24 +492,7 @@ methods: {
                         const paramsColumns = Object.keys(params);
                         console.log("paramsColumns:", paramsColumns);
                         
-                        // Check if the column names match
-                        const missingColumns = paramsColumns.filter((col: string) => !responseColumns.includes(col));
-                        console.log("missingColumns:", missingColumns);
-                        const extraColumns = responseColumns.filter((col: string) => !paramsColumns.includes(col));
-                        console.log("extraColumns:", extraColumns);
 
-                        
-                        if (missingColumns.length > 0 || extraColumns.length > 0) {
-                            let errorMessage = "Column mismatch: Your training dataset does not contain the same variables as the model you requested.\n";
-                            if (missingColumns.length > 0) {
-                                errorMessage += `Missing columns: ${missingColumns.join(", ")}\n`;
-                            }
-                            if (extraColumns.length > 0) {
-                                errorMessage += `Extra columns: ${extraColumns.join(", ")}`;
-                            }
-                            this.handleError(errorMessage);
-                            return;
-                        }
                         this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
                         this.selectedLinkFunctionString = paramsResponse.data.link_function;
                         this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
@@ -528,12 +511,34 @@ methods: {
                                 this.selectedTargetVariable = columnName;
                             }
 
-
                             // Set the selected exposure variable if this column is the exposure column
                             if (isExposureColumn) {
                                 this.selectedExposureVariable = columnName;
                             }
 
+                            // Check if the column names match, excluding the specific column
+                        const missingColumns = paramsColumns
+                            .filter((col: string) => col !== this.selectedExposureVariable)
+                            .filter((col: string) => !responseColumns.includes(col));
+                        console.log("missingColumns:", missingColumns);
+
+                        const extraColumns = responseColumns
+                            .filter((col: string) => col !== this.selectedExposureVariable)
+                            .filter((col: string) => !paramsColumns.includes(col));
+                        console.log("extraColumns:", extraColumns);
+
+                        
+                        if (missingColumns.length > 0 || extraColumns.length > 0) {
+                            let errorMessage = "Column mismatch: Your training dataset does not contain the same variables as the model you requested.\n";
+                            if (missingColumns.length > 0) {
+                                errorMessage += `Missing columns: ${missingColumns.join(", ")}\n`;
+                            }
+                            if (extraColumns.length > 0) {
+                                errorMessage += `Extra columns: ${extraColumns.join(", ")}`;
+                            }
+                            this.handleError(errorMessage);
+                            return;
+                        }
                             return {
                                 name: columnName,
                                 isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
