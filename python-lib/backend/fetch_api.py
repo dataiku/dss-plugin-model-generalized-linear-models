@@ -437,7 +437,7 @@ def export_model():
             for i in range(max_len):
                 for variable in variables:
                     if i < len(variable_keys[variable]):
-                        value = variable_keys[variable][i]
+                        value = sorted(variable_keys[variable])[i]
                         csv_output += "{},{},,".format(value, relativities_dict[variable][value])
                     else:
                         csv_output += ",,,"
