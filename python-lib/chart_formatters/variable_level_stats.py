@@ -23,22 +23,17 @@ class VariableLevelStatsFormatter:
             features = self.model_retriever.get_features_used_in_modelling()
 
             variable_stats = self._process_intercept(coef_table, relativities)
-            print('variable stats')
             if categorical_features := self._get_categorical_features(features):
-                print('categorical features')
                 variable_stats = self._process_categorical_features(
                     variable_stats, predicted_base, relativities, coef_table, categorical_features
                 )
 
             if numeric_features := self._get_numeric_features(features):
-                print('numeric features')
                 variable_stats = self._process_numeric_features(
                     variable_stats, coef_table, numeric_features
                 )
-                print(variable_stats)
             
             if interaction_features := self._get_interaction_features():
-                print('interaction features')
                 variable_stats = self._process_interaction_features(
                     variable_stats, predicted_base, relativities_interaction, coef_table, interaction_features, categorical_features, numeric_features
                 )
@@ -160,6 +155,24 @@ class VariableLevelStatsFormatter:
             right_on=['variable_1', 'variable_2', 'value_1', 'value_2']
         )
         
+        # transform complete interaction into marginal interaction
+        variable_stats_1 = variable_stats[['feature', 'value', 'relativity']]
+        variable_stats_1.columns = ['feature_1', 'value_1', 'relativity_1']
+        variable_stats_2 = variable_stats[['feature', 'value', 'relativity']]
+        variable_stats_2.columns = ['feature_2', 'value_2', 'relativity_2']
+        
+        variable_stats_interaction = variable_stats_interaction.merge(variable_stats_1,
+            how='left',
+            on=['feature_1', 'value_1']
+        )
+        
+        variable_stats_interaction = variable_stats_interaction.merge(variable_stats_2,
+            how='left',
+            on=['feature_2', 'value_2']
+        )
+        
+        variable_stats_interaction['relativity'] = variable_stats_interaction['relativity'] / variable_stats_interaction['relativity_1'] / variable_stats_interaction['relativity_2']
+        
         groupings = pd.DataFrame()
         for i, interaction in enumerate(interaction_features):
             interaction_grouped = self.relativities_calculator.train_set.groupby([interaction[0], interaction[1]])['weight'].sum().reset_index()
@@ -181,7 +194,7 @@ class VariableLevelStatsFormatter:
         variable_stats_interaction['feature'] = variable_stats_interaction['feature_1'] + '::' + variable_stats_interaction['feature_2']
         variable_stats_interaction['value'] = [str(v1) + '::' + str(v2) for v1, v2 in zip(variable_stats_interaction['value_1'], variable_stats_interaction['value_2'])]
         
-        variable_stats_interaction.drop(['feature_1', 'feature_2', 'variable_1', 'variable_2', 'value_1', 'value_2', 'interaction', 'exposure_sum'], axis=1, inplace=True)
+        variable_stats_interaction.drop(['feature_1', 'feature_2', 'variable_1', 'variable_2', 'value_1', 'value_2', 'interaction', 'exposure_sum', 'relativity_1', 'relativity_2'], axis=1, inplace=True)
         
         variable_stats_interaction['relativity'] = [1 if np.isnan(coef) else rel for coef, rel in zip(variable_stats_interaction['coef'], variable_stats_interaction['relativity'])]
         
@@ -204,6 +217,24 @@ class VariableLevelStatsFormatter:
         )
         variable_stats_interaction = variable_stats_interaction[~variable_stats_interaction['coef'].isna()]
         
+        # transform complete interaction into marginal interaction
+        variable_stats_1 = variable_stats[['feature', 'value', 'relativity']]
+        variable_stats_1.columns = ['feature_1', 'value_1', 'relativity_1']
+        variable_stats_2 = variable_stats[['feature', 'value', 'relativity']]
+        variable_stats_2.columns = ['feature_2', 'value_2', 'relativity_2']
+        
+        variable_stats_interaction = variable_stats_interaction.merge(variable_stats_1,
+            how='left',
+            on=['feature_1', 'value_1']
+        )
+        
+        variable_stats_interaction = variable_stats_interaction.merge(variable_stats_2,
+            how='left',
+            on=['feature_2', 'value_2']
+        )
+        
+        variable_stats_interaction['relativity'] = variable_stats_interaction['relativity'] / variable_stats_interaction['relativity_1'] / variable_stats_interaction['relativity_2']
+                
         groupings = pd.DataFrame()
         for i, interaction in enumerate(interactions_cat_num):
             interaction_num = 0 if (interaction[0] in numeric_features) else 1
@@ -228,7 +259,7 @@ class VariableLevelStatsFormatter:
         variable_stats_interaction['feature'] = variable_stats_interaction['feature_1'] + '::' + variable_stats_interaction['feature_2']
         variable_stats_interaction['value'] = [str(v1) + '::' + str(v2) for v1, v2 in zip(variable_stats_interaction['value_1'], variable_stats_interaction['value_2'])]
         
-        variable_stats_interaction.drop(['feature_1', 'feature_2', 'variable_1', 'variable_2', 'value_1', 'value_2', 'interaction', 'exposure_sum'], axis=1, inplace=True)
+        variable_stats_interaction.drop(['feature_1', 'feature_2', 'variable_1', 'variable_2', 'value_1', 'value_2', 'interaction', 'exposure_sum', 'relativity_1', 'relativity_2'], axis=1, inplace=True)
         
         variable_stats_interaction['relativity'] = [1 if np.isnan(coef) else rel for coef, rel in zip(variable_stats_interaction['coef'], variable_stats_interaction['relativity'])]
         
