@@ -444,29 +444,22 @@ def export_model():
                 csv_output += "\n"
             
             variable_stats = model_cache.get_model(model).get('variable_stats')
+            relativities_interaction = model_cache.get_model(model).get('relativities_interaction')
             
-            interactions = variable_stats[variable_stats["variable"].str.contains("::")]
-            if len(interactions) > 0:
-                unique_interactions = interactions['variable'].unique()
-                for interaction in unique_interactions:
-                    csv_output += "{}\n\n".format(interaction.replace("::", " * "))
-                    these_interactions = interactions[interactions['variable'] == interaction]
-                    interaction_dict = dict()
-                    variable_1, variable_2  = interaction.split('::')
-                    for i, interaction_row in these_interactions.iterrows():
-                        value_1, value_2 = interaction_row['value'].split('::')
-                        try:
-                            interaction_dict[value_1][value_2] = interaction_row['relativity']
-                        except KeyError:
-                            interaction_dict[value_1] = {value_2: interaction_row['relativity']}
-                    csv_output += ",,{}\n".format(variable_1)
-                    sorted_value_1 = sorted(interaction_dict.keys())
-                    csv_output += ",,{}\n{}".format(",".join(sorted_value_1), variable_2)
-                    sorted_value_2 = sorted(list(interaction_dict[sorted_value_1[0]].keys()))
+            if len(relativities_interaction) > 0:
+                unique_interactions = relativities_interaction.groupby(['feature_1', 'feature_2']).count().reset_index()
+                for _, interaction in unique_interactions.iterrows():
+                    feature_1 = interaction['feature_1']
+                    feature_2 = interaction['feature_2']
+                    these_relativities = relativities_interaction[(relativities_interaction['feature_1']==feature_1) & (relativities_interaction['feature_2']==feature_2)]
+                    csv_output += "{} * {}\n\n".format(feature_1, feature_2)
+                    csv_output += ",,{}\n".format(feature_1)
+                    sorted_value_1 = sorted(list(set(these_relativities['value_1'])))
+                    csv_output += ",,{}\n{}".format(",".join([str(v) for v in sorted_value_1]), feature_2)
+                    sorted_value_2 = sorted(list(set(these_relativities['value_2'])))
                     for value_2 in sorted_value_2:
-                        csv_output += ",{},{}\n".format(value_2, ",".join([str(interaction_dict[value_1][value_2]) for value_1 in sorted_value_1]))
-                    csv_output += "\n"
-                    
+                        csv_output += ",{},{}\n".format(str(value_2), ",".join([str(these_relativities[(these_relativities['value_1']==value_1) & (these_relativities['value_2']==value_2)]['relativity'].iloc[0]/relativities_dict[feature_1][value_1]/relativities_dict[feature_2][value_2]) for value_1 in sorted_value_1]))
+                    csv_output += "\n"                    
             
             csv_data = csv_output.encode('utf-8')
 

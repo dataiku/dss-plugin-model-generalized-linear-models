@@ -99,17 +99,13 @@ class RelativitiesCalculator:
         for feature, values in self.relativities.items():
             for value, relativity in values.items():
                 rel_df = rel_df.append({'feature': feature, 'value': value, 'relativity': relativity}, ignore_index=True)
-        #rel_df.columns = ['variable', 'category', 'relativity']
         return rel_df
     
     def construct_relativities_interaction_df(self):
         logger.info("constructing relativites DF")
         rel_df = pd.DataFrame(columns=['feature_1', 'feature_2', 'value_1', 'value_2', 'relativity'])
-        print(self.relativities_interaction)
         for feature_1, features in self.relativities_interaction.items():
-            print(features)
             for feature_2, values in features.items():
-                print(values)
                 for value_1, relativities in values.items():
                     for value_2, relativity in relativities.items():
                         rel_df = rel_df.append({'feature_1': feature_1, 
@@ -117,7 +113,6 @@ class RelativitiesCalculator:
                         'value_1': value_1,
                         'value_2': value_2, 
                         'relativity': relativity}, ignore_index=True)
-        #rel_df.columns = ['variable_1', 'variable_2', 'category_1', 'category_2', 'relativity']
         return rel_df
     
     def get_relativities_df(self):
@@ -163,7 +158,7 @@ class RelativitiesCalculator:
         sample_train_row = self.initialize_baseline()
         baseline_prediction = self.calculate_baseline_prediction(sample_train_row)
 
-        self.relativities_interaction = {}#{'base': {'base': baseline_prediction}}
+        self.relativities_interaction = {}
         interactions = self.model_retriever.get_interactions()
 
         for interaction in interactions:
@@ -271,25 +266,6 @@ class RelativitiesCalculator:
         df['baseLevelPrediction'] = [float('%s' % float('%.3g' % x)) for x in  df['baseLevelPrediction']]
         logger.info("Successfully got formatted and predicted base")
         return df
-    
-    def process_dataset_old(self, dataset, dataset_name):
-        logger.info(f"Processing dataset {dataset_name}")
-        used_features = self.model_retriever.get_used_features()
-        base_data = self.compute_base_predictions_new(dataset, used_features)
-
-        # Merge all base_data at once
-        dataset = pd.merge(dataset, pd.concat(base_data.values()), on=used_features)
-
-        predicted_base = self.data_handler.calculate_weighted_aggregations(
-            dataset, 
-            self.model_retriever.non_excluded_features, 
-            used_features
-        )
-        predicted_base_df = self.data_handler.construct_final_dataframe(predicted_base)
-        predicted_base_df['dataset'] = dataset_name
-
-        logger.info(f"Processed dataset {dataset_name}")
-        return predicted_base_df
     
     def merge_predictions(self, test_set, base_data):
         logger.info("Merging Base predictions")

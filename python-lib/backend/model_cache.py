@@ -66,6 +66,7 @@ def setup_model_cache(global_dku_mltask, model_deployer):
                 # Store data in cache
                 model_cache.add_model(model_id, 
                                      relativities, 
+                                     relativities_interaction,
                                      model1_predicted_base,
                                      base_values,
                                      relativities_dict,
@@ -120,6 +121,7 @@ def update_model_cache(global_dku_mltask, model_cache):
 
             model_cache.add_model(model_id, 
                                  relativities, 
+                                 relativities_interaction,
                                  model1_predicted_base,
                                  base_values,
                                  relativities_dict,
