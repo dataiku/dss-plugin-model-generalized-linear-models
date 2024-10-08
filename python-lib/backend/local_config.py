@@ -124,19 +124,14 @@ interaction_setup_params = {
     'ClaimNb': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
     'VehAge': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
     'VehBrand': {'role': 'INPUT', 'type': 'CATEGORY', 'handling': 'DUMMIFY', 'chooseBaseLevel': True, 'baseLevel': 'B10'},
-    '5_Interaction': {'role': 'REJECT','type': 'CATEGORY','handling': 'DUMMIFY'},
     'Exposure': {'role': 'INPUT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
     'DrivAge': {'role': 'INPUT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
     'BonusMalus': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
     'Density': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
-    '6_Interaction': {'role': 'REJECT','type': 'CATEGORY','handling': 'DUMMIFY'},
     'Area': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'DUMMIFY'},
     'ClaimAmount': {'role': 'Target', 'type': 'NUMERIC', 'handling': None},
     'IDpol': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': None},
-    'DrivAgeBin': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'DUMMIFY'},
-    'Region': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'CUSTOM'},
-    '4_Interaction': {'role': 'REJECT','type': 'CATEGORY','handling': 'DUMMIFY'},
-    'New_Interaction': {'role': 'INPUT','type': 'CATEGORY','handling': 'DUMMIFY'}} 
+    'Region': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'CUSTOM'}} 
 }
 dummy_setup_params = {
     "target_column": "ClaimAmount",

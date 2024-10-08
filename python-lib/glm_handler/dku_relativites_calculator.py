@@ -31,10 +31,16 @@ class RelativitiesCalculator:
         self.modalities = {}
         self.variable_types = {}
         self.model_retriever = model_retriever
-        self.train_set = self.prepare_dataset('train')
-        self.test_set = self.prepare_dataset('test')
-        self.compute_base_values()
-        logger.info("ModelHandler initialized.")
+        try:
+            self.train_set = self.prepare_dataset('train')
+            self.test_set = self.prepare_dataset('test')
+            self.compute_base_values()
+            logger.info("Relativities ModelHandler initialized.")
+            logger.info(f"length of train set is {len(self.train_set)}")
+        except Exception as e:
+            logger.error(f"Error initializing RelativitiesCalculator: {e}")
+            self.train_set = None
+            self.test_set = None
         
     def compute_base_values(self):
         logger.info("Computing base values on initiation.")
