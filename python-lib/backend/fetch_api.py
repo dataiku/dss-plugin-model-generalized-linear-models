@@ -247,18 +247,29 @@ def get_lift_data():
     current_nb_bins = len(lift_chart_data[lift_chart_data['dataset'] == dataset])
     
     if current_nb_bins != nb_bins:
-        model_deployer.set_new_active_version(full_model_id)
         model_retriever = VisualMLModelRetriver(full_model_id)
-        relativites_calculator = RelativitiesCalculator(
+        
+        lift_relativites_calculator = RelativitiesCalculator(
             data_handler,
             model_retriever)
         
+        current_app.logger.info(f"Relativies calculator is: {lift_relativites_calculator}")
+        current_app.logger.info(f"Relativies calculator train is : {len(lift_relativites_calculator.train_set)}")
+        
         lift_chart = LiftChartFormatter(
                  model_retriever,
-                 data_handler,
-                 relativities_calculator
+                 data_handler
         ) 
-        lift_chart_data = lift_chart.get_lift_chart(nb_bins)
+        train_set = lift_relativites_calculator.train_set
+        test_set = lift_relativites_calculator.test_set
+
+        if train_set is None:
+            raise ValueError("Train set is not defined in relativities_calculator")
+        if test_set is None:
+            raise ValueError("Test set is not defined in relativities_calculator")
+
+        lift_chart_data = lift_chart.get_lift_chart(nb_bins, train_set, test_set)
+        
 #          model_cache.add_model(full_model_id).get('lift_chart_data') = lift_chart_data
     
     lift_chart_data = lift_chart_data[lift_chart_data['dataset'] == dataset]
@@ -427,12 +438,30 @@ def export_model():
             for i in range(max_len):
                 for variable in variables:
                     if i < len(variable_keys[variable]):
-                        value = variable_keys[variable][i]
+                        value = sorted(variable_keys[variable])[i]
                         csv_output += "{},{},,".format(value, relativities_dict[variable][value])
                     else:
                         csv_output += ",,,"
                 csv_output += "\n"
-
+            
+            variable_stats = model_cache.get_model(model).get('variable_stats')
+            relativities_interaction = model_cache.get_model(model).get('relativities_interaction')
+            
+            if len(relativities_interaction) > 0:
+                unique_interactions = relativities_interaction.groupby(['feature_1', 'feature_2']).count().reset_index()
+                for _, interaction in unique_interactions.iterrows():
+                    feature_1 = interaction['feature_1']
+                    feature_2 = interaction['feature_2']
+                    these_relativities = relativities_interaction[(relativities_interaction['feature_1']==feature_1) & (relativities_interaction['feature_2']==feature_2)]
+                    csv_output += "{} * {}\n\n".format(feature_1, feature_2)
+                    csv_output += ",,{}\n".format(feature_1)
+                    sorted_value_1 = sorted(list(set(these_relativities['value_1'])))
+                    csv_output += ",,{}\n{}".format(",".join([str(v) for v in sorted_value_1]), feature_2)
+                    sorted_value_2 = sorted(list(set(these_relativities['value_2'])))
+                    for value_2 in sorted_value_2:
+                        csv_output += ",{},{}\n".format(str(value_2), ",".join([str(these_relativities[(these_relativities['value_1']==value_1) & (these_relativities['value_2']==value_2)]['relativity'].iloc[0]/relativities_dict[feature_1][value_1]/relativities_dict[feature_2][value_2]) for value_1 in sorted_value_1]))
+                    csv_output += "\n"                    
+            
             csv_data = csv_output.encode('utf-8')
 
         except KeyError as e:

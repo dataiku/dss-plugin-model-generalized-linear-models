@@ -129,7 +129,7 @@
                 <div class="radio-group-container">
                     <div class="q-gutter-sm row items-center">
                         <BsSelect
-                            label="Base Level"
+                            label=""
                             :modelValue="column.baseLevel"
                             :all-options="column.options"
                             @update:modelValue="value => column.baseLevel = value">
@@ -137,9 +137,19 @@
                     </div>
                 </div>
             </div>
+            
+        </q-card>
+        <q-card-section>
+            <h5>Variable Interactions</h5>
+        </q-card-section>
+        <q-card class="q-pa-xl">
+            <VariableInteractions 
+            :filtered-columns="filteredColumns"
+            @update:interactions="handleInteractionsUpdate"
+            />
         </q-card>
     </BsContent>
-    
+
 </BsTab>
 
 </template>
@@ -185,9 +195,9 @@ base_level: string;
 };
 }
 import { defineComponent } from "vue";
-import type { ModelPoint } from '../models';
+import type { ModelPoint, Interaction } from '../models';
 import EmptyState from './EmptyState.vue';
-import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider } from "quasar-ui-bs";
+import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider, BsCard } from "quasar-ui-bs";
 import docLogo from "../assets/images/doc-logo-example.svg";
 import trainingIcon from "../assets/images/training.svg";
 import { API } from '../Api';
@@ -197,10 +207,12 @@ import { useNotification } from "../composables/use-notification";
 import type { AxiosError, AxiosResponse } from 'axios';
 import { isAxiosError } from 'axios';   
 import axios from "../api/index";
+import VariableInteractions from './VariableInteractions.vue'
 
 export default defineComponent({
 components: {
     EmptyState,
+    VariableInteractions,
     BsTab,
     BsTabIcon,
     BsHeader,
@@ -209,7 +221,8 @@ components: {
     BsContent,
     BsTooltip,
     QRadio,
-    BsSlider
+    BsSlider,
+    BsCard,
 
 },
 props: [],
@@ -221,6 +234,7 @@ data() {
         selectedModelString: "",
         models: [] as ModelPoint[],
         modelsString: [] as string[],
+        interactions: [] as Interaction[],
         selectedDatasetString: "",
         selectedTargetVariable: "",
         selectedExposureVariable: "",
@@ -311,6 +325,18 @@ methods: {
         console.error('Error fetching excluded columns:', error);
         }
     },
+    handleInteractionsUpdate(formattedInteractions: string[]) {
+        console.log("formatted inteactions are:")
+        
+        console.log(formattedInteractions);
+        this.interactions = formattedInteractions.map(interaction => {
+        const [first, second] = interaction.split(':');
+        return {
+          interaction_first: first,
+          interaction_second: second
+        };
+      });
+    },
     async updateModelString(value: string) {
           this.loading = true;
           this.selectedModelString = value;
@@ -338,6 +364,10 @@ methods: {
         return false;
         }
         return true; // Validation passed
+    },
+    addInteraction() {
+        var newInteraction = {interaction_first: "", interaction_second: ""};
+        this.interactions.push(newInteraction);
     },
     updateDatasetColumnsPreprocessing() {
         const updatedColumns = this.datasetColumns.map(column => {
@@ -426,7 +456,8 @@ methods: {
         // Now modelParameters is available to be included in payload
         const payload = {
             model_parameters: modelParameters,
-            variables: variableParameters
+            variables: variableParameters,
+            interaction_variable: this.interactions
         };
         try {
             console.log("Payload:", payload);
@@ -474,30 +505,24 @@ methods: {
                 try {
                         const response = await API.getDatasetColumns();
                         this.selectedModelString = model_value;
+
                         const model = this.models.filter((v: ModelPoint) => v.name == model_value)[0];
+                        console.log("Filtered model:", model);
                         console.log("Making request with model Id :", model);
+
                         const paramsResponse = await API.getLatestMLTaskParams(model);
+                        console.log("API.getLatestMLTaskParams response:", paramsResponse);
+
                         const params = paramsResponse.data.params;
-                        // Get the column names from the response and params
+                        console.log("Extracted params:", params);
 
                         const responseColumns = response.data.map((column: ColumnInput) => column.column);
+                        console.log("responseColumns:", responseColumns);
+
                         const paramsColumns = Object.keys(params);
+                        console.log("paramsColumns:", paramsColumns);
                         
-                        // Check if the column names match
-                        const missingColumns = paramsColumns.filter((col: string) => !responseColumns.includes(col));
-                        const extraColumns = responseColumns.filter((col: string) => !paramsColumns.includes(col));
-                        
-                        if (missingColumns.length > 0 || extraColumns.length > 0) {
-                            let errorMessage = "Column mismatch: Your training dataset does not contain the same variables as the model you requested.\n";
-                            if (missingColumns.length > 0) {
-                                errorMessage += `Missing columns: ${missingColumns.join(", ")}\n`;
-                            }
-                            if (extraColumns.length > 0) {
-                                errorMessage += `Extra columns: ${extraColumns.join(", ")}`;
-                            }
-                            this.handleError(errorMessage);
-                            return;
-                        }
+
                         this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
                         this.selectedLinkFunctionString = paramsResponse.data.link_function;
                         this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
@@ -516,12 +541,34 @@ methods: {
                                 this.selectedTargetVariable = columnName;
                             }
 
-
                             // Set the selected exposure variable if this column is the exposure column
                             if (isExposureColumn) {
                                 this.selectedExposureVariable = columnName;
                             }
 
+                            // Check if the column names match, excluding the specific column
+                        const missingColumns = paramsColumns
+                            .filter((col: string) => col !== this.selectedExposureVariable)
+                            .filter((col: string) => !responseColumns.includes(col));
+                        console.log("missingColumns:", missingColumns);
+
+                        const extraColumns = responseColumns
+                            .filter((col: string) => col !== this.selectedExposureVariable)
+                            .filter((col: string) => !paramsColumns.includes(col));
+                        console.log("extraColumns:", extraColumns);
+
+                        
+                        if (missingColumns.length > 0 || extraColumns.length > 0) {
+                            let errorMessage = "Column mismatch: Your training dataset does not contain the same variables as the model you requested.\n";
+                            if (missingColumns.length > 0) {
+                                errorMessage += `Missing columns: ${missingColumns.join(", ")}\n`;
+                            }
+                            if (extraColumns.length > 0) {
+                                errorMessage += `Extra columns: ${extraColumns.join(", ")}`;
+                            }
+                            this.handleError(errorMessage);
+                            return;
+                        }
                             return {
                                 name: columnName,
                                 isIncluded: isTargetColumn || isExposureColumn || param.role !== 'REJECT',
