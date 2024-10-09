@@ -7,12 +7,12 @@ import numpy as np
 from dataiku import pandasutils as pdu
 from glm_handler.dku_utils import extract_active_fullModelId
 
-from backend.logging_settings import logger
+from logging_assist.logging import logger
 
 
 class GlmDataHandler():
     def __init__(self):
-        pass
+        logger.info("Initalising the GLM Data Handler")
     
     def weighted_qcut(values, weights, q, **kwargs):
         quantiles = np.linspace(0, 1, q + 1)
@@ -50,7 +50,8 @@ class GlmDataHandler():
         """
         print(f"Pandas version is {pd.__version__}")
         print(f"data is type {type(data)}")
-        tempdata = data.sort_values(by='predicted', ascending=True)
+        data['raw_predict'] = data['predicted'] / data[exposure]
+        tempdata = data.sort_values(by='raw_predict', ascending=True)
         tempdata['exposure_cumsum'] = tempdata[exposure].cumsum() / tempdata[exposure].sum()
         return tempdata
     
@@ -81,6 +82,7 @@ class GlmDataHandler():
         return grouped
     
     def calculate_weighted_aggregations(self, test_set, non_excluded_features, used_feature):
+        logger.info(f"caclulating weighted aggregation on {used_feature}")
         predicted_base = {feature: test_set.rename(columns={'base_' + feature: 'weighted_base'}).groupby([feature]).agg(
             {'weighted_target': 'sum',
              'weighted_predicted': 'sum',
@@ -98,14 +100,17 @@ class GlmDataHandler():
                 predicted_base[feature]['weighted_base'] = predicted_base[feature]['weighted_predicted']
                 #predicted_base[feature]['weighted_base'] /= predicted_base[feature]['weight']
                 #else:
+        logger.info(f"Successfully calculated weighted aggregation on {used_feature}")
         return predicted_base
     
     def construct_final_dataframe(self, predicted_base):
+        logger.info("Constructing final dataframe")
         predicted_base_df = pd.DataFrame(columns=['feature', 'category', 'target', 'predicted', 'exposure', 'base'])
         for feature, df in predicted_base.items():
             df.columns = ['category', 'target', 'predicted', 'exposure', 'base']
             df['feature'] = feature
             predicted_base_df = predicted_base_df.append(df)
+        logger.info("Successfully constructed final dataframe")
         return predicted_base_df
     
     def bin_numeric_columns(self, test_set, nb_bins_numerical, features, non_excluded_features):

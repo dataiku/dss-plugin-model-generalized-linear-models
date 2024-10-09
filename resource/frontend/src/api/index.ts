@@ -1,6 +1,9 @@
 import axios_ from "axios";
+import type { AxiosError } from 'axios';
 
-
+interface ErrorResponse {
+  error: string;
+}
 
 function getBackendProdUrl() {
     // @ts-ignore
@@ -25,14 +28,29 @@ const axios = axios_.create({ baseURL });
 
 
 axios.interceptors.response.use(
-    (response) => {
+  (response) => {
       return response;
-    },
-    (error) => {
-      APIErrors.push(error.response);
+  },
+  (error: AxiosError<ErrorResponse>) => {
+      if (error.response) {
+          APIErrors.push({
+              status: error.response.status,
+              data: error.response.data,
+              error: error.response.data.error || `Server error: ${error.response.status}`
+          });
+      } else if (error.request) {
+          APIErrors.push({
+              error: 'No response received from the server'
+          });
+      } else {
+          APIErrors.push({
+              error: 'Error setting up the request'
+          });
+      }
       return Promise.reject(error);
-    }
-  );
+  }
+);
+
   
   export const APIErrors: any[] = [];
   
