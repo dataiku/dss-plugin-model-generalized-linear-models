@@ -83,6 +83,9 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         self.removed_indices = None
         self.assign_family()
         self.assign_family_glum_class()
+        self.aic_value = None
+        self.bic_value = None
+        self.deviance_value = None
 
     def get_link_function(self):
         """
@@ -245,6 +248,12 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         X_df = pd.DataFrame(X, columns=self.final_labels)
         self.fitted_model.fit(X_df, y, sample_weight=sample_weight, offset=offset_output, store_covariance_matrix=True)
         
+        self.aic_value = np.round(self.fitted_model.aic(X_df, y), 2)
+        self.bic_value = np.round(self.fitted_model.bic(X_df, y), 2)
+        
+        predictions = self.fitted_model.predict(X_df)
+        self.deviance_value = np.round(self.family_glum_class.deviance(y ,predictions), 2)
+        
         self.coef_table = self.fitted_model.coef_table()
         
         self.compute_coefs(prediction_is_classification)
@@ -336,6 +345,7 @@ class BaseGLM(BaseEstimator, ClassifierMixin):
         
         # makes predictions and converts to DSS accepted format
         y_pred = np.array(self.fitted_model.predict(X, offset=offset_output))
+        
         return y_pred
 
 

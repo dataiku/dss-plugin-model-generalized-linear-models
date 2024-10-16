@@ -1,7 +1,6 @@
 from glm_handler.dku_relativites_calculator import RelativitiesCalculator
 from glm_handler.dku_model_deployer import ModelDeployer
 from glm_handler.glm_data_handler import GlmDataHandler
-from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from time import time
 from logging_assist.logging import logger
 from glm_handler.glm_data_handler import GlmDataHandler
