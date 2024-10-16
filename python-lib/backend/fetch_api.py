@@ -14,7 +14,6 @@ import numpy as np
 import time
 from dataiku.customwebapp import get_webapp_config
 from chart_formatters.lift_chart import LiftChartFormatter
-from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from .api_utils import calculate_base_levels
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
@@ -381,12 +380,12 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-    current_app.logger.info("Getting Model Metrics") 
     if is_local:
         return jsonify(dummy_model_metrics)
     
     loading_thread.join()
     request_json = request.get_json()
+    current_app.logger.info(f"Getting Model Metrics with request: {request_json}") 
 
    
     models = [request_json["model1"], request_json["model2"]]
@@ -397,9 +396,9 @@ def get_model_metrics():
 
     for i, model in enumerate(models, start=1):
         model_retriever = VisualMLModelRetriver(model)
-        mmc = ModelMetricsCalculator(model_retriever)
-        model_aic, model_bic, model_deviance = mmc.calculate_metrics()
-
+        model_aic = model_retriever.predictor._clf.aic_value
+        model_bic  = model_retriever.predictor._clf.bic_value
+        model_deviance = model_retriever.predictor._clf.deviance_value
         model_key = f"Model_{i}"
 
         metrics["models"][model_key] = {
