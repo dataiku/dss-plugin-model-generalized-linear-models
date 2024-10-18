@@ -270,7 +270,10 @@ class VisualMLModelRetriver(DataikuClientProject):
             "link_function":self.get_link_function(),
             "elastic_net_penalty": self.get_elastic_net_penalty(),
             "l1_ratio": self.get_l1_ratio(),
-            "params": features_dict
+            "params": features_dict,
+            "interaction_columns_first":self.predictor._clf.interaction_columns_first,
+            "interaction_columns_second":self.predictor._clf.interaction_columns_second
+            
         }
         logger.info(f"Retrieved setup parameters for model id {self.full_model_id}")
         logger.info(f"Setup params are {setup_params}")
