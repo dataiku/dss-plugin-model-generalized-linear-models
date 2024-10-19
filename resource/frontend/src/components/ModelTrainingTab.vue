@@ -144,10 +144,11 @@
             <h5>Variable Interactions</h5>
         </q-card-section>
         <q-card class="q-pa-xl">
-            <VariableInteractions 
+        <VariableInteractions
             :filtered-columns="filteredColumns"
-            @update:interactions="handleInteractionsUpdate"
-            />
+            :initial-interactions="previousInteractions"
+             @update:interactions="updateInteractions"
+        />
         </q-card>
     </BsContent>
 
@@ -248,6 +249,7 @@ data() {
         layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
         trainingIcon,
         docLogo,
+        previousInteractions: [] as Interaction[],  
         distributionOptions: ['Binomial',
             'Gamma',
             'Gaussian',
@@ -286,6 +288,12 @@ computed:{
         },
 },
 watch: {
+    // previousInteractions: {
+    //     handler(newVal) {
+    //         console.log('interactions changed in parent:', newVal)
+    //     },
+    //     deep: true
+    // },
     datasetColumns: {
         handler(newVal, oldVal) {
             console.log('datasetColumns changed:', newVal);
@@ -293,6 +301,7 @@ watch: {
         },
         deep: true
     },
+    
     loading(newVal) {
         if (newVal) {
             useLoader("Loading...").show();
@@ -301,8 +310,12 @@ watch: {
         }
     },
     
+    
 },
 methods: {
+        updateInteractions(newInteractions) {
+            this.previousInteractions = newInteractions;
+        },
         async fetchExcludedColumns() {
         try {
         const excludedColumnsResponse = await API.getExcludedColumns();
@@ -326,18 +339,7 @@ methods: {
         console.error('Error fetching excluded columns:', error);
         }
     },
-    handleInteractionsUpdate(formattedInteractions: string[]) {
-        console.log("formatted inteactions are:")
-        
-        console.log(formattedInteractions);
-        this.interactions = formattedInteractions.map(interaction => {
-        const [first, second] = interaction.split(':');
-        return {
-          interaction_first: first,
-          interaction_second: second
-        };
-      });
-    },
+
     async updateModelString(value: string) {
           this.loading = true;
           this.selectedModelString = value;
@@ -366,10 +368,10 @@ methods: {
         }
         return true; // Validation passed
     },
-    addInteraction() {
-        var newInteraction = {interaction_first: "", interaction_second: ""};
-        this.interactions.push(newInteraction);
-    },
+    // addInteraction() {
+    //     var newInteraction = {interaction_first: "", interaction_second: ""};
+    //     this.interactions.push(newInteraction);
+    // },
     updateDatasetColumnsPreprocessing() {
         const updatedColumns = this.datasetColumns.map(column => {
             let preprocessing;
@@ -458,7 +460,7 @@ methods: {
         const payload = {
             model_parameters: modelParameters,
             variables: variableParameters,
-            interaction_variable: this.interactions
+            interaction_variable: this.previousInteractions
         };
         try {
             console.log("Payload:", payload);
@@ -523,12 +525,14 @@ methods: {
                         const paramsColumns = Object.keys(params);
                         console.log("paramsColumns:", paramsColumns);
                         
-
+                        this.previousInteractions = paramsResponse.data.interactions;
+                        console.log("Interaction recieved in parent", this.previousInteractions)
                         this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
                         this.selectedLinkFunctionString = paramsResponse.data.link_function;
                         this.selectedElasticNetPenalty = paramsResponse.data.elastic_net_penalty ? paramsResponse.data.elastic_net_penalty : 0;
                         this.selectedL1Ratio = paramsResponse.data.l1_ratio ? paramsResponse.data.l1_ratio : 0;
-
+                        
+                        
                         console.log("paramsResponse:", paramsResponse.data);
                         this.datasetColumns = response.data.map((column: ColumnInput) => {
                             const columnName = column.column;

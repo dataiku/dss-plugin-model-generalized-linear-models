@@ -263,6 +263,9 @@ class VisualMLModelRetriver(DataikuClientProject):
         logger.debug(f"Retrieving setup parameters for model id {self.full_model_id}")
         logger.debug("Model Parameters")
         features_dict = self.get_features_dict()
+        interaction_columns_first = self.predictor._clf.interaction_columns_first,
+        interaction_columns_second = self.predictor._clf.interaction_columns_second
+        
         setup_params = {
             "target_column": self.get_target_column(),
             "exposure_column":self.get_exposure_columns(),
@@ -271,8 +274,10 @@ class VisualMLModelRetriver(DataikuClientProject):
             "elastic_net_penalty": self.get_elastic_net_penalty(),
             "l1_ratio": self.get_l1_ratio(),
             "params": features_dict,
-            "interaction_columns_first":self.predictor._clf.interaction_columns_first,
-            "interaction_columns_second":self.predictor._clf.interaction_columns_second
+            "interactions":[
+                {'first': first, 'second': second}
+                for first, second in zip(interaction_columns_first, interaction_columns_second)
+            ]
             
         }
         logger.info(f"Retrieved setup parameters for model id {self.full_model_id}")

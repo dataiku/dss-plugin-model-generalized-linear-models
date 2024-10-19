@@ -34,7 +34,8 @@
   import type { PropType } from 'vue';
   import { BsButton, BsSelect } from 'quasar-ui-bs';
   import { QCard, QCardSection } from 'quasar';
-  
+  import cloneDeep from 'lodash/cloneDeep';
+
   interface Column {
     name: string;
     // Add other properties if needed
@@ -57,7 +58,11 @@
       filteredColumns: {
         type: Array as PropType<Column[]>,
         required: true
-      }
+      },
+      initialInteractions: {
+      type: Array as PropType<Interaction[]>,
+      default: () => []
+    }
     },
     data() {
       return {
@@ -69,26 +74,53 @@
         return this.filteredColumns.map(column => column.name);
       },
       formattedInteractions(): string[] {
+        console.log("Formatting interactions to return");
         return this.interactions.map(interaction => {
-          return `${interaction.first}:${interaction.second}`;
+            // Check if the interaction is already in the correct format
+            if (typeof interaction === 'string' && interaction.includes(':')) {
+            return interaction;
+            }
+            // If it's not, format it
+            if (interaction.first && interaction.second) {
+            return `${interaction.first}:${interaction.second}`;
+            }
+            // If it's neither in the correct format nor has the expected properties, return it as is
+            return String(interaction);
         });
-      }
+        }
     },
     methods: {
       addInteraction() {
-        this.interactions.push({ first: '', second: '' });
+        console.log("Triggering addition of a new interactions")
+        this.interactions.push({ first: '', second: '' })
+        console.log("New interactions",this.interactions);
       },
       removeInteraction(index: number) {
         this.interactions.splice(index, 1);
       }
     },
+    created() {
+    console.log("Initalising")
+    this.interactions = cloneDeep(this.initialInteractions);
+
+    },
     watch: {
       interactions: {
         handler(newInteractions: Interaction[]) {
-          this.$emit('update:interactions', this.formattedInteractions);
+        console.log("Changes to interactions detected in the child as:",newInteractions)
+        this.$emit('update:interactions', this.formattedInteractions);
         },
         deep: true
+      },
+      initialInteractions: {
+      handler(newInteractions: Interaction[]) {
+        console.log("Inital interactions are being set:",newInteractions)
+        if (JSON.stringify(this.interactions) !== JSON.stringify(newInteractions)) {
+          this.interactions = cloneDeep(JSON.parse(JSON.stringify(newInteractions)));
+        }
       }
+    },  
+        
     }
   });
   </script>
