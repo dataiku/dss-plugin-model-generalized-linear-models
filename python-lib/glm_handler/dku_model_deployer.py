@@ -48,7 +48,7 @@ class ModelDeployer(DataikuClientProject):
         
         return version_mapping
     
-    def deploy_model(self, model_id, input_dataset):
+    def deploy_model(self, model_id, input_dataset, experiment_name):
         """
         Deploys the latest model to the flow.
 
@@ -68,7 +68,7 @@ class ModelDeployer(DataikuClientProject):
                 logger.exception("Failed to deploy model to the flow: %s", e)
         else:
             logger.debug("Saved model not present - Creating new Model ID to deploy")
-            model_name = str(input_dataset) + "_Model_"+ str(random.randint(0, 1000))
+            model_name = experiment_name + "_Model"
             model_details = self.mltask.deploy_to_flow(model_id, model_name=model_name, train_dataset=input_dataset)
             saved_model_id = model_details.get("savedModelId")
             self._set_saved_model_attribute(saved_model_id)
