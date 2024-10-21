@@ -20,25 +20,20 @@ class VariableLevelStatsFormatter:
             relativities = self._get_relativities()
             coef_table = self._prepare_coef_table()
             features = self.model_retriever.get_features_used_in_modelling()
-            print('variable stats')
-            print(coef_table)
             
             variable_stats = self._process_intercept(coef_table, relativities)
 
             if categorical_features := self._get_categorical_features(features):
-                print('categorical')
                 variable_stats = self._process_categorical_features(
                     variable_stats, predicted_base, relativities, coef_table, categorical_features
                 )
 
             if numeric_features := self._get_numeric_features(features):
-                print('numeric')
                 variable_stats = self._process_numeric_features(
                     variable_stats, coef_table, numeric_features
                 )
 
             variable_stats = self._finalize_stats(variable_stats)
-            print(variable_stats)
             logger.info("Finished getting variable level stats.")
             return variable_stats
 
@@ -117,8 +112,6 @@ class VariableLevelStatsFormatter:
         coef_table_num['relativity'] = 1
         
         variable_stats_num = coef_table_num[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
-        print('variable stats num')
-        print(variable_stats_num)
         return variable_stats.append(variable_stats_num)
 
     def _finalize_stats(self, variable_stats):
