@@ -117,8 +117,7 @@ def update_model_cache(global_dku_mltask, model_cache):
             
             lift_chart = LiftChartFormatter(
                      model_retriever,
-                     data_handler,
-                     relativities_calculator
+                     data_handler
             ) 
             lift_chart_data = lift_chart.get_lift_chart(8)
 
