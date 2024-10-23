@@ -119,7 +119,16 @@ def update_model_cache(global_dku_mltask, model_cache):
                      model_retriever,
                      data_handler
             ) 
-            lift_chart_data = lift_chart.get_lift_chart(8)
+            train_set = relativities_calculator.train_set
+            test_set = relativities_calculator.test_set
+
+            if train_set is None:
+                raise ValueError("Train set is not defined in relativities_calculator")
+            if test_set is None:
+                raise ValueError("Test set is not defined in relativities_calculator")
+
+            lift_chart_data = lift_chart.get_lift_chart(8, train_set, test_set)
+            
 
             model_cache.add_model(model_id, 
                                  relativities, 
