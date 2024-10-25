@@ -20,7 +20,7 @@ class DKUVisualMLConfig:
         self.input_dataset = web_app_config.get("training_dataset_string")
         self.prediction_type = web_app_config.get("prediction_type")
         self.exposure_column = web_app_config.get("exposure_column")    
-        
+        self.experiment_name = web_app_config.get("experiment_name")    
         self.policy = web_app_config.get("policy")
         self.test_dataset_string = web_app_config.get("test_dataset_string")
         self.code_env_string = web_app_config.get("code_env_string")

@@ -21,7 +21,7 @@ class VariableLevelStatsFormatter:
             relativities_interaction = self._get_relativities_interaction()
             coef_table = self._prepare_coef_table()
             features = self.model_retriever.get_features_used_in_modelling()
-
+            
             variable_stats = self._process_intercept(coef_table, relativities)
             if categorical_features := self._get_categorical_features(features):
                 variable_stats = self._process_categorical_features(
@@ -120,7 +120,7 @@ class VariableLevelStatsFormatter:
         coef_table_num['exposure'] = self.relativities_calculator.train_set['weight'].sum()
         coef_table_num['exposure_pct'] = 100
         coef_table_num['relativity'] = 1
-
+        
         variable_stats_num = coef_table_num[['feature', 'value', 'relativity', 'coef', 'se', 'se_pct', 'exposure', 'exposure_pct']]
         return variable_stats.append(variable_stats_num)
 

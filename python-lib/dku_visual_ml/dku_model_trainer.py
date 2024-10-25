@@ -111,8 +111,9 @@ class VisualMLModelTrainer(DataikuClientProject):
         
         analysis = self.project.get_analysis(analysis_id)
         new_analysis_defintion = analysis.get_definition().get_raw()
-        random_word = self.generate_random_word(5,6)
-        new_analysis_defintion['name'] = str(self.visual_ml_config.input_dataset) + "_"+str(random_word)
+#         random_word = self.generate_random_word(5,6)
+        experiment_name = str(self.visual_ml_config.experiment_name)
+        new_analysis_defintion['name'] = str(self.visual_ml_config.input_dataset) + "_" + experiment_name
         analysis_definition = analysis.set_definition(new_analysis_defintion)
     
     def create_inital_ml_task(self, target_variable):
@@ -346,7 +347,10 @@ class VisualMLModelTrainer(DataikuClientProject):
                 self.model_deployer = ModelDeployer(self.mltask, self.visual_ml_config.saved_model_id)
             try:
 
-                model_details = self.model_deployer.deploy_model(latest_model_id, self.visual_ml_config.input_dataset)
+                model_details = self.model_deployer.deploy_model(latest_model_id,
+                                                                 self.visual_ml_config.input_dataset,
+                                                                 self.visual_ml_config.experiment_name
+                                                                )
                 logger.info(f"Model Details are {model_details}")
                 return model_details, None
             except Exception as e:

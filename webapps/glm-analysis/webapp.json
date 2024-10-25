@@ -27,6 +27,14 @@
           ],
           "mandatory": true
       },
+      {
+        "name": "experiment_name",
+        "label": "Experiment Name",
+         "description": "Your custom name for your experiment",
+        "type": "STRING",
+      "visibilityCondition": "model.setup_type == 'new'",
+        "mandatory": true
+      },
      {
         "type": "SEPARATOR",
         "description": "",
@@ -62,7 +70,6 @@
       "description": "Select the Default Prediction Type",
        "type": "SELECT",
         "selectChoices" : [
-            { "value": "BINARY_CLASSIFICATION", "label": "Binary Classification"},
             { "value": "REGRESSION", "label": "Regression"}
         ]
   },
