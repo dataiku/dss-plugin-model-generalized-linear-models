@@ -15,6 +15,7 @@ CONFIG = {
     },
     "default_project_key": DEFAULT_PROJECT_KEY,
     "training_dataset_string": "claim_train",
+    "exposure_column":"exposure"
 }
 
 
@@ -25,7 +26,8 @@ def get_setup_for_dataiku_client():
     return {
         "webapp_config": CONFIG.get("webapp_config"),
         "default_project_key": CONFIG.get("default_project_key"),
-        "training_dataset_string": CONFIG.get("claim_train")
+        "training_dataset_string": CONFIG.get("claim_train"),
+        "exposure_column": CONFIG.get("exposure")
     }
 
 DKU_CUSTOM_WEBAPP_CONFIG='{"saved_model_id": "U4TLlapA","training_dataset_string": "claim_train","code_env_string": "anotherValue"}'
@@ -56,7 +58,7 @@ def setup_dataiku_client():
     dataiku_api.setup(**dataiku_setup)
 
     
-dummy_models = [{"id": "model_1", "name": "Generalized Linear Model Regression (GLM 1)"}, {"id": "model_2", "name": "Generalized Linear Model Regression (GLM 2)"}]
+dummy_models = [{"id": "model_interaction", "name": "Interaction"}, {"id": "model_1", "name": "Generalized Linear Model Regression (GLM 1)"}, {"id": "model_2", "name": "Generalized Linear Model Regression (GLM 2)"}]
 
 dummy_variables = [{'variable': 'Variable1', 'isInModel': True, 'variableType': 'categorical'},
                     {'variable': 'Variable2', 'isInModel': False, 'variableType': 'numeric'}]
@@ -70,12 +72,19 @@ dummy_df_data = pd.DataFrame({
             'baseLevelPrediction': [0.5, 0.55, 0.6, 0.7, 0.5, 0.5, 0.4, 0.45]
         })
 
+
+pre_dummy_base_values = {'Variable1': 'January', 
+                     'Variable2': 20}
+dummy_base_values = [{'variable': k, 'base_level': v} for k, v in pre_dummy_base_values.items()]
+
 dummy_lift_data = pd.DataFrame({
             'Category': ['0.1', '0.15', '0.2', '0.3', '0.4', '0.6', '0.8', '1'],
             'Value': [100, 103, 101, 98, 100, 100, 101, 102],
             'observedAverage': [0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1],
             'fittedAverage': [0.12, 0.16, 0.19, 0.32, 0.37, 0.55, 0.83, 1.02]
         })
+dummy_lift_data['observedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['observedAverage']]
+dummy_lift_data['fittedAverage'] = [float('%s' % float('%.3g' % x)) for x in dummy_lift_data['fittedAverage']]
 
 dummy_get_updated_data  = pd.DataFrame({
             'definingVariable': ['Variable1','Variable1','Variable1','Variable1', 'Variable2','Variable2','Variable2','Variable2'],
@@ -105,6 +114,7 @@ dummy_model_metrics_old ={
             }
         }
         }
+<<<<<<< HEAD
 
 dummy_model_metrics ={
             "AIC": 100,
@@ -117,6 +127,26 @@ dummy_model_metrics2 ={
             "BIC": 992,
             "Deviance": 18881
         }
+
+interaction_setup_params = {
+       "target_column": "ClaimAmount",
+    "exposure_column":"Exposure",
+    "distribution_function":"Tweedie",
+    "link_function":"Logit",
+    'params': {'VehGas': {'role': 'REJECT','type': 'CATEGORY','handling': 'DUMMIFY'},
+    'VehPower': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'ClaimNb': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'VehAge': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'VehBrand': {'role': 'INPUT', 'type': 'CATEGORY', 'handling': 'DUMMIFY', 'chooseBaseLevel': True, 'baseLevel': 'B10'},
+    'Exposure': {'role': 'INPUT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'DrivAge': {'role': 'INPUT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'BonusMalus': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'Density': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': 'REGULAR'},
+    'Area': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'DUMMIFY'},
+    'ClaimAmount': {'role': 'Target', 'type': 'NUMERIC', 'handling': None},
+    'IDpol': {'role': 'REJECT', 'type': 'NUMERIC', 'handling': None},
+    'Region': {'role': 'REJECT', 'type': 'CATEGORY', 'handling': 'CUSTOM'}} 
+}
 
 dummy_setup_params = {
     "target_column": "ClaimAmount",
@@ -210,5 +240,18 @@ def get_dummy_model_comparison_data():
     df['model_2_observedAverage']= np.random.uniform(0.5, 1, size=11)
     df['model_2_fittedAverage']= np.random.uniform(0.5, 1, size=11)
     df['model2_baseLevelPrediction']= np.random.uniform(0.5, 1, size=11)
+    choices = ["train", "test"]
+    df['dataset']= [np.random.choice(choices) for _ in range(11)]
     return df
 
+dummy_variable_level_stats = pd.DataFrame({'variable': ['VehBrand', 'VehBrand', 'VehBrand', 'VehPower', 'VehPower'], 
+                       'value': ['B1', 'B10', 'B12', 'Diesel', 'Regular'], 
+                       'coefficient': [0, 0.5, 0.32, 0, 0.0234],
+                       'standard_error': [0, 1.23, 1.74, 0, 0.9],
+                       'standard_error_pct': [0, 1.23, 1.74, 0, 0.9],
+                        'weight': [234, 87, 73, 122, 90], 
+                        'weight_pct': [60, 20, 20, 65, 35], 
+                        'relativity': [1, 1.23, 1.077, 1, 0.98]}).to_dict('records')
+
+data = {'Name': ['John', 'Alice', 'Bob'], 'Age': [30, 25, 35]}
+variable_level_stats_df = pd.DataFrame(data)

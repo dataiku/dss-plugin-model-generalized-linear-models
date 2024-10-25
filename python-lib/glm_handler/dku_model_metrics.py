@@ -1,9 +1,9 @@
 import numpy as np
 
 class ModelMetricsCalculator:
-    def __init__(self, model_handler):
-        self.model_info_handler = model_handler.model_info_handler
-        self.predictor = model_handler.model_info_handler.get_predictor()
+    def __init__(self, model_retriever):
+        self.model_info_handler = model_retriever.model_info_handler
+        self.predictor = model_retriever.model_info_handler.get_predictor()
         self.df = self.model_info_handler.get_train_df()[0]
         self.transformed_X, _, _, self.valid_y = self.predictor.preprocessing.preprocess(self.df, with_target=True)
         self.transformed_X = self.predictor._clf.process_fixed_columns(self.transformed_X)

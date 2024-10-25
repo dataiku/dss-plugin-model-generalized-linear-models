@@ -158,7 +158,8 @@
               data: this.xaxisLabels,
               axisLabel: {'interval': 0,
                           'rotate': 45,
-                          }
+                          },
+              axisLine: { onZero: false},
           }],
           yAxis: [
                     {
@@ -166,11 +167,22 @@
                         position: "left",
                         name: "value",
                         axisLine: { onZero: false, show: true },
+                        //axisLine: { onZero: false, show:false},
+                        //min: 'dataMin',
+                        max: function(value: any) {
+                          return Math.round((value.max + (value.max-value.min)*0.1) * 100) / 100; // Adjust 'someMargin' as needed
+                        },
+                        min: function(value: any) {
+                          return Math.round((value.min - (value.max-value.min)*0.1) * 100) / 100; // Adjust 'someMargin' as needed
+                        },
                     },
                     {
                         type: "value",
                         position: "right",
                         name: "weights",
+                        max: function(value: any) {
+                          return Math.round((value.max + (value.max-value.min)*0.1) * 100) / 100; // Adjust 'someMargin' as needed
+                        },
                         splitLine: {show: false} ,
                     },
                 ],
@@ -202,7 +214,7 @@
                         // Custom tooltip formatter
                         var tooltip = params[0].axisValueLabel + '<br/>'; // X-axis label
                         params.forEach(function(item: any) {
-                            tooltip += item.seriesName + ': ' + item.data + '<br/>'; // Series name and value
+                            tooltip += item.seriesName + ': ' + (Math.round(item.data*1000.0)/1000.0) + '<br/>'; // Series name and value
                         });
                         return tooltip;
                     }

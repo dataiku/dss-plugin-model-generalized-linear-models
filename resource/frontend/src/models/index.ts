@@ -36,6 +36,11 @@ export type ModelPoint = {
     name: string;
 }
 
+export type BaseValue = {
+    variable: string;
+    base_level: string;
+}
+
 export type ModelVariablePoint = { 
     id: string;
     name: string;

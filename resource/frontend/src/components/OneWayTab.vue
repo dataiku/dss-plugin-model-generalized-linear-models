@@ -69,8 +69,7 @@
                               </q-item>
                         </template>
                   </BsSelect>
-                  <BsCheckbox v-model="rescale" 
-                  v-if="selectedVariable.isInModel"
+                  <BsCheckbox v-model="rescale" v-if="selectedModelString"
                   @update:modelValue="updateRescale" 
                   label="Rescale?"></BsCheckbox>
                   <BsLabel v-if="selectedModelString"
@@ -134,7 +133,7 @@ import BarChart from './BarChart.vue'
 import DocumentationContent from './DocumentationContent.vue'
 import EmptyState from './EmptyState.vue';
 import * as echarts from "echarts";
-import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, ModelVariablePoint } from '../models';
+import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, ModelVariablePoint, BaseValue } from '../models';
 import { isErrorPoint } from '../models';
 import { defineComponent } from "vue";
 import { API } from '../Api';
@@ -194,6 +193,7 @@ export default defineComponent({
             relativitiesData: [] as RelativityPoint[],
             relativitiesTable: [] as RelativityPoint[],
             models: [] as ModelPoint[],
+            baseValues: [] as BaseValue[],
             selectedModel: {} as ModelPoint,
             modelsString: [] as string[],
             selectedModelString: "",
@@ -238,14 +238,15 @@ export default defineComponent({
           return relativity
         })
         if (this.rescale) {
-            const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            //const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            const baseCategory = this.baseValues.find(item => item.variable === newValue.variable);
             if (baseCategory) {
-              const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+              const baseData = this.allData.find(item => item.Category === baseCategory.base_level && item.definingVariable === this.selectedVariable.variable);
               if (baseData) {
                 const baseLevelPrediction = baseData.baseLevelPrediction;
                 const fittedAverage = baseData.fittedAverage;
                 const observedAverage = baseData.observedAverage;
-            this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
+                this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable).map(item => ({
                 ...item,
                 baseLevelPrediction: item.baseLevelPrediction / baseLevelPrediction,
                 fittedAverage: item.fittedAverage / fittedAverage,
@@ -264,9 +265,10 @@ export default defineComponent({
       allData(newValue: DataPoint[]) {
          this.chartData = this.allData.filter(item => item.definingVariable === this.selectedVariable.variable);
          if (this.rescale) {
-            const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            //const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            const baseCategory = this.baseValues.find(item => item.variable === this.selectedVariable.variable);
             if (baseCategory) {
-              const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+              const baseData = this.allData.find(item => item.Category === baseCategory.base_level && item.definingVariable === this.selectedVariable.variable);
               if (baseData) {
                 const baseLevelPrediction = baseData.baseLevelPrediction;
                 const fittedAverage = baseData.fittedAverage;
@@ -305,9 +307,11 @@ export default defineComponent({
         },
         async updateRescale(value: boolean) {
           if (value) {
-            const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            //const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+            const baseCategory = this.baseValues.find(item => item.variable === this.selectedVariable.variable);
             if (baseCategory) {
-              const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+              const baseData = this.allData.find(item => item.Category === baseCategory.base_level && item.definingVariable === this.selectedVariable.variable);
+              console.log(baseData);
               if (baseData) {
                 const baseLevelPrediction = baseData.baseLevelPrediction;
                 const fittedAverage = baseData.fittedAverage;
@@ -345,6 +349,10 @@ export default defineComponent({
               this.allData = dataResponse?.data;
               const relativityResponse = await API.getRelativities(model);
               this.relativitiesData = relativityResponse?.data;
+              const baseResponse = await API.getBaseValues(model);
+              this.baseValues = baseResponse?.data;
+              console.log("base values");
+              console.log(this.baseValues);
               this.selectedModelString = value;
             }
         } catch (err) {
