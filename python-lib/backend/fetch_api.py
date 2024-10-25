@@ -386,25 +386,15 @@ def get_model_metrics():
     loading_thread.join()
     request_json = request.get_json()
 
-   
-    models = [request_json["model1"], request_json["model2"]]
+    model_retriever = VisualMLModelRetriver(request_json["id"])
+    mmc = ModelMetricsCalculator(model_retriever)
+    model_aic, model_bic, model_deviance = mmc.calculate_metrics()
 
     metrics = {
-        "models": {}
+        "AIC": model_aic,
+        "BIC": model_bic,
+        "Deviance": model_deviance
     }
-
-    for i, model in enumerate(models, start=1):
-        model_retriever = VisualMLModelRetriver(model)
-        mmc = ModelMetricsCalculator(model_retriever)
-        model_aic, model_bic, model_deviance = mmc.calculate_metrics()
-
-        model_key = f"Model_{i}"
-
-        metrics["models"][model_key] = {
-            "AIC": model_aic,
-            "BIC": model_bic,
-            "Deviance": model_deviance
-        }
     return jsonify(metrics)
 
 

@@ -114,7 +114,6 @@ dummy_model_metrics_old ={
             }
         }
         }
-<<<<<<< HEAD
 
 dummy_model_metrics ={
             "AIC": 100,
