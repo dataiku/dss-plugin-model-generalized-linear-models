@@ -1,5 +1,9 @@
 # Changelog
 
+## [Version 2.0.0alpha1] - Bugfix Release - 2024-10
+
+* New Webapp
+
 ## [Version 1.1.1] - Bugfix Release - 2024-02
 
 * Update the PredictionModelHandler interface
