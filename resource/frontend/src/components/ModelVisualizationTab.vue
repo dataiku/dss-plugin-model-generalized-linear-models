@@ -70,7 +70,7 @@
                             </template>
                       </BsSelect>
                       <BsCheckbox v-model="rescale" 
-                      v-if="selectedVariable.isInModel && tab=='one-way-variable'"
+                      v-if="selectedModelString && tab=='one-way-variable'"
                       @update:modelValue="updateRescale" 
                       label="Rescale?"></BsCheckbox>
                       <BsLabel v-if="selectedModelString && tab=='lift-chart'"
