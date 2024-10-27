@@ -27,6 +27,14 @@
           ],
           "mandatory": true
       },
+      {
+        "name": "experiment_name",
+        "label": "Experiment Name",
+         "description": "Your custom name for your experiment",
+        "type": "STRING",
+      "visibilityCondition": "model.setup_type == 'new'",
+        "mandatory": true
+      },
      {
         "type": "SEPARATOR",
         "description": "",
