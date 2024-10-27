@@ -162,6 +162,10 @@ type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFuncti
 interface TypeWithValue {
   value: string;
 }
+interface Interaction {
+    first: string;
+    second: string;
+}
 interface Model {
     id: string;
     name: string;
@@ -249,7 +253,7 @@ data() {
         layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
         trainingIcon,
         docLogo,
-        previousInteractions: [] as Interaction[],  
+        previousInteractions: [] as Array<{first: string, second: string}>, 
         distributionOptions: ['Binomial',
             'Gamma',
             'Gaussian',
@@ -313,8 +317,12 @@ watch: {
     
 },
 methods: {
-        updateInteractions(newInteractions) {
-            this.previousInteractions = newInteractions;
+    updateInteractions(newInteractions: Array<string>) {
+            // Convert the formatted strings back to interaction objects
+            this.previousInteractions = newInteractions.map(interaction => {
+                const [first, second] = interaction.split(':');
+                return { first, second };
+            });
         },
         async fetchExcludedColumns() {
         try {
@@ -458,10 +466,13 @@ methods: {
         }, {});
         // Now modelParameters is available to be included in payload
         const payload = {
-            model_parameters: modelParameters,
-            variables: variableParameters,
-            interaction_variable: this.previousInteractions
-        };
+        model_parameters: modelParameters,
+        variables: variableParameters,
+        interaction_variables: this.previousInteractions.map(interaction => ({
+            first: interaction.first,
+            second: interaction.second
+        }))
+};
         try {
             console.log("Payload:", payload);
             const modelUID = await API.trainModel(payload);
@@ -525,7 +536,10 @@ methods: {
                         const paramsColumns = Object.keys(params);
                         console.log("paramsColumns:", paramsColumns);
                         
-                        this.previousInteractions = paramsResponse.data.interactions;
+                        this.previousInteractions = paramsResponse.data.interactions.map((interaction: any) => ({
+                            first: interaction.first,
+                            second: interaction.second
+                        }));
                         console.log("Interaction recieved in parent", this.previousInteractions)
                         this.selectedDistributionFunctionString = paramsResponse.data.distribution_function;
                         this.selectedLinkFunctionString = paramsResponse.data.link_function;
