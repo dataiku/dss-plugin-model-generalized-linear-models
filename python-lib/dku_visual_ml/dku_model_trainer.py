@@ -360,8 +360,8 @@ class VisualMLModelTrainer(DataikuClientProject):
         interaction_columns_second = []
         
         for interaction in interaction_columns:
-            first = interaction['interaction_first']
-            second = interaction['interaction_second']
+            first = interaction['first']
+            second = interaction['second']
             interaction_columns_first.append(first)
             interaction_columns_second.append(second)
             

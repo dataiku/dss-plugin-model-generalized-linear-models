@@ -103,7 +103,7 @@ class DKUVisualMLConfig:
         
         self.variables = dict(request_json.get('variables'))
         self.variables_list = [{'name': key, **value} for key, value in self.variables.items()]
-        self.interaction_variables =  request_json.get('interaction_variable', None)
+        self.interaction_variables =  request_json.get('interaction_variables', None)
         self.log_configuration()
         # Check for required parameters
 
