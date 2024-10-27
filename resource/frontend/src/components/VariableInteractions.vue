@@ -21,20 +21,20 @@
         <div v-for="(interaction, index) in interactions" :key="index" class="interaction-row">
           <div class="interaction-label">Interaction {{ index + 1 }}</div>
           <BsSelect
-            :modelValue="interaction.first"
-            class="interaction-select"
-            :all-options="filteredColumns.map(col => col.name)"
-            @update:modelValue="value => updateInteraction(index, 'first', value)"
-            placeholder="Select first variable"
-          />
-  
-          <BsSelect
-            :modelValue="interaction.second"
-            class="interaction-select"
-            :all-options="filteredColumns.map(col => col.name)"
-            @update:modelValue="value => updateInteraction(index, 'second', value)"
-            placeholder="Select second variable"
-          />
+                :modelValue="interaction.first"
+                class="interaction-select"
+                :all-options="(filteredColumns as Column[]).map(col => col.name)"
+                @update:modelValue="value => updateInteraction(index, 'first', value)"
+                placeholder="Select first variable"
+            />
+
+            <BsSelect
+                :modelValue="interaction.second"
+                class="interaction-select"
+                :all-options="(filteredColumns as Column[]).map(col => col.name)"
+                @update:modelValue="value => updateInteraction(index, 'second', value)"
+                placeholder="Select second variable"
+            />
   
           <q-btn 
             color="negative" 
@@ -57,58 +57,71 @@
     </div>
   </template>
   
-  <script>
-  export default {
+  <script lang="ts">
+  // Remove PropType import - we'll use type casting instead
+  import { defineComponent } from 'vue';
+  
+  interface Column {
+    name: string;
+  }
+  
+  interface Interaction {
+    first: string;
+    second: string;
+  }
+  
+  export default defineComponent({
     name: 'VariableInteractions',
     
     props: {
-      filteredColumns: {
-        type: Array,
-        required: true
-      },
-      initialInteractions: {
-        type: Array,
-        default: () => []
-      }
+    filteredColumns: {
+      type: Array,
+      required: true
     },
+    initialInteractions: {
+      type: Array,
+      default: () => []
+    }
+  },
   
     data() {
       return {
-        interactions: [],
+        interactions: [] as Interaction[],
         internalUpdate: false,
-        lastEmittedInteractions: []
+        lastEmittedInteractions: [] as Interaction[]
       }
     },
   
     watch: {
-      initialInteractions: {
+        initialInteractions: {
         handler(newInteractions) {
-          if (!this.internalUpdate && JSON.stringify(newInteractions) !== JSON.stringify(this.lastEmittedInteractions)) {
+            if (!this.internalUpdate && JSON.stringify(newInteractions) !== JSON.stringify(this.lastEmittedInteractions)) {
             console.log("Initial interactions updated:", newInteractions);
             if (newInteractions && newInteractions.length > 0) {
-              this.interactions = newInteractions.map(interaction => ({
+                this.interactions = (newInteractions as Interaction[]).map(interaction => ({
                 first: interaction.first || '',
                 second: interaction.second || ''
-              }));
+                }));
             } else {
-              this.interactions = [];
+                this.interactions = [];
             }
-            this.lastEmittedInteractions = newInteractions;
-          }
+            this.lastEmittedInteractions = [...newInteractions] as Interaction[];
+            }
         },
         deep: true
-      }
+        }
     },
-  
+
     created() {
-      if (this.initialInteractions && this.initialInteractions.length > 0) {
-        this.interactions = this.initialInteractions.map(interaction => ({
-          first: interaction.first || '',
-          second: interaction.second || ''
+        if (this.initialInteractions && this.initialInteractions.length > 0) {
+        this.interactions = (this.initialInteractions as Interaction[]).map(interaction => ({
+            first: interaction.first || '',
+            second: interaction.second || ''
         }));
-        this.lastEmittedInteractions = this.initialInteractions;
-      }
+        this.lastEmittedInteractions = [...this.initialInteractions] as Interaction[];
+        }
     },
+
   
     methods: {
       addInteraction() {
@@ -123,7 +136,7 @@
         }
       },
   
-      removeInteraction(index) {
+      removeInteraction(index: number) {
         this.internalUpdate = true;
         try {
           this.interactions.splice(index, 1);
@@ -133,7 +146,7 @@
         }
       },
   
-      updateInteraction(index, field, value) {
+      updateInteraction(index: number, field: keyof Interaction, value: string) {
         this.internalUpdate = true;
         try {
           this.interactions[index][field] = value;
@@ -159,7 +172,7 @@
         this.$emit('update:interactions', formattedInteractions);
       }
     }
-  }
+  });
   </script>
   
   <style scoped>
