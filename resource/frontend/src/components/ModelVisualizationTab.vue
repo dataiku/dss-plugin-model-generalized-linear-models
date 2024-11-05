@@ -194,7 +194,7 @@
     import VariableLevelStatsTabContent from './VariableLevelStatsTabContent.vue'
     import LiftChartTabContent from './LiftChartTabContent.vue'
     import * as echarts from "echarts";
-    import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, VariableLevelStatsPoint, LiftDataPoint, ModelMetrics, ModelMetricsDataPoint } from '../models';
+    import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, VariableLevelStatsPoint, LiftDataPoint, ModelMetrics, ModelMetricsDataPoint, BaseValue } from '../models';
     import { isErrorPoint } from '../models';
     import { defineComponent } from "vue";
     import { API } from '../Api';
@@ -312,7 +312,8 @@
                 modelMetrics2: {} as ModelMetricsDataPoint,
                 variableLevelStatsData2: [] as VariableLevelStatsPoint[],
                 relativitiesData2: [] as RelativityPoint[],
-
+                baseValues1: [] as BaseValue[],
+                baseValues2: [] as BaseValue[],
             };
         },
         watch: {
@@ -353,9 +354,9 @@
               return relativity
             })
             if (rescale) {
-                const baseCategory = this.relativitiesTable.find(item => item.relativity === 1);
+                const baseCategory = this.baseValues1.find(item => item.variable === variable.variable);
                 if (baseCategory) {
-                  const baseData = this.allData.find(item => item.Category === baseCategory.category && item.definingVariable === this.selectedVariable.variable);
+                  const baseData = this.allData.find(item => item.Category === baseCategory.base_level && item.definingVariable === this.selectedVariable.variable);
                   if (baseData) {
                     const baseLevelPrediction = baseData.baseLevelPrediction;
                     const fittedAverage = baseData.fittedAverage;
@@ -369,8 +370,13 @@
                   } else {
                 this.chartData = this.allData.filter(item => item.definingVariable === variable.variable);
                 }
+                } else {
+                  this.chartData = this.allData.filter(item => item.definingVariable === variable.variable);
+                }
                 if (modelString2) {
-                  const baseData2 = this.allData2.find(item => item.Category === baseCategory.category && item.definingVariable === variable.variable);
+                  const baseCategory2 = this.baseValues2.find(item => item.variable === variable.variable);
+                  if (baseCategory2) {
+                  const baseData2 = this.allData2.find(item => item.Category === baseCategory2.base_level && item.definingVariable === variable.variable);
                   if (baseData2) {
                     const baseLevelPrediction = baseData2.baseLevelPrediction;
                     const fittedAverage = baseData2.fittedAverage;
@@ -382,15 +388,11 @@
                     observedAverage: item.observedAverage / observedAverage
                     }));
                   } else {
-                this.chartData2 = this.allData2.filter(item => item.definingVariable === variable.variable);
-                }
-                }
-
-              } else {
-                this.chartData = this.allData.filter(item => item.definingVariable === variable.variable);
-                if (modelString2) {
                   this.chartData2 = this.allData2.filter(item => item.definingVariable === variable.variable);
-                }
+                  }
+                } else {
+                  this.chartData2 = this.allData2.filter(item => item.definingVariable === variable.variable);
+                  }
               }
             } else {
                 this.chartData = this.allData.filter(item => item.definingVariable === variable.variable);
@@ -434,6 +436,8 @@
                   this.relativitiesData = relativityResponse?.data;
                   this.selectedModelString = value;
                 }
+                const baseResponse = await API.getBaseValues(model);
+                this.baseValues1 = baseResponse?.data;
                 const variableLevelStatsResponse = await API.getVariableLevelStats(model);
                 this.variableLevelStatsData = variableLevelStatsResponse?.data.map( (point) => {
                     const variableLevelStats = {'variable': point.variable, 'value': point.value, 
@@ -468,6 +472,8 @@
                 const relativityResponse = await API.getRelativities(model);
                 this.relativitiesData2 = relativityResponse?.data;
                 this.selectedModelString2 = value;
+                const baseResponse = await API.getBaseValues(model);
+                this.baseValues2 = baseResponse?.data;
                 const variableLevelStatsResponse = await API.getVariableLevelStats(model);
                 this.variableLevelStatsData2 = variableLevelStatsResponse?.data.map( (point) => {
                     const variableLevelStats = {'variable': point.variable, 'value': point.value, 
@@ -658,13 +664,4 @@
         position: relative;
         top: 4px;
     }
-    </style>
-
-function updateChartData(selectedVariable: any, rescale: any, selectedModelString: any, selectedModelString1: any) {
-  throw new Error('Function not implemented.');
-}
-
-function updateChartData(selectedVariable: any, rescale: any, selectedModelString: any, selectedModelString1: any) {
-  throw new Error('Function not implemented.');
-}
-    
+    </style>    
