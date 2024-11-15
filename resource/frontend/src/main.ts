@@ -13,6 +13,7 @@ import "quasar-ui-bs/dist/style.css";
 import "vite/modulepreload-polyfill";
 import "./assets/fonts/fonts.scss";
 import { QuasarBs } from "quasar-ui-bs";
+import { createPinia } from "pinia";
 
 const myApp = createApp(App)
 
@@ -24,4 +25,5 @@ myApp.use(Quasar, {
     }
 })
 myApp.use(QuasarBs);
+myApp.use(createPinia());
 myApp.mount('#app')
