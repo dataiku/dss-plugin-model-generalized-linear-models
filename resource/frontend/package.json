@@ -29,9 +29,9 @@
     "quasar": "2.12.0",
     "quasar-ui-bs": "file:tmp/ui",
     "vue": "^3.2.47",
+    "vue-echarts": "^6.5.4",
     "vue-i18n": "^9.3.0-beta.26",
-    "vue-router": "^4.1.6",
-    "vue-echarts": "^6.5.4"
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@quasar/vite-plugin": "^1.4.1",
