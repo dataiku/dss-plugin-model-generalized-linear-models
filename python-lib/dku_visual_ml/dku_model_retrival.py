@@ -123,7 +123,7 @@ class VisualMLModelRetriver(DataikuClientProject):
         final_interactions = set()
 
         for interaction in interaction_variables:
-            split_interaction = interaction_variables[0].split('::')
+            split_interaction = interaction.split('::')
             first = split_interaction[0].split(':')[1]
             second = split_interaction[1].split(':')[1]
             final_interactions.add((first, second))

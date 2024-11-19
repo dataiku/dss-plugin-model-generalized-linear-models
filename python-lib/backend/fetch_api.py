@@ -456,8 +456,11 @@ def export_model():
             variable_stats = model_cache.get_model(model).get('variable_stats')
             relativities_interaction = model_cache.get_model(model).get('relativities_interaction')
             
+            print('relativities_interaction')
+            print(relativities_interaction)
             if len(relativities_interaction) > 0:
                 unique_interactions = relativities_interaction.groupby(['feature_1', 'feature_2']).count().reset_index()
+                print(unique_interactions)
                 for _, interaction in unique_interactions.iterrows():
                     feature_1 = interaction['feature_1']
                     feature_2 = interaction['feature_2']

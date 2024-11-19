@@ -163,10 +163,10 @@ class RelativitiesCalculator:
         logger.info("Computing relativities DataFrame.")
         sample_train_row = self.initialize_baseline()
         baseline_prediction = self.calculate_baseline_prediction(sample_train_row)
-
+        
         self.relativities_interaction = {}
         interactions = self.model_retriever.get_interactions()
-
+        
         for interaction in interactions:
             interaction_first = interaction[0]
             interaction_second = interaction[1]
@@ -194,6 +194,7 @@ class RelativitiesCalculator:
                         self.relativities_interaction[interaction_first][interaction_second][value_first] = {value_second: relativity}
 
         relativities_interaction_df = self.construct_relativities_interaction_df()
+        
         logger.info("Relativities DataFrame computed")
         return relativities_interaction_df
 

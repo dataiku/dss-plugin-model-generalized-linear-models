@@ -42,7 +42,7 @@ def setup_model_cache(global_dku_mltask, model_deployer):
                 
                 model1_predicted_base = relativities_calculator.get_formated_predicted_base()
                 base_values = relativities_calculator.get_base_values()
-
+                
                 relativities = relativities_calculator.get_relativities_df()
                 relativities_interaction = relativities_calculator.get_relativities_interactions_df()
                 
