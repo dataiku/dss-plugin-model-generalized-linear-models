@@ -13,8 +13,6 @@ function roundDecimals(x: number): number {
     return Math.round(x * 1000) / 1000;
   }
   
-export const TABS_KEYS = ["modelTrainTab", "modelVisualizationTab"];
-
 const rows = [
     {
         class: 'January',

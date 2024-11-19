@@ -1,34 +1,122 @@
 <template>
     <BsLayoutDefault ref="layout" :left-panel-width="350">
-      <ModelTrainingTab
+      <template v-for="tabInfo in tabs" :key="tabInfo.name">
+      <BsTab :name="tabInfo.name" :docTitle="tabInfo.docTitle">
+                <BsTabIcon>
+                    <img :src="tabInfo.icon" :alt="`${tabInfo.name} Icon`" />
+                </BsTabIcon>
+                <BsHeader>
+                    <!-- <template #content>
+                        <Header
+                            :target="tabInfo.headerInfo.target"
+                            :target-date="tabInfo.headerInfo.targetDate"
+                            :target-type="tabInfo.headerInfo.targetType"
+                        ></Header>
+                    </template> -->
+                    <template #documentation>
+                        <CustomDocumentation></CustomDocumentation>
+                    </template>
+                </BsHeader>
+                <BsDrawer>
+                    <component
+                        :is="tabInfo.drawerComponent"
+                        v-bind="tabInfo.drawerProps"
+                        @update:loading="updateLoading"
+                        @navigate-tab="goToTab"
+                    />
+                </BsDrawer>
+                <BsContent>
+                    <template
+                        v-if="
+                            tabInfo.contentComponent && !tabInfo.showEmptyState
+                        "
+                    >
+                        <component
+                            :is="tabInfo.contentComponent"
+                            v-bind="tabInfo.contentProps"
+                            @update:loading="updateLoading"
+                            @navigate-tab="goToTab"
+                        />
+                    </template>
+                    <template v-else>
+                        <EmptyState
+                            :title="tabInfo.emptyState.title"
+                            :subtitle="tabInfo.emptyState.subtitle"
+                        />
+                    </template>
+                </BsContent>
+            </BsTab>
+        </template>
+      <!-- <ModelTrainingTab
         @update-models="updateModels">
       </ModelTrainingTab>
       <ModelVisualizationTab
       :reload-models="reloadModels">
-      </ModelVisualizationTab>
+      </ModelVisualizationTab> -->
     </BsLayoutDefault>
 </template>
 
 <script lang="ts">
-import ModelTrainingTab from './components/ModelTrainingTab.vue';
-import ModelVisualizationTab from './components/ModelVisualizationTab.vue'
+import ModelVisualizationTabContent from './components/ModelVisualizationTabContent.vue';
+import ModelVisualizationTabDrawer from './components/ModelVisualizationTabDrawer.vue';
+import EmptyState from './components/EmptyState.vue';
+import CustomDocumentation from './components/CustomDocumentation.vue';
 import { BsLayoutDefault } from "quasar-ui-bs";
 import { defineComponent } from "vue";
+import { useModelStore } from "./stores/webapp";
+import oneWayIcon from "./assets/images/one-way.svg";
+
 export default defineComponent({
     components: {
-        ModelTrainingTab,
-        ModelVisualizationTab,
+      ModelVisualizationTabContent,
+      ModelVisualizationTabDrawer,
+      EmptyState,
+      CustomDocumentation
     },
     data() {
     return {
         reloadModels: false as boolean,
+        store: useModelStore(),
+        loading: false as boolean
       }
+    },
+    computed: {
+    tabs() {
+            return [
+                {
+                    name: "Model Visualization",
+                    docTitle: "GLM Hub",
+                    icon: oneWayIcon,
+                    drawerComponent: "ModelVisualizationTabDrawer",
+                    contentComponent: "ModelVisualizationTabContent",
+                    contentProps: {},
+                    drawerProps: {},
+                    showEmptyState: !this.store.chartData,
+                    emptyState: {
+                        title: "Model Visualization",
+                        subtitle:
+                            "Select a model and variable in the left menu",
+                    }
+                }
+              ]
+            }
     },
     methods: {
       updateModels(){
         console.log("App: update models");
         this.reloadModels = !this.reloadModels;
       },
+      updateLoading(newVal: boolean) {
+            this.loading = newVal;
+        },
+        goToTab(index: number) {
+            const layout = this.$refs.layout as InstanceType<
+                typeof BsLayoutDefault
+            >;
+            if (layout) {
+                layout.tabIndex = index;
+            }
+        },
     }
 })
 </script>
