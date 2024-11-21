@@ -47,10 +47,10 @@
                 </BsContent>
             </BsTab>
         </template>
-      <!-- <ModelTrainingTab
+      <ModelTrainingTab
         @update-models="updateModels">
       </ModelTrainingTab>
-      <ModelVisualizationTab
+      <!-- <ModelVisualizationTab
       :reload-models="reloadModels">
       </ModelVisualizationTab> -->
     </BsLayoutDefault>
@@ -59,6 +59,7 @@
 <script lang="ts">
 import ModelVisualizationTabContent from './components/ModelVisualizationTabContent.vue';
 import ModelVisualizationTabDrawer from './components/ModelVisualizationTabDrawer.vue';
+import ModelTrainingTab from './components/ModelTrainingTab.vue'
 import EmptyState from './components/EmptyState.vue';
 import CustomDocumentation from './components/CustomDocumentation.vue';
 import { BsLayoutDefault } from "quasar-ui-bs";
@@ -71,6 +72,7 @@ export default defineComponent({
       ModelVisualizationTabContent,
       ModelVisualizationTabDrawer,
       EmptyState,
+      ModelTrainingTab,
       CustomDocumentation
     },
     data() {

@@ -9,37 +9,15 @@ import type {
 } from '../models';
 import { isAxiosError } from 'axios'; 
 import type { AxiosError, AxiosResponse } from 'axios';  
+import type { ColumnInput, Interaction, Column, APIResponse } from "../models";
 
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
 
-interface ErrorResponse {
-    error: string;
-}
-
-interface AccType {
-    [key: string]: {
-    role: string;
-    type: string;
-    processing: string;
-    included: boolean;
-    base_level: string;
-    };
-}
-
-interface Column {
-    name: string;
-    isIncluded: boolean;
-    role: string;
-    type: string;
-    preprocessing: string;
-    baseLevel: string;
-    options: Array<string>;
-}
-
-interface Interaction {
-    first: string;
-    second: string;
-}
+// interface ColumnInput {
+//     column: string;
+//     baseLevel: string;
+//     options: Array<string>;
+// }
 
 export const useTrainingStore = defineStore("TrainingStore", {
     state: () => ({
