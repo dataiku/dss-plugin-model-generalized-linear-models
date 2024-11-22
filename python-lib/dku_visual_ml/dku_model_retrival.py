@@ -263,7 +263,7 @@ class VisualMLModelRetriver(DataikuClientProject):
         logger.debug(f"Retrieving setup parameters for model id {self.full_model_id}")
         logger.debug("Model Parameters")
         features_dict = self.get_features_dict()
-        interaction_columns_first = self.predictor._clf.interaction_columns_first,
+        interaction_columns_first = self.predictor._clf.interaction_columns_first
         interaction_columns_second = self.predictor._clf.interaction_columns_second
         
         setup_params = {
