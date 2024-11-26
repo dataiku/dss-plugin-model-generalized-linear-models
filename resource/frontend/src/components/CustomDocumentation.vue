@@ -29,14 +29,16 @@
         </template>
     </BsDocumentation>
 </template>
-<script>
+
+<script lang="ts">
+import { defineComponent } from "vue";
 import docLogo from "../assets/images/doc-logo-example.svg";
 
-export default {
+export default defineComponent({
     data() {
         return {
             docLogo,
         }
     }
-};
+})
 </script>

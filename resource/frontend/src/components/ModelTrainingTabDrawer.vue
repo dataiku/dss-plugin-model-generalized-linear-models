@@ -88,7 +88,7 @@
 
 <script lang="ts">
     import { defineComponent } from "vue";
-    import type { ErrorPoint } from '../models';
+    import type { ErrorPoint, AccType } from '../models';
     import EmptyState from './EmptyState.vue';
     import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider, BsCard } from "quasar-ui-bs";
     import docLogo from "../assets/images/doc-logo-example.svg";

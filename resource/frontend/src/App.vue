@@ -47,9 +47,9 @@
                 </BsContent>
             </BsTab>
         </template>
-      <ModelTrainingTab
+      <!-- <ModelTrainingTab
         @update-models="updateModels">
-      </ModelTrainingTab>
+      </ModelTrainingTab> -->
       <!-- <ModelVisualizationTab
       :reload-models="reloadModels">
       </ModelVisualizationTab> -->
@@ -59,20 +59,23 @@
 <script lang="ts">
 import ModelVisualizationTabContent from './components/ModelVisualizationTabContent.vue';
 import ModelVisualizationTabDrawer from './components/ModelVisualizationTabDrawer.vue';
-import ModelTrainingTab from './components/ModelTrainingTab.vue'
+import ModelTrainingTabDrawer from './components/ModelTrainingTabDrawer.vue'
+import ModelTrainingTabContent from './components/ModelTrainingTabContent.vue'
 import EmptyState from './components/EmptyState.vue';
 import CustomDocumentation from './components/CustomDocumentation.vue';
 import { BsLayoutDefault } from "quasar-ui-bs";
 import { defineComponent } from "vue";
 import { useModelStore } from "./stores/webapp";
 import oneWayIcon from "./assets/images/one-way.svg";
+import trainingIcon from "./assets/images/training.svg";
 
 export default defineComponent({
     components: {
       ModelVisualizationTabContent,
       ModelVisualizationTabDrawer,
       EmptyState,
-      ModelTrainingTab,
+      ModelTrainingTabDrawer,
+      ModelTrainingTabContent,
       CustomDocumentation
     },
     data() {
@@ -85,6 +88,21 @@ export default defineComponent({
     computed: {
     tabs() {
             return [
+                {
+                    name: "Model Training",
+                    docTitle: "GLM Hub",
+                    icon: trainingIcon,
+                    drawerComponent: "ModelTrainingTabDrawer",
+                    contentComponent: "ModelTrainingTabContent",
+                    contentProps: {},
+                    drawerProps: {},
+                    showEmptyState: false,
+                    emptyState: {
+                        title: "Model Visualization",
+                        subtitle:
+                            "Select a model and variable in the left menu",
+                    }
+                },
                 {
                     name: "Model Visualization",
                     docTitle: "GLM Hub",
