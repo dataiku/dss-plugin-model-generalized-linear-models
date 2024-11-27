@@ -33,7 +33,7 @@ def natural_sort_key(s):
     import re
     return [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', str(s))]
 
-def calculate_base_levels(df, exposure_column=None):
+def calculate_base_levels(df, exposure_column=None, max_nb_options=100):
     cols_json = []
     # Sort the columns using natural sorting
     sorted_columns = sorted(df.columns, key=natural_sort_key)
@@ -47,8 +47,10 @@ def calculate_base_levels(df, exposure_column=None):
         
         if is_numeric:
             options = sorted([str(val) for val in df[col].unique()], key=float)
+            options = options[:max_nb_options]
         else:
             options = sorted([str(val) for val in df[col].unique()], key=natural_sort_key)
+            options = options[:max_nb_options]
         
         if exposure_column and exposure_column in df.columns:
             # Exposure-based calculation

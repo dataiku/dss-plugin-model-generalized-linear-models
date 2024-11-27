@@ -17,7 +17,9 @@ from chart_formatters.lift_chart import LiftChartFormatter
 from .api_utils import calculate_base_levels
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
-is_local = False
+is_local = True
+
+LIMIT = 100000
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
@@ -595,7 +597,7 @@ def get_excluded_columns():
 def get_dataset_columns():
     try:
         if is_local:
-            dataset_name = "claim_train"
+            dataset_name = "big_test_prepared"
             exposure_column = "exposure"
         else:
             web_app_config = get_webapp_config()
@@ -604,9 +606,9 @@ def get_dataset_columns():
             
         current_app.logger.info(f"Training Dataset name selected is: {dataset_name}")
         
-        df = dataiku.Dataset(dataset_name).get_dataframe()
+        df = dataiku.Dataset(dataset_name).get_dataframe(limit=LIMIT)
         cols_json = calculate_base_levels(df, exposure_column)
-
+        
         current_app.logger.info(f"Successfully retrieved column for dataset '{dataset_name}': {[col['column'] for col in cols_json]}")
 
         return jsonify(cols_json)
@@ -623,7 +625,7 @@ def get_dataset_columns():
 def get_train_dataset_column_names():
     try:
         if is_local:
-            dataset_name = "claim_train"
+            dataset_name = "big_test_prepared"
         else:
             dataset_name = visual_ml_config.input_dataset
 
