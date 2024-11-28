@@ -59,36 +59,7 @@
         "mandatory": false,
         "visibilityCondition": "model.setup_type == 'continue'"
     },
-     {
-        "type": "SEPARATOR",
-        "description": "",
-         "label": "Modelling Parameters"
-    },
-    {
-      "name": "prediction_type",
-      "label": "Prediction Type",
-      "description": "Select the Default Prediction Type",
-       "type": "SELECT",
-        "selectChoices" : [
-            { "value": "REGRESSION", "label": "Regression"}
-        ]
-  },
-
-  {
-    "name": "target_column",
-    "label": "Target Variable",
-    "type": "DATASET_COLUMN",
-    "datasetParamName": "training_dataset_string",
-    "mandatory": true
-  },
-  {
-    "name": "exposure_column",
-    "label": "Exposure Variable",
-    "type": "DATASET_COLUMN",
-    "datasetParamName": "training_dataset_string",
-    "mandatory": false
-  },
-    {
+      {
       "type": "SEPARATOR",
       "description": "",
        "label": "Dataset Parameters"
@@ -116,6 +87,37 @@
         "type": "DATASET",
       "visibilityCondition": "model.policy == 'explicit_test_set'"
     },
+     {
+        "type": "SEPARATOR",
+        "description": "",
+         "label": "Modelling Parameters"
+    },
+    {
+      "name": "prediction_type",
+      "label": "Prediction Type",
+      "description": "Select the Default Prediction Type",
+       "type": "SELECT",
+        "selectChoices" : [
+            { "value": "REGRESSION", "label": "Regression"}
+        ],
+        "visibilityCondition": "false"
+  },
+
+  {
+    "name": "target_column",
+    "label": "Target Variable",
+    "type": "DATASET_COLUMN",
+    "datasetParamName": "training_dataset_string",
+    "mandatory": true
+  },
+  {
+    "name": "exposure_column",
+    "label": "Exposure Variable",
+    "type": "DATASET_COLUMN",
+    "datasetParamName": "training_dataset_string",
+    "mandatory": false
+  },
+    
      {
         "type": "SEPARATOR",
         "description": "",

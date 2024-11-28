@@ -17,7 +17,7 @@ from chart_formatters.lift_chart import LiftChartFormatter
 from .api_utils import calculate_base_levels
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
-is_local = True
+is_local = False
 
 logger.debug(f"Starting web application with is_local: {is_local}")
 
@@ -157,11 +157,16 @@ def get_models():
     if is_local:
         return jsonify(dummy_models)
     
+    loading_thread.join()
     latest_ml_task = visual_ml_trainer.get_latest_ml_task()
     
     if latest_ml_task is None:
-        return jsonify({'error': 'ML task not initialized'}), 500
-    try:  
+        web_app_config = get_webapp_config()
+        visual_ml_trainer.update_visual_ml_config(visual_ml_config)
+        visual_ml_trainer.ml_task = visual_ml_trainer.create_inital_ml_task(web_app_config.get("target_column"))
+        latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+    
+    try:
         current_app.logger.info(f"Mltask has : {len(visual_ml_trainer.mltask.get_trained_models_ids())} Models")
         
         models = format_models(latest_ml_task)
@@ -383,18 +388,11 @@ def get_model_metrics():
     
     loading_thread.join()
     request_json = request.get_json()
-
-   
-    models = [request_json["model1"], request_json["model2"]]
-
-    metrics = {
-        "models": {}
-    }
-
-    for i, model in enumerate(models, start=1):
-        model_retriever = VisualMLModelRetriver(model)
-        mmc = ModelMetricsCalculator(model_retriever)
-        model_aic, model_bic, model_deviance = mmc.calculate_metrics()
+    
+    model_retriever = VisualMLModelRetriver(request_json['id'])
+    model_aic = model_retriever.predictor._clf.aic_value
+    model_bic  = model_retriever.predictor._clf.bic_value
+    model_deviance = model_retriever.predictor._clf.deviance_value
 
     metrics = {
         "AIC": model_aic,
