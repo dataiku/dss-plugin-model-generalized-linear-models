@@ -47,12 +47,6 @@
                 </BsContent>
             </BsTab>
         </template>
-      <!-- <ModelTrainingTab
-        @update-models="updateModels">
-      </ModelTrainingTab> -->
-      <!-- <ModelVisualizationTab
-      :reload-models="reloadModels">
-      </ModelVisualizationTab> -->
     </BsLayoutDefault>
 </template>
 
@@ -68,6 +62,7 @@ import { defineComponent } from "vue";
 import { useModelStore } from "./stores/webapp";
 import oneWayIcon from "./assets/images/one-way.svg";
 import trainingIcon from "./assets/images/training.svg";
+import { useLoader } from "./composables/use-loader";
 
 export default defineComponent({
     components: {
@@ -120,6 +115,15 @@ export default defineComponent({
                 }
               ]
             }
+    },
+    watch: {
+        loading(newVal) {
+            if (newVal) {
+                useLoader("Loading data..").show();
+            } else {
+                useLoader().hide();
+            }
+        },
     },
     methods: {
       updateModels(){

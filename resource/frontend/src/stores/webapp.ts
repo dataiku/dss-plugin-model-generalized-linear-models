@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import { API } from "../Api";
-import { useLoader } from "../composables/use-loader";
 import { useNotification } from "../composables/use-notification";
 import { isErrorPoint } from '../models';
 import type { 
@@ -12,7 +11,7 @@ import type { QTableColumn } from "quasar";
 function roundDecimals(x: number): number {
     return Math.round(x * 1000) / 1000;
   }
-  
+
 const rows = [
     {
         class: 'January',
@@ -78,7 +77,6 @@ export const useModelStore = defineStore("GLMStore", {
       baseValues1: [] as BaseValue[],
       baseValues2: [] as BaseValue[],
       nbBins: 8,
-      loading: false,
       trainTest: false,
       rescale: false,
       includeSuspectVariables: true,
@@ -88,14 +86,11 @@ export const useModelStore = defineStore("GLMStore", {
     actions: {
       async loadModels() {
         try {
-          this.loading = true;
           const response = await API.getModels();
           this.models = response.data;
           this.modelsString = this.models.map(item => item.name);
         } catch (error) {
           this.handleError(error);
-        } finally {
-          this.loading = false;
         }
       },
       async updateTrainTest(value: boolean) {
@@ -108,7 +103,6 @@ export const useModelStore = defineStore("GLMStore", {
         this.liftChartData = liftDataResponse?.data;
       },
       async updateModelString(value: string) {
-        this.loading = true;
               try {
                 this.selectedVariable = {} as VariablePoint;
                 const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
@@ -146,12 +140,9 @@ export const useModelStore = defineStore("GLMStore", {
                 this.modelMetrics1 = ModelMetricsResponse?.data as ModelMetricsDataPoint;
             } catch (err) {
                 this.handleError(err);
-            } finally {
-              this.loading = false;
             }
       },
       async updateModelString2(value: string) {
-        this.loading = true;
               try {
                 this.selectedVariable = {} as VariablePoint;
                 const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
@@ -179,8 +170,6 @@ export const useModelStore = defineStore("GLMStore", {
                 this.modelMetrics2 = ModelMetricsResponse?.data as ModelMetricsDataPoint;
               } catch (err) {
                   this.handleError(err);
-              } finally {
-                this.loading = false;
               }
       },
       async updateChartData() {
@@ -238,13 +227,11 @@ export const useModelStore = defineStore("GLMStore", {
     }
       },
      async updateNbBins(value: number) {
-        this.loading = true;
         this.nbBins = value;
         const model = this.models.filter( (v: ModelPoint) => v.name==this.selectedModelString)[0];
         const modelNbBins = { nbBins: this.nbBins, id: model.id, name: model.name, trainTest: this.trainTest};
         const dataResponse = await API.getLiftData(modelNbBins);
         this.liftChartData = dataResponse?.data;
-        this.loading = false;
     },
     async exportModel() {
         API.exportModel(this.activeModel).then(response => {
@@ -289,10 +276,12 @@ export const useModelStore = defineStore("GLMStore", {
             console.error('Error exporting model:', error);
         });
     },
-      handleError(error: any) {
-        this.loading = false;
-        console.error(error);
-        useNotification("negative", error.message || "An error occurred");
-      },
+    handleError(msg: any) {
+      console.error(msg);
+      this.notifyError(msg);
+  },
+      notifyError(msg: string) {
+        useNotification("negative", msg);
+    },
     },
   });

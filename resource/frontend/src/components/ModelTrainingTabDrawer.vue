@@ -127,21 +127,19 @@
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             trainingIcon,
             docLogo,
-            errorMessage: "" as string
+            errorMessage: "" as string,
+            loading: false as boolean
         };
     },
+    emits: ['update:modelValue', 'update-models', "update:loading"],
     watch: {
-        loading(newVal) {
-            if (newVal) {
-                useLoader("Loading...").show();
-            } else {
-                useLoader().hide();
-            }
-        },
+        loading() {
+            this.$emit("update:loading", this.loading);
+        }
     },
     methods: {
         async submitVariables() {
-        this.store.loading = true;
+            this.loading = true;
         if (!this.store.validateSubmission()) {
       // If validation fails, stop execution
         return;
@@ -209,7 +207,7 @@
     } finally {
         this.updateModels = !this.updateModels;
         this.$emit("update-models", this.updateModels);
-        this.store.loading = false;
+        this.loading = false;
     }
     },
     },
@@ -225,8 +223,7 @@
         await this.store.getDatasetColumns();
     
         
-    },
-    emits: ['update:modelValue', 'update-models']
+    }
     })
     </script>   
     <style scoped>

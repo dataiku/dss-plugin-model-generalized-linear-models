@@ -47,18 +47,11 @@
 
 <script lang="ts">
     import { defineComponent } from "vue";
-    import type { ErrorPoint } from '../models';
     import EmptyState from './EmptyState.vue';
     import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider, BsCard } from "quasar-ui-bs";
     import docLogo from "../assets/images/doc-logo-example.svg";
     import trainingIcon from "../assets/images/training.svg";
-    import { API } from '../Api';
     import { QRadio } from 'quasar';
-    import { useLoader } from "../composables/use-loader";
-    import { useNotification } from "../composables/use-notification";
-    import type { AxiosError, AxiosResponse } from 'axios';
-    import { isAxiosError } from 'axios';   
-    import axios from "../api/index";
     import VariableInteractions from './VariableInteractions.vue'
     import { useTrainingStore } from "../stores/training";
     
@@ -104,16 +97,7 @@
                 this.store.updateDatasetColumnsPreprocessing();
             },
             deep: true
-        },
-        
-        loading(newVal) {
-            if (newVal) {
-                useLoader("Loading...").show();
-            } else {
-                useLoader().hide();
-            }
-        },
-        
+        },        
         
     }
 })

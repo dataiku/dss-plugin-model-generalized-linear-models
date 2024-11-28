@@ -69,12 +69,9 @@
     import OneWayTabContent from './OneWayTabContent.vue'
     import VariableLevelStatsTabContent from './VariableLevelStatsTabContent.vue'
     import LiftChartTabContent from './LiftChartTabContent.vue'
-    import * as echarts from "echarts";
-    import type { DataPoint, ModelPoint, RelativityPoint, VariablePoint, VariableLevelStatsPoint, LiftDataPoint, ModelMetrics, ModelMetricsDataPoint, BaseValue } from '../models';
-    import { isErrorPoint } from '../models';
+    // import * as echarts from "echarts";
+    import type { DataPoint, VariablePoint } from '../models';
     import { defineComponent } from "vue";
-    import { API } from '../Api';
-    import { useLoader } from "../composables/use-loader";
     import { useNotification } from "../composables/use-notification";
     import { BsButton, BsLayoutDefault, BsTable, BsCheckbox, BsSlider, BsToggle } from "quasar-ui-bs";
     import docLogo from "../assets/images/doc-logo-example.svg";
@@ -111,21 +108,20 @@
                 tab: "one-way-variable",
                 comparisonChartTitle: "Model Metrics",
                 selectedVariable: {} as VariablePoint,
+                // loading = false;
             };
         },
         watch: {
-          reloadModels: {
-              handler() {
-                this.store.loadModels();
-              },
-          },
-          loading(newVal) {
-              if (newVal) {
-                  useLoader("Loading data..").show();
-              } else {
-                  useLoader().hide();
-              }
-          },
+          // reloadModels: {
+          //     handler() {
+          //       this.loading = true;
+          //       this.store.loadModels();
+          //       this.loading = false;
+          //     },
+          // },
+          // loading() {
+          //     this.$emit("update:loading", this.loading);
+          // },
           selectedVariable(newValue: VariablePoint) {
             this.store.selectedVariable = newValue;
             this.store.updateChartData();
@@ -168,15 +164,15 @@
             notifyError(msg: string) {
                 useNotification("negative", msg);
             },
-            handleError(msg: any) {
-                this.store.loading = false;
-                console.error(msg);
-                this.notifyError(msg);
-            },
+            // handleError(msg: any) {
+            //     this.store.loading = false;
+            //     console.error(msg);
+            //     this.notifyError(msg);
+            // },
         },
-        mounted() {
-          this.store.loadModels();
-        }
+        // mounted() {
+        //   this.store.loadModels();
+        // }
     })
     </script>
     

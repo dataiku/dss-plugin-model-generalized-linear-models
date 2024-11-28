@@ -141,71 +141,95 @@
                 tab: "one-way-variable",
                 comparisonChartTitle: "Model Metrics",
                 selectedVariable: {} as VariablePoint,
+                loading: false as boolean
             };
         },
+        emits: ["update:loading"],
         watch: {
           reloadModels: {
               handler() {
+                this.loading = true;
                 this.store.loadModels();
+                this.loading = false;
               },
           },
-          loading(newVal) {
-              if (newVal) {
-                  useLoader("Loading data..").show();
-              } else {
-                  useLoader().hide();
-              }
+          loading() {
+            this.$emit("update:loading", this.loading);
           },
           selectedVariable(newValue: VariablePoint) {
+            this.loading = true;
             this.store.selectedVariable = newValue;
             this.store.updateChartData();
+            this.loading = false;
           },
           allData(newValue: DataPoint[]) {
+            this.loading = true;
             this.store.allData = newValue;
             this.store.updateChartData();
+            this.loading = false;
           }
         },
         methods: {
             
             async updateVariable(value: VariablePoint) {
+                this.loading = true;
               this.store.selectedVariable = value;
+              this.loading = false;
             },
             async updateTrainTest(value: boolean) {
+                this.loading = true;
               this.store.updateTrainTest(value);
+              this.loading = false;
             },
             async updateRescale(value: boolean) {
+                this.loading = true;
               this.store.rescale = value;
               this.store.updateChartData();
+              this.loading = false;
             },
             async updateModelString(value: string) {
+                this.loading = true;
               this.store.updateModelString(value);
+              this.loading = false;
             },
             async updateModelString2(value: string) {
+                this.loading = true;
               this.store.updateModelString2(value);
+              this.loading = false;
             },
             async updateNbBins(value: number) {
+                this.loading = true;
                 this.store.updateNbBins(value);
+                this.loading = false;
             },
             onClick: function() {
+                this.loading = true;
               this.store.exportModel();
+              this.loading = false;
             },
             onClickOneWay: function() {
+                this.loading = true;
               this.store.exportOneWay();
+              this.loading = false;
             },
             onClickStats: function() {
+                this.loading = true;
                 this.store.exportStats();
+                this.loading = false;
             },
             notifyError(msg: string) {
                 useNotification("negative", msg);
             },
             handleError(msg: any) {
-                this.store.loading = false;
+                this.loading = false;
                 console.error(msg);
                 this.notifyError(msg);
             },
         },
         mounted() {
-          this.store.loadModels();
+            this.loading = true;
+            this.store.loadModels();
+            this.loading = false;
         }
     })
     </script>

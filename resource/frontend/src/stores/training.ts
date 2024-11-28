@@ -1,23 +1,12 @@
 import { defineStore } from "pinia";
 import { API } from "../Api";
-import { useLoader } from "../composables/use-loader";
 import { useNotification } from "../composables/use-notification";
-import { isErrorPoint } from '../models';
 import type { 
-  ModelPoint, VariablePoint, 
-  ModelMetricsDataPoint,  
+  ModelPoint
 } from '../models';
-import { isAxiosError } from 'axios'; 
-import type { AxiosError, AxiosResponse } from 'axios';  
 import type { ColumnInput, Interaction, Column, APIResponse } from "../models";
 
 type UpdatableProperties = 'selectedDatasetString' | 'selectedDistributionFunctionString' | 'selectedLinkFunctionString';
-
-// interface ColumnInput {
-//     column: string;
-//     baseLevel: string;
-//     options: Array<string>;
-// }
 
 export const useTrainingStore = defineStore("TrainingStore", {
     state: () => ({
@@ -63,8 +52,7 @@ export const useTrainingStore = defineStore("TrainingStore", {
             'Dummy Encode',
             'Standard Rescaling',
         ],
-        datasetColumns: [] as Column[], // Populate this based on your actual data
-        loading: false as boolean
+        datasetColumns: [] as Column[],
     }),
     actions: {
         updateInteractions(newInteractions: Array<string>) {
@@ -99,16 +87,13 @@ export const useTrainingStore = defineStore("TrainingStore", {
     },
 
     async updateModelString(value: string) {
-          this.loading = true;
           this.selectedModelString = value;
-          const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
-          this.loading = false;
+          //const model = this.models.filter( (v: ModelPoint) => v.name==value)[0];
         },
         notifyError(msg: string) {
             useNotification("negative", msg);
         },
         handleError(msg: any) {
-            this.loading = false;
             console.error(msg);
             this.notifyError(msg);
         },
@@ -180,8 +165,6 @@ export const useTrainingStore = defineStore("TrainingStore", {
             this.datasetColumns[index] = column;
         },  
         async getDatasetColumns(model_value = null) {
-            this.loading = true;
-            console.log(model_value);
             if (model_value) {
                 console.log("model_id parameter provided:", model_value);
                 this.datasetColumns = []
@@ -272,9 +255,7 @@ export const useTrainingStore = defineStore("TrainingStore", {
 
                     } catch (error) {
                         console.error("Error fetching data:", error);
-                    }finally {
-                            this.loading = false;
-                        }
+                    }
                     
 
             } 
@@ -300,7 +281,6 @@ export const useTrainingStore = defineStore("TrainingStore", {
                     this.datasetColumns = [];
                 }
             }
-            this.loading = false;
             }
     },
   });
