@@ -149,6 +149,11 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
+body,
+div {
+    color: var(--text-and-icons-bs-color-text, #333e48);
+}
+
 :deep(.toggle-left-button) {
     display: none;
 }

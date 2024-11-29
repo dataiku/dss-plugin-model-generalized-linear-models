@@ -12,10 +12,10 @@
                         <BsCheckbox v-model="column.isIncluded" label="Include?" class="custom-label-spacing"></BsCheckbox>
                     </div>
                     <div class="radio-group-container">
-                        <div class="q-gutter-sm row items-center">
+                        <div class="q-gutter-sm row items-center bs-colored-text">
                             <q-radio v-model="column.type as any" val="numerical" label="Numerical" />
                         </div>
-                        <div class="q-gutter-sm row items-center">
+                        <div class="q-gutter-sm row items-center bs-colored-text">
                             <q-radio v-model="column.type as any" val="categorical" label="Categorical" />
                         </div>
                     </div>

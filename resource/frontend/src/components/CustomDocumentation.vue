@@ -2,29 +2,23 @@
     <BsDocumentation>
         <template #title>
             <img :src="docLogo" style="margin-right: 12px;"/>
-            Parameters Analyzer
+            Visual GLM
         </template>
 
         <template #content>
             <div class="bs-font-medium-3-normal">
                 <p>
-                    The Parameters Analyzer solution helps you understand your
-                    historical process performance.<br />
-                    Engineers and Technicians can identify and analyze easily
-                    your key target process parameters. <br />
-                    Find and set up ranges for those parameters to improve your
-                    outcome.
+                    Visual GLM lets you design your Generalized Linear Model visually 
+                    and explore Model performance and interpretation. <br />
+                    Create a first model by selecting the variables that you want to include,
+                    the distribution and the link function. <br />
+                    Then visualize the results in the second tab, including
+                    One-Way Variable Analysis, Variable Level Stats and Lift Charts. 
                 </p>
                 <p>
-                    Within the Web App of Parameters Analyzer, you can perform a
-                    complete analysis of your historical performance and
-                    understand how to improve it:
+                    When you are satisfied with a model, you can export it in a standard format
+                    with the relativities of each of your modalities.
                 </p>
-                <ul>
-                    <li>Define your “good” target.</li>
-                    <li>Analyze parameters' impact.</li>
-                    <li>Set main parameters and ranges`</li>
-                </ul>
             </div>
         </template>
     </BsDocumentation>
