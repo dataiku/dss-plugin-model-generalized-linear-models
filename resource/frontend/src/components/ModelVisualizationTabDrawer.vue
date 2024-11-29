@@ -6,7 +6,7 @@
                 </BsLabel>
                 <BsSelect
                     :modelValue="store.selectedModelString"
-                    :all-options="store.modelsString"
+                    :all-options="store.modelsString.filter(option => option !== store.selectedModelString2)"
                     @update:modelValue="updateModelString"
                     >
                 </BsSelect>
@@ -85,7 +85,7 @@
                     </BsLabel>
                     <BsSelect v-if="store.selectedModelString && tab=='one-way-variable'"
                         :modelValue="store.selectedModelString2"
-                        :all-options="store.modelsString"
+                        :all-options="store.modelsString.filter(option => option !== store.selectedModelString)"
                         @update:modelValue="updateModelString2"
                         >
                     </BsSelect>

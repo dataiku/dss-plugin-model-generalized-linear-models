@@ -1,12 +1,12 @@
 <template>
-    <div>
+    <div class="tab-content-wrapper">
     <q-card-section>
-                <h5>Feature Handling</h5>
+                <BsLabel class="bs-font-medium-4-semi-bold" label="Feature Handling"></BsLabel>
             </q-card-section>
             <q-card class="q-pa-xl">
                 <div v-for="(column, index) in filteredColumns" class="column-management row-spacing">
                     <div class="column-name-container">
-                        <h6 class="column-name">{{ store.abbreviateColumnName(column.name) }}</h6>
+                        <BsLabel :label="store.abbreviateColumnName(column.name)"></BsLabel>
                     </div>
                     <div class="checkbox-container">
                         <BsCheckbox v-model="column.isIncluded" label="Include?" class="custom-label-spacing"></BsCheckbox>
@@ -33,11 +33,11 @@
                 
             </q-card>
             <q-card-section>
-                <h5>Variable Interactions</h5>
+                <BsLabel class="bs-font-medium-4-semi-bold" label="Variable Interactions"></BsLabel>
             </q-card-section>
             <q-card class="q-pa-xl">
             <VariableInteractions
-                :filtered-columns="filteredColumns"
+                :filtered-columns="selectedColumns"
                 :initial-interactions="store.previousInteractions"
                  @update:interactions="store.updateInteractions"
             />
@@ -48,7 +48,7 @@
 <script lang="ts">
     import { defineComponent } from "vue";
     import EmptyState from './EmptyState.vue';
-    import { BsTab, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider, BsCard } from "quasar-ui-bs";
+    import { BsTab, BsLabel, BsTabIcon, BsLayoutDefault, BsHeader, BsButton, BsDrawer, BsContent, BsTooltip, BsSlider, BsCard } from "quasar-ui-bs";
     import docLogo from "../assets/images/doc-logo-example.svg";
     import trainingIcon from "../assets/images/training.svg";
     import { QRadio } from 'quasar';
@@ -60,6 +60,7 @@
         EmptyState,
         VariableInteractions,
         BsTab,
+        BsLabel,
         BsTabIcon,
         BsHeader,
         BsButton,
@@ -79,21 +80,23 @@
             layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
             trainingIcon,
             docLogo,
-            errorMessage: "" as string
+            errorMessage: "" as string,
         };
     },
     computed:{
         filteredColumns() {
-            console.log(this.store.datasetColumns);
                 return this.store.datasetColumns.filter(column =>
                     column.role !== 'Target' &&
                     column.role !== 'Exposure')
             },
+        selectedColumns() {
+            return this.store.datasetColumns.filter(column =>
+                column.role == 'Variable' && column.isIncluded == true)
+            },
     },
     watch: {
-        datasetColumns: {
-            handler(newVal, oldVal) {
-                console.log('datasetColumns changed:', newVal);
+        "store.datasetColumns": {
+            handler(newVal) {
                 this.store.updateDatasetColumnsPreprocessing();
             },
             deep: true
@@ -204,5 +207,9 @@
         display: flex;
         align-items: left;
         min-width: 150px;
+    }
+    .tab-content-wrapper {
+        padding-left: 20px;
+        padding-top: 20px;
     }
 </style>

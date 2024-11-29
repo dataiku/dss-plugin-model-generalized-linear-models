@@ -1,18 +1,18 @@
 <template>
-              <EmptyState
-                    class="variable-level-stats-tab-content"
-                    title="Variable Level Stats"
-                    subtitle="Select model in the left column to create table"
-                    v-if="variableLevelStatsData.length==0"/>
-                <div class="variable-level-stats-tab-content" v-else>
-                    <BsTable
-                      title="Variable Level Stats"
-                      :rows="variableLevelStatsData"
-                      :columns="columns"
-                      :globalSearch="false"
-                      row-key="variable"
-                    />
-                </div>
+      <EmptyState
+            class="empty-state"
+            title="Variable Level Stats"
+            subtitle="Select model in the left column to create table"
+            v-if="variableLevelStatsData.length==0"/>
+        <div class="tab-content" v-else>
+            <BsTable
+              title="Variable Level Stats"
+              :rows="variableLevelStatsData"
+              :columns="columns"
+              :globalSearch="false"
+              row-key="variable"
+            />
+        </div>
     </template>
 
 <script lang="ts">

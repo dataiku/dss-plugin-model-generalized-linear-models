@@ -1,6 +1,6 @@
 <template>
-    <div>
-<div class="card-container">
+<div class="tab-content-wrapper">
+    <div class="card-container">
                     <BsCard v-if="store.selectedModelString" :title=store.selectedModelString style="width: 600px">
                         <template #content>
                             <BsCardColItems
@@ -112,16 +112,6 @@
             };
         },
         watch: {
-          // reloadModels: {
-          //     handler() {
-          //       this.loading = true;
-          //       this.store.loadModels();
-          //       this.loading = false;
-          //     },
-          // },
-          // loading() {
-          //     this.$emit("update:loading", this.loading);
-          // },
           selectedVariable(newValue: VariablePoint) {
             this.store.selectedVariable = newValue;
             this.store.updateChartData();
@@ -243,17 +233,9 @@
         flex-wrap: wrap;
       }
     }
+    .tab-content-wrapper {
+      padding-left: 0px;
+      padding-top: 20px;
+  }
     
-    .close-side-drawer-btn {
-        color: var(--interactions-bs-color-interaction-primary, #2b66ff);
-        position: absolute;
-        top: 7px;
-        right: 10px;
-        z-index: 1000;
-    }
-    .open-side-drawer-btn {
-        color: var(--interactions-bs-color-interaction-primary, #2b66ff);
-        position: relative;
-        top: 4px;
-    }
     </style> 

@@ -1,7 +1,9 @@
 <template>
     <div class="interactions-container">
       <div v-if="interactions.length === 0" class="add-initial">
-        <q-btn 
+        <BsButton 
+        unelevated
+          no-caps
           color="primary" 
           class="q-mt-md"
           label="Add an interaction?" 
@@ -12,18 +14,18 @@
       <div v-else class="interactions-list">
         <!-- Headers -->
         <div class="interaction-header-row">
-          <div class="interaction-label">Interaction</div>
-          <div class="variable-header">Variable 1</div>
-          <div class="variable-header">Variable 2</div>
+          <BsLabel class="interaction-label" label="Interaction"></BsLabel>
+          <BsLabel class="variable-header" label="Variable 1"></BsLabel>
+          <BsLabel class="variable-header" label="Variable 2"></BsLabel>
           <div class="action-header"></div>
         </div>
   
         <div v-for="(interaction, index) in interactions" :key="index" class="interaction-row">
-          <div class="interaction-label">Interaction {{ index + 1 }}</div>
+          <BsLabel class="interaction-label" :label="'Interaction ' + (index + 1)"></BsLabel>
           <BsSelect
                 :modelValue="interaction.first"
                 class="interaction-select"
-                :all-options="(filteredColumns as Column[]).map(col => col.name)"
+                :all-options="(filteredColumns as Column[]).map(col => col.name).filter(name => name !== interaction.second)"
                 @update:modelValue="value => updateInteraction(index, 'first', value)"
                 placeholder="Select first variable"
             />
@@ -31,7 +33,7 @@
             <BsSelect
                 :modelValue="interaction.second"
                 class="interaction-select"
-                :all-options="(filteredColumns as Column[]).map(col => col.name)"
+                :all-options="(filteredColumns as Column[]).map(col => col.name).filter(name => name !== interaction.first)"
                 @update:modelValue="value => updateInteraction(index, 'second', value)"
                 placeholder="Select second variable"
             />
@@ -47,7 +49,9 @@
           </q-btn>
         </div>
   
-        <q-btn 
+        <BsButton 
+        unelevated
+          no-caps
           color="primary" 
           class="q-mt-md"
           label="Add another interaction" 

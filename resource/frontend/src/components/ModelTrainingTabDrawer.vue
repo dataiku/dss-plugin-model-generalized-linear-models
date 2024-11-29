@@ -75,11 +75,13 @@
                 placeholder="Enter model name"
                 class="model-name-input"
                 />
-            <q-btn 
+            <BsButton
+            unelevated
+            no-caps
             color="primary" 
             class="q-mt-md" 
             label="Train Model" 
-            @click="submitVariables"></q-btn>
+            @click="submitVariables"></BsButton>
             
             </div>
             </BsCollapsiblePanel>
