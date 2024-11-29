@@ -19,14 +19,14 @@
                     padding="4"
                     @click="onClick">Export Full Model</BsButton>
                 </div>
-                <BsCheckbox v-if="store.selectedModelString && tab=='one-way-variable'" v-model="store.includeSuspectVariables" label="Include Suspect Variables">
+                <BsCheckbox v-if="store.selectedModelString && store.tab=='one-way-variable'" v-model="store.includeSuspectVariables" label="Include Suspect Variables">
                 </BsCheckbox>
-                <BsLabel v-if="store.selectedModelString && tab=='one-way-variable'"
+                <BsLabel v-if="store.selectedModelString && store.tab=='one-way-variable'"
                     label="Select a Variable"
                     info-text="Charts will be generated with respect to this variable">
                 </BsLabel>
                 <BsSelect
-                    v-if="store.selectedModelString && tab=='one-way-variable'"
+                    v-if="store.selectedModelString && store.tab=='one-way-variable'"
                         v-model="selectedVariable"
                         :all-options="store.variablePoints"
                         @update:modelValue="updateVariable">
@@ -48,22 +48,22 @@
                         </template>
                     </BsSelect>
                     <BsCheckbox v-model="store.rescale" 
-                    v-if="store.selectedModelString && tab=='one-way-variable'"
+                    v-if="store.selectedModelString && store.tab=='one-way-variable'"
                     @update:modelValue="updateRescale" 
                     label="Rescale?"></BsCheckbox>
-                    <BsLabel v-if="store.selectedModelString && tab=='lift-chart'"
+                    <BsLabel v-if="store.selectedModelString && store.tab=='lift-chart'"
                     label="Select the number of bins">
                 </BsLabel>
-                <BsSlider v-if="store.selectedModelString && tab=='lift-chart'" @update:modelValue="updateNbBins" v-model="store.nbBins" :min="2" :max="20"/>
-                    <BsLabel v-if="store.selectedModelString && (tab=='one-way-variable' || tab=='lift-chart')"
+                <BsSlider v-if="store.selectedModelString && store.tab=='lift-chart'" @update:modelValue="updateNbBins" v-model="store.nbBins" :min="2" :max="20"/>
+                    <BsLabel v-if="store.selectedModelString && (store.tab=='one-way-variable' || store.tab=='lift-chart')"
                     label="Run Analysis on">
                     </BsLabel>
-                    <BsToggle v-if="store.selectedModelString && (tab=='one-way-variable' || tab=='lift-chart')" 
+                    <BsToggle v-if="store.selectedModelString && (store.tab=='one-way-variable' || store.tab=='lift-chart')" 
                     v-model="store.trainTest"
                     @update:modelValue="updateTrainTest"
                     labelRight="Test" 
                     labelLeft="Train"/>
-                    <div v-if="store.selectedVariable.variable && tab=='one-way-variable'" class="button-container">
+                    <div v-if="store.selectedVariable.variable && store.tab=='one-way-variable'" class="button-container">
                     <BsButton class="bs-primary-button" 
                     unelevated
                     dense
@@ -71,7 +71,7 @@
                     padding="4"
                     @click="onClickOneWay">Export One-Way Data</BsButton>
                     </div>
-                    <div v-if="store.selectedModelString && tab=='variable-level-stats'" class="button-container">
+                    <div v-if="store.selectedModelString && store.tab=='variable-level-stats'" class="button-container">
                     <BsButton class="bs-primary-button" 
                     unelevated
                     dense
@@ -79,11 +79,11 @@
                     padding="4"
                     @click="onClickStats">Export</BsButton>
                     </div>
-                    <BsLabel v-if="store.selectedModelString && tab=='one-way-variable'"
+                    <BsLabel v-if="store.selectedModelString && store.tab=='one-way-variable'"
                         label="Compare with model"
                         info-text="Second model to compare with the first one">
                     </BsLabel>
-                    <BsSelect v-if="store.selectedModelString && tab=='one-way-variable'"
+                    <BsSelect v-if="store.selectedModelString && store.tab=='one-way-variable'"
                         :modelValue="store.selectedModelString2"
                         :all-options="store.modelsString.filter(option => option !== store.selectedModelString)"
                         @update:modelValue="updateModelString2"
@@ -138,7 +138,6 @@
                 layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
                 docLogo,
                 oneWayIcon,
-                tab: "one-way-variable",
                 comparisonChartTitle: "Model Metrics",
                 selectedVariable: {} as VariablePoint,
                 loading: false as boolean

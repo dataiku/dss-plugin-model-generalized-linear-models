@@ -19,7 +19,7 @@
                     <div class="tab-content">
                         <div class="q-pa-lg">
                             <q-tabs
-                            v-model="tab"
+                            v-model="store.tab"
                             dense
                             class="bs-underline-tabs bs-font-medium-3-normal bs-colored-text"
                             active-color="primary"
@@ -33,7 +33,7 @@
                             </q-tabs>
                     
                     
-                            <q-tab-panels v-model="tab" animated class="bs-colored-text">
+                            <q-tab-panels v-model="store.tab" animated class="bs-colored-text">
                             <q-tab-panel name="one-way-variable">
                                 <OneWayTabContent
                                 :chart-data=store.chartData
@@ -105,7 +105,6 @@
                 layoutRef: undefined as undefined | InstanceType<typeof BsLayoutDefault>,
                 docLogo,
                 oneWayIcon,
-                tab: "one-way-variable",
                 comparisonChartTitle: "Model Metrics",
                 selectedVariable: {} as VariablePoint,
                 // loading = false;
