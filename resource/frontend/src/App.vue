@@ -93,9 +93,9 @@ export default defineComponent({
                     drawerProps: {},
                     showEmptyState: false,
                     emptyState: {
-                        title: "Model Visualization",
+                        title: "Model Training",
                         subtitle:
-                            "Select a model and variable in the left menu",
+                            "Configure a model and start training",
                     }
                 },
                 {
@@ -118,6 +118,8 @@ export default defineComponent({
     },
     watch: {
         loading(newVal) {
+            console.log("App loading");
+            console.log(newVal);
             if (newVal) {
                 useLoader("Loading data..").show();
             } else {
@@ -186,18 +188,5 @@ header {
     place-items: flex-start;
     flex-wrap: wrap;
   }
-}
-
-.close-side-drawer-btn {
-    color: var(--interactions-bs-color-interaction-primary, #2b66ff);
-    position: absolute;
-    top: 7px;
-    right: 10px;
-    z-index: 1000;
-}
-.open-side-drawer-btn {
-    color: var(--interactions-bs-color-interaction-primary, #2b66ff);
-    position: relative;
-    top: 4px;
 }
 </style>

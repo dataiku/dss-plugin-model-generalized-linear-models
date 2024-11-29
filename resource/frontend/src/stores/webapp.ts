@@ -101,6 +101,7 @@ export const useModelStore = defineStore("GLMStore", {
         const modelLiftPoint = { nbBins: this.nbBins, id: modelTrainPoint.id, name: modelTrainPoint.name, trainTest: this.trainTest};
         const liftDataResponse = await API.getLiftData(modelLiftPoint);
         this.liftChartData = liftDataResponse?.data;
+        this.updateChartData();
       },
       async updateModelString(value: string) {
               try {

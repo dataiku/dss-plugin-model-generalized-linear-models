@@ -146,15 +146,15 @@
         },
         emits: ["update:loading"],
         watch: {
+          loading(newVal) {
+            this.$emit("update:loading", newVal);
+        },
           reloadModels: {
               handler() {
                 this.loading = true;
                 this.store.loadModels();
                 this.loading = false;
               },
-          },
-          loading() {
-            this.$emit("update:loading", this.loading);
           },
           selectedVariable(newValue: VariablePoint) {
             this.loading = true;
@@ -172,49 +172,49 @@
         methods: {
             
             async updateVariable(value: VariablePoint) {
-                this.loading = true;
+              this.loading = true;
               this.store.selectedVariable = value;
               this.loading = false;
             },
             async updateTrainTest(value: boolean) {
-                this.loading = true;
-              this.store.updateTrainTest(value);
+              this.loading = true;
+              await this.store.updateTrainTest(value);
               this.loading = false;
             },
             async updateRescale(value: boolean) {
                 this.loading = true;
               this.store.rescale = value;
-              this.store.updateChartData();
+              await this.store.updateChartData();
               this.loading = false;
             },
             async updateModelString(value: string) {
                 this.loading = true;
-              this.store.updateModelString(value);
+                await this.store.updateModelString(value);
               this.loading = false;
             },
             async updateModelString2(value: string) {
                 this.loading = true;
-              this.store.updateModelString2(value);
+                await this.store.updateModelString2(value);
               this.loading = false;
             },
             async updateNbBins(value: number) {
                 this.loading = true;
-                this.store.updateNbBins(value);
+                await this.store.updateNbBins(value);
                 this.loading = false;
             },
-            onClick: function() {
+            async onClick() {
                 this.loading = true;
-              this.store.exportModel();
+                await this.store.exportModel();
               this.loading = false;
             },
-            onClickOneWay: function() {
+            async onClickOneWay() {
                 this.loading = true;
-              this.store.exportOneWay();
+                await this.store.exportOneWay();
               this.loading = false;
             },
-            onClickStats: function() {
+            async onClickStats() {
                 this.loading = true;
-                this.store.exportStats();
+                await this.store.exportStats();
                 this.loading = false;
             },
             notifyError(msg: string) {
@@ -222,7 +222,6 @@
             },
             handleError(msg: any) {
                 this.loading = false;
-                console.error(msg);
                 this.notifyError(msg);
             },
         },

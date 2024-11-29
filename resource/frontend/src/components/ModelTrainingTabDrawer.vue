@@ -97,11 +97,8 @@
     import trainingIcon from "../assets/images/training.svg";
     import { API } from '../Api';
     import { QRadio } from 'quasar';
-    import { useLoader } from "../composables/use-loader";
-    import { useNotification } from "../composables/use-notification";
-    import type { AxiosError, AxiosResponse } from 'axios';
-    import { isAxiosError } from 'axios';   
-    import axios from "../api/index";
+    import type { AxiosError } from 'axios';
+    import { isAxiosError } from 'axios';
     import VariableInteractions from './VariableInteractions.vue'
     import { useTrainingStore } from "../stores/training";
     
