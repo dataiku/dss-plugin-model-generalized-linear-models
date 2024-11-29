@@ -1,31 +1,31 @@
 <template>
-              <EmptyState
-                    class="tab-content"
-                    title="One-Way Variable"
-                    subtitle="Select variable in the left column to create chart"
-                    v-if="chartData.length==0"/>
-                <div class="tab-content" v-else>
-                    <BarChart
-                      v-if="selectedVariable"
-                      :xaxisLabels="chartData.map(item => ((selectedVariable.variableType == 'categorical') ? item.Category : Number(item.Category)))"
-                      :xaxisType="selectedVariable.variableType"
-                      :barData="chartData.map(item => item.Value)"
-                      :observedAverageLine="chartData.map(item => item.observedAverage)"
-                      :fittedAverageLine="chartData.map(item => item.fittedAverage)"
-                      :baseLevelPredictionLine="chartData.map(item => item.baseLevelPrediction)"
-                      :fittedAverageLine2="chartData2.map(item => item.fittedAverage)"
-                      :baseLevelPredictionLine2="chartData2.map(item => item.baseLevelPrediction)"
-                      :chartTitle="selectedVariable.variable"
-                      />
-                    <BsTable v-if="selectedVariable.isInModel"
-                      :title="selectedVariable.variable"
-                      :rows="relativities"
-                      :columns="relativitiesColumns"
-                      :globalSearch="false"
-                      row-key="name"
-                    />
-                </div>
-    </template>
+    <EmptyState
+          class="empty-state"
+          title="One-Way Variable"
+          subtitle="Select variable in the left column to create chart"
+          v-if="chartData.length==0"/>
+      <div class="tab-content" v-else>
+          <BarChart
+            v-if="selectedVariable"
+            :xaxisLabels="chartData.map(item => ((selectedVariable.variableType == 'categorical') ? item.Category : Number(item.Category)))"
+            :xaxisType="selectedVariable.variableType"
+            :barData="chartData.map(item => item.Value)"
+            :observedAverageLine="chartData.map(item => item.observedAverage)"
+            :fittedAverageLine="chartData.map(item => item.fittedAverage)"
+            :baseLevelPredictionLine="chartData.map(item => item.baseLevelPrediction)"
+            :fittedAverageLine2="chartData2.map(item => item.fittedAverage)"
+            :baseLevelPredictionLine2="chartData2.map(item => item.baseLevelPrediction)"
+            :chartTitle="selectedVariable.variable"
+            />
+          <BsTable v-if="selectedVariable.isInModel"
+            :title="selectedVariable.variable"
+            :rows="relativities"
+            :columns="relativitiesColumns"
+            :globalSearch="false"
+            row-key="name"
+          />
+      </div>
+</template>
 
 <script lang="ts">
 import BarChart from './BarChart.vue'

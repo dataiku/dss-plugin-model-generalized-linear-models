@@ -7,6 +7,12 @@ export type DataPoint = {
     baseLevelPrediction: number;
 }
 
+export type ColumnInput = {
+    column: string;
+    baseLevel: string;
+    options: Array<string>;
+}
+
 export type LiftDataPoint = { 
     Category: string;
     Value: number;
@@ -34,6 +40,11 @@ export type VariableLevelStatsPoint = {
 export type ModelPoint = { 
     id: string;
     name: string;
+}
+
+export type Interaction = { 
+    first: string;
+    second: string;
 }
 
 export type BaseValue = {
@@ -78,6 +89,50 @@ export type ModelMetricsDataPoint = {
 
 export type ModelMetrics = {
     [models: string]: ModelMetricsDataPoint;
+}
+
+export type AccType = {
+    [key: string]: {
+    role: string;
+    type: string;
+    processing: string;
+    included: boolean;
+    base_level: string;
+    };
+}
+
+export type APIResponse = {
+    data: MLTaskParams;
+    }   
+    interface MLTaskParams {
+        params: {
+            [key: string]: {
+                role: string;
+                type: string;
+                handling: string;
+                baseLevel?: string;
+            }
+        };
+        target_column: string;
+        exposure_column: string;
+        distribution_function: string;
+        link_function: string;
+        elastic_net_penalty?: number;
+        l1_ratio?: number;
+        interactions?: Array<{
+            first: string;
+            second: string;
+        }>;
+}
+
+export type Column = {
+    name: string;
+    isIncluded: boolean;
+    role: string;
+    type: string;
+    preprocessing: string;
+    baseLevel: string;
+    options: Array<string>;
 }
 
 

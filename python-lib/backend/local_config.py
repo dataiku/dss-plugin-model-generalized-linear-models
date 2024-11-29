@@ -128,7 +128,9 @@ dummy_model_metrics2 ={
         }
 
 interaction_setup_params = {
-       "target_column": "ClaimAmount",
+    "target_column": "ClaimAmount",
+    "interactions": [{ "first": 'VehBrand', "second": 'VehPower' },
+                     { "first": 'Area', "second": 'DrivAge' }],
     "exposure_column":"Exposure",
     "distribution_function":"Tweedie",
     "link_function":"Logit",

@@ -14,7 +14,6 @@ import numpy as np
 import time
 from dataiku.customwebapp import get_webapp_config
 from chart_formatters.lift_chart import LiftChartFormatter
-from glm_handler.dku_model_metrics import ModelMetricsCalculator
 from .api_utils import calculate_base_levels
 
 visual_ml_trainer = model_cache = model_deployer =relativities_calculator = None
@@ -158,11 +157,16 @@ def get_models():
     if is_local:
         return jsonify(dummy_models)
     
+    loading_thread.join()
     latest_ml_task = visual_ml_trainer.get_latest_ml_task()
     
     if latest_ml_task is None:
-        return jsonify({'error': 'ML task not initialized'}), 500
-    try:  
+        web_app_config = get_webapp_config()
+        visual_ml_trainer.update_visual_ml_config(visual_ml_config)
+        visual_ml_trainer.ml_task = visual_ml_trainer.create_inital_ml_task(web_app_config.get("target_column"))
+        latest_ml_task = visual_ml_trainer.get_latest_ml_task()
+    
+    try:
         current_app.logger.info(f"Mltask has : {len(visual_ml_trainer.mltask.get_trained_models_ids())} Models")
         
         models = format_models(latest_ml_task)
@@ -379,16 +383,16 @@ def get_model_comparison_data():
 
 @fetch_api.route("/get_model_metrics", methods=["POST"])
 def get_model_metrics():
-    current_app.logger.info("Getting Model Metrics") 
     if is_local:
         return jsonify(dummy_model_metrics)
     
     loading_thread.join()
     request_json = request.get_json()
-
-    model_retriever = VisualMLModelRetriver(request_json["id"])
-    mmc = ModelMetricsCalculator(model_retriever)
-    model_aic, model_bic, model_deviance = mmc.calculate_metrics()
+    
+    model_retriever = VisualMLModelRetriver(request_json['id'])
+    model_aic = model_retriever.predictor._clf.aic_value
+    model_bic  = model_retriever.predictor._clf.bic_value
+    model_deviance = model_retriever.predictor._clf.deviance_value
 
     metrics = {
         "AIC": model_aic,
@@ -435,12 +439,30 @@ def export_model():
             for i in range(max_len):
                 for variable in variables:
                     if i < len(variable_keys[variable]):
-                        value = variable_keys[variable][i]
+                        value = sorted(variable_keys[variable])[i]
                         csv_output += "{},{},,".format(value, relativities_dict[variable][value])
                     else:
                         csv_output += ",,,"
                 csv_output += "\n"
-
+            
+            variable_stats = model_cache.get_model(model).get('variable_stats')
+            relativities_interaction = model_cache.get_model(model).get('relativities_interaction')
+            
+            if len(relativities_interaction) > 0:
+                unique_interactions = relativities_interaction.groupby(['feature_1', 'feature_2']).count().reset_index()
+                for _, interaction in unique_interactions.iterrows():
+                    feature_1 = interaction['feature_1']
+                    feature_2 = interaction['feature_2']
+                    these_relativities = relativities_interaction[(relativities_interaction['feature_1']==feature_1) & (relativities_interaction['feature_2']==feature_2)]
+                    csv_output += "{} * {}\n\n".format(feature_1, feature_2)
+                    csv_output += ",,{}\n".format(feature_1)
+                    sorted_value_1 = sorted(list(set(these_relativities['value_1'])))
+                    csv_output += ",,{}\n{}".format(",".join([str(v) for v in sorted_value_1]), feature_2)
+                    sorted_value_2 = sorted(list(set(these_relativities['value_2'])))
+                    for value_2 in sorted_value_2:
+                        csv_output += ",{},{}\n".format(str(value_2), ",".join([str(these_relativities[(these_relativities['value_1']==value_1) & (these_relativities['value_2']==value_2)]['relativity'].iloc[0]/relativities_dict[feature_1][value_1]/relativities_dict[feature_2][value_2]) for value_1 in sorted_value_1]))
+                    csv_output += "\n"                    
+            
             csv_data = csv_output.encode('utf-8')
 
         except KeyError as e:
