@@ -39,21 +39,6 @@ class VisualMLModelRetriver(DataikuClientProject):
     def get_offset_columns(self):
         return self.algo_settings['params']['offset_columns']
     
-
-    def get_coefficients(self):
-        """
-        Retrieves the coefficients of the model predictor.
-
-        Returns:
-            dict: A dictionary mapping variable names to their coefficients.
-        """
-        logger.info("Retrieving model coefficients.")
-        
-        coefficients = self.get_predictor()
-        variable_names = predictor._model.clf.column_labels
-        logger.info(f"Model coefficients retrieved: {coefficients_dict}")
-        return dict(zip(variable_names, coefficients))
-    
     def get_features(self):
         logger.info(f"Getting features for model ID {self.full_model_id}")
         return self.features
@@ -123,7 +108,7 @@ class VisualMLModelRetriver(DataikuClientProject):
         final_interactions = set()
 
         for interaction in interaction_variables:
-            split_interaction = interaction_variables[0].split('::')
+            split_interaction = interaction.split('::')
             first = split_interaction[0].split(':')[1]
             second = split_interaction[1].split(':')[1]
             final_interactions.add((first, second))
@@ -263,7 +248,7 @@ class VisualMLModelRetriver(DataikuClientProject):
         logger.debug(f"Retrieving setup parameters for model id {self.full_model_id}")
         logger.debug("Model Parameters")
         features_dict = self.get_features_dict()
-        interaction_columns_first = self.predictor._clf.interaction_columns_first,
+        interaction_columns_first = self.predictor._clf.interaction_columns_first
         interaction_columns_second = self.predictor._clf.interaction_columns_second
         
         setup_params = {
