@@ -45,18 +45,24 @@ def calculate_base_levels(df, exposure_column=None):
         # Determine if the column contains numeric or non-numeric data
         is_numeric = pd.api.types.is_numeric_dtype(df[col])
         
+        # Handle NA values when getting unique values
+        unique_vals = df[col].dropna().unique()
         if is_numeric:
-            options = sorted([str(val) for val in df[col].unique()], key=float)
+            options = sorted([str(val) for val in unique_vals], key=float)
         else:
-            options = sorted([str(val) for val in df[col].unique()], key=natural_sort_key)
+            options = sorted([str(val) for val in unique_vals], key=natural_sort_key)
         
         if exposure_column and exposure_column in df.columns:
-            # Exposure-based calculation
-            weighted_counts = df.groupby(col)[exposure_column].sum()
-            base_level = str(weighted_counts.idxmax())
+            # Exposure-based calculation with NA handling
+            weighted_counts = df.dropna(subset=[col]).groupby(col)[exposure_column].sum()
+            if len(weighted_counts) > 0:
+                base_level = str(weighted_counts.idxmax())
+            else:
+                base_level = str(options[0]) if options else ""
         else:
-            # Original mode-based calculation
-            base_level = str(df[col].mode().iloc[0])
+            # Original mode-based calculation with NA handling
+            mode_values = df[col].mode()
+            base_level = str(mode_values.iloc[0]) if not mode_values.empty else (str(options[0]) if options else "")
         
         cols_json.append({
             'column': col,
