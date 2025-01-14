@@ -124,7 +124,7 @@ class VisualMLModelTrainer(DataikuClientProject):
                 target_variable=target_variable,
                 ml_backend_type='PY_MEMORY',  # ML backend to use
                 guess_policy='DEFAULT',  # Template to use for setting default parameters
-                prediction_type=self.visual_ml_config.prediction_type,
+                prediction_type=self.visual_ml_config.prediction_type
             )
         
         self.ml_task_variables = list(self.mltask.get_settings().get_raw().get('preprocessing').get('per_feature').keys())
