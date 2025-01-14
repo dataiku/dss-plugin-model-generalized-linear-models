@@ -47,7 +47,7 @@ class VisualMLModelTrainer(DataikuClientProject):
     def _refresh_mltask(self):
         
         logger.debug("Refreshing the ml task")
-        self.mltask.guess()
+        self.mltask.guess(prediction_type=self.visual_ml_config.prediction_type)
         self.mltask.wait_guess_complete()
         logger.debug("Successfully refreshed the ml task")
     
@@ -123,7 +123,8 @@ class VisualMLModelTrainer(DataikuClientProject):
                 input_dataset=self.visual_ml_config.input_dataset,
                 target_variable=target_variable,
                 ml_backend_type='PY_MEMORY',  # ML backend to use
-                guess_policy='DEFAULT'  # Template to use for setting default parameters
+                guess_policy='DEFAULT',  # Template to use for setting default parameters
+                prediction_type=self.visual_ml_config.prediction_type,
             )
         
         self.ml_task_variables = list(self.mltask.get_settings().get_raw().get('preprocessing').get('per_feature').keys())
